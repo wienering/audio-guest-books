@@ -76,12 +76,25 @@ async function main() {
   await db
     .insert(plans)
     .values([
-      { code: "free", name: "Free", priceCents: 0, stripePriceId: null },
-      { code: "pro", name: "Pro", priceCents: 0, stripePriceId: null },
+      {
+        code: "free",
+        name: "Free",
+        priceCents: 0,
+        fileLimitPerEvent: 10,
+        stripePriceId: null,
+      },
+      {
+        code: "pro",
+        name: "Pro",
+        priceCents: 0,
+        fileLimitPerEvent: 100,
+        stripePriceId: null,
+      },
       {
         code: "ultimate",
         name: "Ultimate",
         priceCents: 500,
+        fileLimitPerEvent: null,
         stripePriceId: null,
       },
     ])
@@ -130,6 +143,19 @@ async function main() {
   await linkFeatures(freePlan.id, new Set());
   await linkFeatures(proPlan.id, PRO_FEATURES);
   await linkFeatures(ultimatePlan.id, ULTIMATE_FEATURES);
+
+  await db
+    .update(plans)
+    .set({ fileLimitPerEvent: 10 })
+    .where(eq(plans.code, "free"));
+  await db
+    .update(plans)
+    .set({ fileLimitPerEvent: 100 })
+    .where(eq(plans.code, "pro"));
+  await db
+    .update(plans)
+    .set({ fileLimitPerEvent: null })
+    .where(eq(plans.code, "ultimate"));
 
   console.log("Seed completed: plans, features, plan_features.");
 }

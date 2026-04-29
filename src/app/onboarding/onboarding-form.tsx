@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useEffect, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -17,19 +17,33 @@ import { Label } from "@/components/ui/label";
 import {
   completeOnboarding,
   type OnboardingActionState,
+  type OnboardingFormValues,
 } from "./actions";
 
 type FormProps = {
   rootDomain: string;
 };
 
+const emptyValues = (): OnboardingFormValues => ({
+  companyName: "",
+  companySlug: "",
+});
+
 export function OnboardingForm(props: FormProps) {
   const { rootDomain } = props;
 
   const [state, dispatch, pending] = useActionState(
     completeOnboarding,
-    undefined as OnboardingActionState | undefined,
+    undefined as OnboardingActionState | undefined
   );
+
+  const [fields, setFields] = useState<OnboardingFormValues>(emptyValues);
+
+  useEffect(() => {
+    if (state?.ok === false && state.values) {
+      setFields(state.values);
+    }
+  }, [state]);
 
   const nameError =
     state && "fieldErrors" in state ? state.fieldErrors?.companyName : undefined;
@@ -37,6 +51,15 @@ export function OnboardingForm(props: FormProps) {
     state && "fieldErrors" in state ? state.fieldErrors?.companySlug : undefined;
   const errorMessage =
     state && state.ok === false ? state.message : undefined;
+
+  const showGeneralBanner =
+    errorMessage &&
+    !(
+      state?.ok === false &&
+      state.fieldErrors &&
+      Object.keys(state.fieldErrors).length > 0 &&
+      errorMessage === "Please fix the fields below."
+    );
 
   return (
     <Card className="w-full max-w-md shadow-sm">
@@ -56,6 +79,10 @@ export function OnboardingForm(props: FormProps) {
               autoComplete="organization"
               placeholder="Nova Audio Memories"
               required
+              value={fields.companyName}
+              onChange={(e) =>
+                setFields((f) => ({ ...f, companyName: e.target.value }))
+              }
               aria-invalid={!!nameError}
             />
             {nameError ? (
@@ -79,6 +106,10 @@ export function OnboardingForm(props: FormProps) {
               spellCheck={false}
               placeholder="nova-audio"
               required
+              value={fields.companySlug}
+              onChange={(e) =>
+                setFields((f) => ({ ...f, companySlug: e.target.value }))
+              }
               aria-invalid={!!slugError}
             />
             <p className="text-muted-foreground text-xs">
@@ -89,7 +120,7 @@ export function OnboardingForm(props: FormProps) {
               <p className="text-destructive text-sm">{slugError}</p>
             ) : null}
           </div>
-          {errorMessage ? (
+          {showGeneralBanner ? (
             <div className="rounded-md bg-destructive/10 px-3 py-2 text-destructive text-sm">
               {errorMessage}
             </div>

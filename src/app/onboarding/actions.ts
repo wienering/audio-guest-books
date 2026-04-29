@@ -16,10 +16,23 @@ import {
 import { getMembershipWithCompany } from "@/lib/company";
 import { isReservedSubdomain } from "@/lib/reserved-subdomains";
 
+export type OnboardingFormValues = {
+  companyName: string;
+  companySlug: string;
+};
+
+function readOnboardingFormValues(formData: FormData): OnboardingFormValues {
+  return {
+    companyName: String(formData.get("companyName") ?? ""),
+    companySlug: String(formData.get("companySlug") ?? ""),
+  };
+}
+
 export type OnboardingActionState =
   | {
       ok: false;
       message: string;
+      values: OnboardingFormValues;
       fieldErrors?: { companyName?: string; companySlug?: string };
     }
   | { ok: true };
@@ -51,10 +64,16 @@ export async function completeOnboarding(
   _previousState: OnboardingActionState | undefined,
   formData: FormData
 ): Promise<OnboardingActionState> {
+  const submittedValues = readOnboardingFormValues(formData);
+
   const session = await auth();
   const userId = session.userId;
   if (!userId) {
-    return { ok: false, message: "You must sign in before continuing." };
+    return {
+      ok: false,
+      message: "You must sign in before continuing.",
+      values: submittedValues,
+    };
   }
 
   const parsed = formSchema.safeParse({
@@ -67,6 +86,7 @@ export async function completeOnboarding(
     return {
       ok: false,
       message: "Please fix the fields below.",
+      values: submittedValues,
       fieldErrors: {
         companyName: errs.companyName?.[0],
         companySlug: errs.companySlug?.[0],
@@ -84,6 +104,7 @@ export async function completeOnboarding(
       ok: false,
       message:
         "This URL slug is reserved. Choose a different subdomain for your company.",
+      values: submittedValues,
       fieldErrors: {
         companySlug: "Reserved slug — pick another.",
       },
@@ -100,7 +121,8 @@ export async function completeOnboarding(
     return {
       ok: false,
       message: `The slug "${parsed.data.companySlug}" is already taken.`,
-      fieldErrors: { companySlug: "Slug is already registered." },
+      values: submittedValues,
+      fieldErrors: { companySlug: "This slug is already taken." },
     };
   }
 

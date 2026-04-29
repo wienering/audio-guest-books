@@ -4,6 +4,7 @@ import type { Metadata } from "next";
 import { ClerkProvider } from "@clerk/nextjs";
 import { Geist, Geist_Mono } from "next/font/google";
 
+import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 
 const geistSans = Geist({
@@ -40,7 +41,10 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} font-sans antialiased`}
       >
         <ClerkProvider>
-          <TooltipProvider delay={200}>{children}</TooltipProvider>
+          <TooltipProvider delay={200}>
+            {children}
+            <Toaster />
+          </TooltipProvider>
         </ClerkProvider>
       </body>
     </html>

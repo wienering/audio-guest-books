@@ -9,7 +9,11 @@ export async function getMembershipWithCompany(clerkUserId: string) {
   const row = await db.query.companyUsers.findFirst({
     where: eq(companyUsers.clerkUserId, clerkUserId),
     with: {
-      company: true,
+      company: {
+        with: {
+          plan: true,
+        },
+      },
     },
   });
   return row;
