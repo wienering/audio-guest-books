@@ -20,12 +20,43 @@ const isPublicAuthRoute = createRouteMatcher([
 
 const isAdminRoute = createRouteMatcher(["/admin(.*)", "/api/admin(.*)"]);
 
+/**
+ * Public marketing paths served at the apex (audioguestbooks.ca).
+ * These are also blocked on tenant subdomains so they don't leak through
+ * `[clientSlug]` routing. The home path "/" is intentionally not listed —
+ * it's host-dispatched in `src/app/page.tsx`.
+ */
+const MARKETING_ONLY_PATHS = [
+  "/pricing",
+  "/faq",
+  "/contact",
+  "/privacy",
+  "/terms",
+] as const;
+
+function isMarketingOnlyPath(pathname: string): boolean {
+  return MARKETING_ONLY_PATHS.some(
+    (p) => pathname === p || pathname.startsWith(`${p}/`)
+  );
+}
+
 export default clerkMiddleware(async (auth, request) => {
   const hostHeader = request.headers.get("host") ?? "";
   const { hostname: hostnameOnly } = splitHostAndPort(hostHeader);
   const pathname = request.nextUrl.pathname;
+  const search = request.nextUrl.search;
   const root = rootEnv();
   const hostCtx = parseHostContext(hostnameOnly, root);
+
+  /**
+   * www.audioguestbooks.ca → audioguestbooks.ca (canonical apex).
+   * 301 so search engines update their index. Local dev (.localhost) keeps
+   * its hostnames untouched.
+   */
+  if (!hostCtx.isLocalDev && hostnameOnly === `www.${root}`) {
+    const dest = new URL(`https://${root}${pathname}${search}`);
+    return NextResponse.redirect(dest, 301);
+  }
 
   /** Marketing apex — send app-auth routes and dashboard to app subdomain */
   if (!hostCtx.isLocalDev && hostCtx.isMarketingHost) {
@@ -36,10 +67,7 @@ export default clerkMiddleware(async (auth, request) => {
       pathname.startsWith("/sign-up")
     ) {
       const origin = buildAppOriginFromHostHeader(hostHeader, root);
-      const dest = new URL(
-        `${pathname}${request.nextUrl.search}`,
-        origin
-      );
+      const dest = new URL(`${pathname}${search}`, origin);
       return NextResponse.redirect(dest);
     }
   }
@@ -59,6 +87,16 @@ export default clerkMiddleware(async (auth, request) => {
 
   /** Tenant subdomain */
   if (hostCtx.isTenantHost) {
+    /**
+     * Marketing-only paths must never render under a tenant subdomain — they
+     * would otherwise be picked up by static `(marketing)/<page>` routes that
+     * are intended for the apex. Redirect the visitor to the apex.
+     */
+    if (!hostCtx.isLocalDev && isMarketingOnlyPath(pathname)) {
+      const dest = new URL(`https://${root}${pathname}${search}`);
+      return NextResponse.redirect(dest);
+    }
+
     if (hostCtx.isReservedTenant || !hostCtx.tenantSubdomain) {
       requestHeaders.set("x-tenant-status", "reserved");
       return NextResponse.next({

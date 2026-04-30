@@ -2,8 +2,9 @@
 
 ## Pre-launch design tasks
 - [ ] Comprehensive design pass on retail page (after Stage 5 branding integration)
-- [ ] Marketing site design (apex audioguestbooks.ca)
+- [x] Marketing site design (apex audioguestbooks.ca) — Stage 13a v1 (Crimson Pro serif + teal accent, plan cards driven by live `getFoundingMemberSpotsRemaining`)
 - [ ] Consider hiring designer for a few hours of polish
+- [ ] Stage 13a follow-ups: OG image, blog, customer testimonials, marketing analytics (Stage 13b), cookie banner if needed for EU
 
 ## Known small issues
 - [ ] Page view analytics double-counted (logged in both API route and page component) — Stage 8 cleanup

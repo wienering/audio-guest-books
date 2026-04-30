@@ -2,7 +2,7 @@ import "./globals.css";
 
 import type { Metadata } from "next";
 import { ClerkProvider } from "@clerk/nextjs";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Crimson_Pro, Geist, Geist_Mono } from "next/font/google";
 
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -17,17 +17,23 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+const crimsonPro = Crimson_Pro({
+  variable: "--font-crimson",
+  subsets: ["latin"],
+  display: "swap",
+});
+
+const SITE_URL =
+  process.env.NEXT_PUBLIC_SITE_URL ?? "https://audioguestbooks.ca";
+
 export const metadata: Metadata = {
-  metadataBase:
-    typeof process.env.NEXT_PUBLIC_SITE_URL === "string"
-      ? new URL(process.env.NEXT_PUBLIC_SITE_URL)
-      : undefined,
+  metadataBase: new URL(SITE_URL),
   title: {
     default: "Audio Guest Books",
-    template: "%s • Audio Guest Books",
+    template: "%s — Audio Guest Books",
   },
   description:
-    "Multi-tenant audio guest book delivery platform for weddings, parties, and events.",
+    "Branded delivery pages, automatic file processing, and analytics for wedding and event audio guest books.",
 };
 
 export default function RootLayout({
@@ -38,7 +44,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} font-sans antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} ${crimsonPro.variable} font-sans antialiased`}
       >
         <ClerkProvider>
           <TooltipProvider delay={200}>
