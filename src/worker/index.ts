@@ -10,6 +10,8 @@ import {
   EXTRACT_ZIP_QUEUE_NAME,
   GENERATE_ZIP_QUEUE_NAME,
   RETENTION_SCHEDULER_QUEUE_NAME,
+  TRANSCODE_AUDIO_QUEUE_NAME,
+  type TranscodeAudioJobPayload,
 } from "@/lib/queue";
 import { runRetentionScheduler } from "@/lib/retention-scheduler";
 import { createRedisFromEnv } from "@/lib/redis";
@@ -24,6 +26,7 @@ import {
   processGenerateZipJob,
   type GenerateZipPayload,
 } from "./jobs/generate-zip";
+import { processTranscodeAudioJob } from "./jobs/transcode-audio";
 
 const log = pino({
   level: process.env.LOG_LEVEL ?? "info",
@@ -96,6 +99,27 @@ const generateZipWorker = new Worker<GenerateZipPayload>(
   }
 );
 
+const transcodeAudioWorker = new Worker<TranscodeAudioJobPayload>(
+  TRANSCODE_AUDIO_QUEUE_NAME,
+  async (job) => {
+    const started = Date.now();
+    log.info({ bullmqJobId: job.id, ...job.data }, "transcode-audio job start");
+    await processTranscodeAudioJob(job.data, log);
+    log.info(
+      {
+        bullmqJobId: job.id,
+        audioFileId: job.data.audioFileId,
+        durationMs: Date.now() - started,
+      },
+      "transcode-audio job end"
+    );
+  },
+  {
+    connection,
+    concurrency: 2,
+  }
+);
+
 const retentionWorker = new Worker(
   RETENTION_SCHEDULER_QUEUE_NAME,
   async () => {
@@ -159,6 +183,9 @@ extractWorker.on("error", (err) => {
 generateZipWorker.on("error", (err) => {
   log.error({ err }, "generate-zip worker error");
 });
+transcodeAudioWorker.on("error", (err) => {
+  log.error({ err }, "transcode-audio worker error");
+});
 retentionWorker.on("error", (err) => {
   log.error({ err }, "retention worker error");
 });
@@ -169,6 +196,7 @@ async function shutdown(signal: string) {
   log.info({ signal }, "shutdown: closing workers");
   await extractWorker.close();
   await generateZipWorker.close();
+  await transcodeAudioWorker.close();
   await retentionWorker.close();
   await connection.quit();
   await closeWorkerDb();

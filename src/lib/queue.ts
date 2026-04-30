@@ -6,6 +6,50 @@ export const EXTRACT_ZIP_QUEUE_NAME = "extract-zip";
 export const GENERATE_ZIP_QUEUE_NAME = "generate-zip";
 export const RETENTION_SCHEDULER_QUEUE_NAME = "retention-scheduler";
 
+export const TRANSCODE_AUDIO_QUEUE_NAME = "transcode-audio";
+
+export type TranscodeAudioJobPayload = {
+  audioFileId: string;
+  eventId: string;
+  companyId: string;
+};
+
+const gTc = globalThis as typeof globalThis & {
+  __transcodeAudioQueue?: Queue<TranscodeAudioJobPayload>;
+};
+
+export function getTranscodeAudioQueue(): Queue<TranscodeAudioJobPayload> {
+  if (!gTc.__transcodeAudioQueue) {
+    const connection = getSharedRedis();
+    gTc.__transcodeAudioQueue = new Queue<TranscodeAudioJobPayload>(
+      TRANSCODE_AUDIO_QUEUE_NAME,
+      { connection }
+    );
+  }
+  return gTc.__transcodeAudioQueue;
+}
+
+export async function enqueueTranscodeAudioJob(
+  payload: TranscodeAudioJobPayload
+): Promise<void> {
+  const queue = getTranscodeAudioQueue();
+  try {
+    await queue.add(
+      "transcode-audio",
+      payload,
+      {
+        jobId: `transcode-${payload.audioFileId}`,
+        attempts: 3,
+        backoff: { type: "exponential", delay: 8000 },
+        removeOnComplete: true,
+        removeOnFail: false,
+      }
+    );
+  } catch (e) {
+    console.warn("enqueue transcode job", e);
+  }
+}
+
 export type ExtractZipJobPayload = {
   uploadJobId: string;
   companyId: string;

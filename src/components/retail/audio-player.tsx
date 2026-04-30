@@ -18,6 +18,8 @@ export type RetailAudioFile = {
   originalFilename: string;
   durationSeconds: number | null;
   playbackUrl: string;
+  /** When playing transcoded MP3, downloadable lossless id */
+  losslessOriginalFileId?: string | null;
 };
 
 export type RetailAudioPlayerHandle = {

@@ -40,7 +40,7 @@ Multi-tenant SaaS for delivering audio guest book recordings (**Stage 1** — fo
    npm run worker
    ```
 
-   Set `REDIS_URL` in `.env` (e.g. Upstash `rediss://…`). The worker uses the same `DATABASE_URL` and R2 variables as the Next.js app.
+   Set `REDIS_URL` in `.env` (e.g. Upstash `rediss://…`). The worker uses the same `DATABASE_URL` and R2 variables as the Next.js app. **FFmpeg** must be installed and on `PATH` for Ultimate WAV/FLAC/AIFF transcoding (or set `FFMPEG_PATH` to the `ffmpeg` binary). Ultimate transcode jobs use the BullMQ queue `transcode-audio`.
 
    - **Marketing**: [http://localhost:3000](http://localhost:3000)
 

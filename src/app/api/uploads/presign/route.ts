@@ -7,6 +7,7 @@ import { z } from "zod";
 import { db } from "@/db/index";
 import { audioFiles, events, uploadJobs } from "@/db/schema";
 import {
+  extensionRequiresUltimateTranscode,
   formatNotAllowedMessage,
   isExtensionAllowedForPlan,
   MAX_UPLOAD_BYTES,
@@ -165,7 +166,11 @@ export async function POST(req: Request) {
     .select({ n: count() })
     .from(audioFiles)
     .where(
-      and(eq(audioFiles.eventId, event_id), isNull(audioFiles.deletedAt))
+      and(
+        eq(audioFiles.eventId, event_id),
+        isNull(audioFiles.deletedAt),
+        eq(audioFiles.isOriginal, true)
+      )
     );
 
   const fileCount = Number(agg?.n ?? 0);
@@ -180,7 +185,11 @@ export async function POST(req: Request) {
     .select({ displayOrder: audioFiles.displayOrder })
     .from(audioFiles)
     .where(
-      and(eq(audioFiles.eventId, event_id), isNull(audioFiles.deletedAt))
+      and(
+        eq(audioFiles.eventId, event_id),
+        isNull(audioFiles.deletedAt),
+        eq(audioFiles.isOriginal, true)
+      )
     );
 
   const nextOrder =
@@ -206,6 +215,9 @@ export async function POST(req: Request) {
     );
   }
 
+  const needsTranscodeJob =
+    allowUltimateFormats && extensionRequiresUltimateTranscode(ext);
+
   const [row] = await db
     .insert(audioFiles)
     .values({
@@ -216,6 +228,8 @@ export async function POST(req: Request) {
       sizeBytes: size,
       displayOrder: nextOrder,
       uploadedAt: null,
+      isOriginal: true,
+      transcodingStatus: needsTranscodeJob ? "pending" : "not_needed",
     })
     .returning({ id: audioFiles.id });
 

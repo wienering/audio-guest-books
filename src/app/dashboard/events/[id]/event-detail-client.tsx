@@ -66,6 +66,15 @@ export type EventDetailClientFile = {
   sizeBytes: number;
   uploadedAt: string;
   displayOrder: number;
+  isOriginal: boolean;
+  mimeType: string;
+  transcodingStatus:
+    | "not_needed"
+    | "pending"
+    | "processing"
+    | "succeeded"
+    | "failed";
+  transcodingError: string | null;
 };
 
 export type EventUploadJobSnapshot = {
@@ -288,6 +297,19 @@ function AudioRow(props: {
     };
   }, [file.id]);
 
+  async function retryTranscode() {
+    const r = await fetch(`/api/uploads/${file.id}/retranscode`, {
+      method: "POST",
+    });
+    if (!r.ok) {
+      const j = (await r.json().catch(() => null)) as { error?: string } | null;
+      toast.error(j?.error ?? "Could not queue transcoding.");
+      return;
+    }
+    toast.success("Transcoding queued.");
+    onDeleted();
+  }
+
   async function onDownload() {
     const r = await fetch(`/api/uploads/${file.id}/download-url`);
     if (!r.ok) {
@@ -319,16 +341,57 @@ function AudioRow(props: {
     }
   }
 
+  const transcodeLabel =
+    file.isOriginal &&
+    (file.transcodingStatus === "pending" ||
+      file.transcodingStatus === "processing")
+      ? "Transcoding…"
+      : null;
+
   return (
     <li className="rounded-lg border bg-card p-4 shadow-sm">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div className="min-w-0 space-y-1">
-          <p className="truncate font-medium">{file.originalFilename}</p>
+          <p className="font-medium break-words">
+            {file.originalFilename}
+            {file.isOriginal ? (
+              <span className="ml-2 font-normal text-muted-foreground text-sm">
+                (original)
+              </span>
+            ) : (
+              <span className="ml-2 rounded-md bg-muted px-1.5 py-0.5 text-muted-foreground text-xs">
+                transcoded MP3
+              </span>
+            )}
+          </p>
           <p className="text-muted-foreground text-xs">
             {formatBytes(file.sizeBytes)} · {uploadedAtLabel}
+            {transcodeLabel ? (
+              <>
+                {" "}
+                · <span className="font-medium text-amber-700">{transcodeLabel}</span>
+              </>
+            ) : null}
           </p>
+          {file.isOriginal &&
+          file.transcodingStatus === "failed" &&
+          file.transcodingError ? (
+            <p className="text-destructive text-xs">{file.transcodingError}</p>
+          ) : null}
         </div>
         <div className="flex flex-wrap gap-2">
+          {file.isOriginal && file.transcodingStatus === "failed" ? (
+            <button
+              type="button"
+              className={cn(
+                buttonVariants({ variant: "secondary", size: "sm" }),
+                "shrink-0"
+              )}
+              onClick={() => void retryTranscode()}
+            >
+              Retry transcoding
+            </button>
+          ) : null}
           <button
             type="button"
             className={cn(
@@ -518,6 +581,11 @@ export function EventDetailClient(props: EventDetailClientProps) {
     () =>
       [...props.files].sort((a, b) => a.displayOrder - b.displayOrder),
     [props.files]
+  );
+
+  const sourceFileCount = useMemo(
+    () => sortedFiles.filter((f) => f.isOriginal).length,
+    [sortedFiles]
   );
 
   const bulkDialogRef = useRef<HTMLDialogElement | null>(null);
@@ -999,7 +1067,10 @@ export function EventDetailClient(props: EventDetailClientProps) {
 
       <section className="space-y-4">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <h2 className="font-medium">Files ({sortedFiles.length})</h2>
+          <h2 className="font-medium">
+            Files ({sourceFileCount} source file
+            {sourceFileCount !== 1 ? "s" : ""}, {sortedFiles.length} total)
+          </h2>
           {sortedFiles.length > 0 ? (
             <button
               type="button"

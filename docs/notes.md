@@ -11,7 +11,7 @@
 
 ## Future enhancements (post-MVP)
 - [ ] Audio file duration extraction (currently null in audio_files table)
-- [ ] WAV/FLAC transcoding for Ultimate tier (Stage 12)
+- [x] WAV/FLAC/AIFF transcoding for Ultimate tier (Stage 12 — see runbook at bottom)
 - [ ] Custom domains for Ultimate tier (yourcompany.com instead of subdomain)
 
 ## Stage 5 — Password sessions
@@ -38,7 +38,7 @@ Existing databases seeded before Stage 5 may still grant `remove_powered_by_foot
 
 ## Future enhancements (post-MVP)
 - [ ] Audio file duration extraction (currently null in audio_files table)
-- [ ] WAV/FLAC transcoding for Ultimate tier (Stage 12)
+- [x] WAV/FLAC/AIFF transcoding for Ultimate tier (Stage 12 — see runbook at bottom)
 - [ ] Custom domains for Ultimate tier (yourcompany.com instead of subdomain)
 - [ ] Drag-to-reorder files (Stage 13 polish)
 
@@ -51,3 +51,29 @@ Existing databases seeded before Stage 5 may still grant `remove_powered_by_foot
 - [ ] No "kill all retail page sessions" button when password is changed (sessions stay valid for 7 days)
 - [ ] Drizzle relational queries with `with: { event: ... }` were causing column errors — pattern is now avoided in favor of explicit joins, but worth a code review pass before launch
 - [ ] Worker logs are functional but not centralized — production deployment should send to a real logging service
+
+## Stage 10 — Account deletion (runbook)
+
+Support-only restore **during the 30-day grace period** (before the daily scheduler purges the company):
+
+```sql
+UPDATE companies 
+SET deleted_at = NULL, hard_delete_after = NULL, deletion_requested_by_user_id = NULL
+WHERE id = '<company-uuid>';
+```
+
+Stripe: Stage 9 is not integrated yet — if someone on a paid plan deletes their account **before** billing automation exists, manually cancel their subscription in the Stripe dashboard before the `hard_delete_after` date.
+
+Manual Stage 10 verification: disposable company → events/files → delete via `/dashboard/settings/account` → soft-delete + sign-out + slug reserved for new signups → set `hard_delete_after` in the past → trigger retention scheduler → confirm anonymized log row, R2 purge, slug available again.
+
+## Stage 12 — Ultimate transcoding
+
+The BullMQ worker must find **FFmpeg** on PATH (Windows: `choco install ffmpeg`, or set `FFMPEG_PATH` to `ffmpeg.exe`). Railway/production: install FFmpeg in the worker image when you finalize deployment.
+
+Ultimate tier uses seeded feature `audio_transcoding`. WAV/FLAC/AIFF uploads enqueue `transcode-audio`; retail/sync zip/async zip generation prefers the transcoded MP3 when status is succeeded — optional **Download original** on retail when a lossless file remains.
+Account deletion UX hardening needed:
+
+Disable Clerk's built-in account deletion in UserButton config (force users through /dashboard/settings/account)
+Fix "Return to sign in" link on deletion page to actually call Clerk signOut + redirect
+Add /sign-out route or Clerk-managed sign-out URL for emergency exits
+Audit middleware: deleted users should be hard-redirected to deletion-status page on EVERY navigation, with a single "Sign out" button there that actually works

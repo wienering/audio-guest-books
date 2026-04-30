@@ -48,6 +48,14 @@ export const uploadJobStatusEnum = pgEnum("upload_job_status", [
   "partial",
 ]);
 
+export const audioTranscodingStatusEnum = pgEnum("audio_transcoding_status", [
+  "not_needed",
+  "pending",
+  "processing",
+  "succeeded",
+  "failed",
+]);
+
 export const retentionNotifyThresholdEnum = pgEnum("retention_notify_threshold", [
   "60_days",
   "30_days",
@@ -71,6 +79,7 @@ export const emailKindEnum = pgEnum("email_kind", [
   "files_deleted",
   "retail_invitation_default",
   "retail_invitation_custom",
+  "account_deletion_requested",
 ]);
 
 export const emailStatusEnum = pgEnum("email_status", [
@@ -148,11 +157,29 @@ export const companies = pgTable(
     /** Optional explicit text color; when null, derived from background for contrast */
     themeText: text("theme_text"),
     deletedAt: timestamp("deleted_at", { withTimezone: true }),
+    /** UTC calendar date when the daily job will purge the company permanently. */
+    hardDeleteAfter: date("hard_delete_after", { mode: "date" }),
+    /** Clerk user id who requested deletion (nullable after row is gone). */
+    deletionRequestedByUserId: text("deletion_requested_by_user_id"),
     createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
   },
   (t) => [uniqueIndex("companies_slug_uidx").on(t.slug)]
 );
+
+/** Anonymized audit row kept after account hard-delete (no PII). */
+export const deletedCompaniesLog = pgTable("deleted_companies_log", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  originalCompanyId: uuid("original_company_id").notNull(),
+  originalSlug: text("original_slug").notNull(),
+  originalPlanCode: text("original_plan_code").notNull(),
+  totalEventsAtDeletion: integer("total_events_at_deletion").notNull(),
+  totalFilesAtDeletion: integer("total_files_at_deletion").notNull(),
+  totalStorageBytesAtDeletion: bigint("total_storage_bytes_at_deletion", {
+    mode: "number",
+  }).notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+});
 
 export const companyUsers = pgTable(
   "company_users",
@@ -283,6 +310,15 @@ export const audioFiles = pgTable(
     displayOrder: integer("display_order").notNull().default(0),
     uploadedAt: timestamp("uploaded_at", { withTimezone: true }),
     deletedAt: timestamp("deleted_at", { withTimezone: true }),
+    /** False for FFmpeg-derived copies (Ultimate WAV/FLAC/AIFF → MP3). */
+    isOriginal: boolean("is_original").notNull().default(true),
+    /** Non-null links a transcoded MP3 row back to its source recording. */
+    derivedFromId: uuid("derived_from_id"),
+    transcodingStatus:
+      audioTranscodingStatusEnum("transcoding_status")
+        .notNull()
+        .default("not_needed"),
+    transcodingError: text("transcoding_error"),
   },
   (t) => [uniqueIndex("audio_files_storage_key_uidx").on(t.storageKey)]
 );
@@ -475,6 +511,12 @@ export const audioFilesRelations = relations(audioFiles, ({ one, many }) => ({
     fields: [audioFiles.eventId],
     references: [events.id],
   }),
+  derivedFrom: one(audioFiles, {
+    fields: [audioFiles.derivedFromId],
+    references: [audioFiles.id],
+    relationName: "audio_derivation",
+  }),
+  derivedCopies: many(audioFiles, { relationName: "audio_derivation" }),
   analyticsEvents: many(eventAnalyticsEvents),
 }));
 

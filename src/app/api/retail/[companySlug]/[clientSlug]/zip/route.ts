@@ -5,6 +5,8 @@ import { PassThrough } from "node:stream";
 import { Readable } from "node:stream";
 
 import { bulkZipUsesSyncPath } from "@/lib/bulk-zip-policy";
+import type { DbAudioFileRow } from "@/lib/display-audio-files";
+import { getZipIncludedFilePicks } from "@/lib/display-audio-files";
 import { hashIp, logRetailAnalytics } from "@/lib/retail-analytics";
 import {
   resolveRetailEventForSlugs,
@@ -58,11 +60,15 @@ export async function GET(req: Request, ctx: RouteCtx) {
     return NextResponse.json({ error: "Files no longer available" }, { status: 410 });
   }
 
-  if (!event.audioFiles.length) {
+  const zipInputs = getZipIncludedFilePicks(
+    event.audioFiles as DbAudioFileRow[]
+  );
+
+  if (!zipInputs.length) {
     return NextResponse.json({ error: "No files to zip" }, { status: 400 });
   }
 
-  if (!bulkZipUsesSyncPath(event.audioFiles)) {
+  if (!bulkZipUsesSyncPath(zipInputs)) {
     return NextResponse.json(
       {
         error: "This collection is too large for a direct download.",
@@ -98,7 +104,7 @@ export async function GET(req: Request, ctx: RouteCtx) {
   (async () => {
     try {
       let i = 0;
-      for (const f of event.audioFiles) {
+      for (const f of zipInputs) {
         const out = await s3.send(
           new GetObjectCommand({ Bucket: bucket, Key: f.storageKey })
         );

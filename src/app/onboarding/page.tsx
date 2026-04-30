@@ -10,7 +10,10 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
-import { getMembershipWithCompany } from "@/lib/company";
+import {
+  getMembershipWithCompany,
+  getSoftDeletedMembershipInfo,
+} from "@/lib/company";
 
 import { OnboardingForm } from "./onboarding-form";
 
@@ -24,6 +27,15 @@ export default async function OnboardingPage() {
   const existing = await getMembershipWithCompany(userId);
   if (existing) {
     redirect("/dashboard");
+  }
+
+  const pendingDeletion = await getSoftDeletedMembershipInfo(userId);
+  if (pendingDeletion) {
+    const q =
+      pendingDeletion.hardDeleteAfter != null
+        ? `?purgeDate=${pendingDeletion.hardDeleteAfter.toISOString().slice(0, 10)}`
+        : "";
+    redirect(`/account-scheduled-for-deletion${q}`);
   }
 
   const rootDomain =

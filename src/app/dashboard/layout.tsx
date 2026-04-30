@@ -4,7 +4,10 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
-import { getMembershipWithCompany } from "@/lib/company";
+import {
+  getMembershipWithCompany,
+  getSoftDeletedMembershipInfo,
+} from "@/lib/company";
 
 export default async function DashboardLayout({
   children,
@@ -17,6 +20,14 @@ export default async function DashboardLayout({
 
   const membership = await getMembershipWithCompany(userId);
   if (!membership) {
+    const pending = await getSoftDeletedMembershipInfo(userId);
+    if (pending) {
+      const q =
+        pending.hardDeleteAfter != null
+          ? `?purgeDate=${pending.hardDeleteAfter.toISOString().slice(0, 10)}`
+          : "";
+      redirect(`/account-scheduled-for-deletion${q}`);
+    }
     redirect("/onboarding");
   }
 
@@ -46,6 +57,12 @@ export default async function DashboardLayout({
                 className="hover:text-foreground"
               >
                 Branding
+              </Link>
+              <Link
+                href="/dashboard/settings/account"
+                className="hover:text-foreground"
+              >
+                Account
               </Link>
             </nav>
           </div>

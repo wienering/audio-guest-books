@@ -69,7 +69,13 @@ export default async function EventDetailPage(props: {
   const [countRow] = await db
     .select({ n: count() })
     .from(audioFiles)
-    .where(and(eq(audioFiles.eventId, id), isNull(audioFiles.deletedAt)));
+    .where(
+      and(
+        eq(audioFiles.eventId, id),
+        isNull(audioFiles.deletedAt),
+        eq(audioFiles.isOriginal, true)
+      )
+    );
 
   const activeFileCount = Number(countRow?.n ?? 0);
   const fileLimit = membership.company.plan?.fileLimitPerEvent ?? null;
@@ -112,6 +118,10 @@ export default async function EventDetailPage(props: {
     sizeBytes: f.sizeBytes,
     uploadedAt: f.uploadedAt!.toISOString(),
     displayOrder: f.displayOrder,
+    isOriginal: f.isOriginal,
+    mimeType: f.mimeType,
+    transcodingStatus: f.transcodingStatus,
+    transcodingError: f.transcodingError,
   }));
 
   const zipJobVisibleCutoff = new Date(Date.now() - 10 * 60 * 1000);

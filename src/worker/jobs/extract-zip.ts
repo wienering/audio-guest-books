@@ -18,9 +18,12 @@ import {
 } from "@/db/schema";
 import {
   classifyZipEntry,
+  extensionRequiresUltimateTranscode,
   MAX_UPLOAD_BYTES,
+  normalizeExtension,
   zipIncompatibleFormatsErrorMessage,
 } from "@/lib/audio-upload-policy";
+import { enqueueTranscodeAudioJob } from "@/lib/queue";
 import {
   deleteObject,
   getR2BucketName,
@@ -274,7 +277,8 @@ export async function processExtractZipJob(
       .where(
         and(
           eq(audioFiles.eventId, payload.eventId),
-          isNull(audioFiles.deletedAt)
+          isNull(audioFiles.deletedAt),
+          eq(audioFiles.isOriginal, true)
         )
       );
     const existingFilesCount = Number(existingCountRow?.n ?? 0);
@@ -316,7 +320,8 @@ export async function processExtractZipJob(
       .where(
         and(
           eq(audioFiles.eventId, payload.eventId),
-          isNull(audioFiles.deletedAt)
+          isNull(audioFiles.deletedAt),
+          eq(audioFiles.isOriginal, true)
         )
       );
     let nextDisplayOrder = Number(maxOrderRow?.m ?? -1) + 1;
@@ -359,6 +364,9 @@ export async function processExtractZipJob(
         basename.slice(0, 500)
       );
       const mimeType = mimeForPath(entry.path);
+      const zipExt = normalizeExtension(originalFilename);
+      const enqueueTranscode =
+        allowUltimate && extensionRequiresUltimateTranscode(zipExt);
 
       try {
         const bodyStream = entry.stream();
@@ -373,16 +381,30 @@ export async function processExtractZipJob(
         });
         await upload.done();
 
-        await db.insert(audioFiles).values({
-          eventId: payload.eventId,
-          originalFilename,
-          storageKey,
-          mimeType,
-          sizeBytes: Number(entry.uncompressedSize),
-          displayOrder: nextDisplayOrder,
-          uploadedAt: new Date(),
-        });
+        const inserted = await db
+          .insert(audioFiles)
+          .values({
+            eventId: payload.eventId,
+            originalFilename,
+            storageKey,
+            mimeType,
+            sizeBytes: Number(entry.uncompressedSize),
+            displayOrder: nextDisplayOrder,
+            uploadedAt: new Date(),
+            isOriginal: true,
+            transcodingStatus: enqueueTranscode ? "pending" : "not_needed",
+          })
+          .returning({ id: audioFiles.id });
         nextDisplayOrder += 1;
+
+        const newId = inserted[0]?.id;
+        if (enqueueTranscode && newId) {
+          await enqueueTranscodeAudioJob({
+            audioFileId: newId,
+            eventId: payload.eventId,
+            companyId: payload.companyId,
+          });
+        }
       } catch (e) {
         const msg = e instanceof Error ? e.message : String(e);
         fileErrors.push({

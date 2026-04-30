@@ -1,15 +1,15 @@
 import { auth } from "@clerk/nextjs/server";
-import { and, eq, inArray, isNull } from "drizzle-orm";
+import { and, eq, isNull } from "drizzle-orm";
 import { NextResponse } from "next/server";
 
 import { db } from "@/db/index";
 import { audioFiles } from "@/db/schema";
 import { getMembershipWithCompany } from "@/lib/company";
-import { deleteObject } from "@/lib/r2";
+import { enqueueTranscodeAudioJob } from "@/lib/queue";
 
 type RouteCtx = { params: Promise<{ fileId: string }> };
 
-export async function DELETE(_req: Request, ctx: RouteCtx) {
+export async function POST(_req: Request, ctx: RouteCtx) {
   const { fileId } = await ctx.params;
 
   const session = await auth();
@@ -39,37 +39,30 @@ export async function DELETE(_req: Request, ctx: RouteCtx) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
 
-  if (row.event.deletedAt) {
-    return NextResponse.json({ error: "Event not available" }, { status: 400 });
+  if (row.event.deletedAt || !row.isOriginal) {
+    return NextResponse.json({ error: "Invalid file" }, { status: 400 });
   }
 
-  const descendantRows = row.isOriginal
-    ? await db.query.audioFiles.findMany({
-        where: and(
-          eq(audioFiles.derivedFromId, row.id),
-          isNull(audioFiles.deletedAt)
-        ),
-      })
-    : [];
-
-  const idsToPurge = [row.id, ...descendantRows.map((d) => d.id)];
-
-  for (const r of [row, ...descendantRows]) {
-    try {
-      await deleteObject(r.storageKey);
-    } catch (e) {
-      console.error("R2 delete failed", e);
-      return NextResponse.json(
-        { error: "Could not delete file from storage." },
-        { status: 500 }
-      );
-    }
+  if (row.transcodingStatus !== "failed") {
+    return NextResponse.json(
+      { error: "Retry is only available after a failed transcode." },
+      { status: 400 }
+    );
   }
 
   await db
     .update(audioFiles)
-    .set({ deletedAt: new Date() })
-    .where(inArray(audioFiles.id, idsToPurge));
+    .set({
+      transcodingStatus: "pending",
+      transcodingError: null,
+    })
+    .where(eq(audioFiles.id, row.id));
+
+  await enqueueTranscodeAudioJob({
+    audioFileId: row.id,
+    eventId: row.eventId,
+    companyId: row.event.companyId,
+  });
 
   return NextResponse.json({ ok: true });
 }

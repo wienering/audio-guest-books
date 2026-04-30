@@ -4,8 +4,10 @@ import { and, asc, eq, isNotNull, isNull } from "drizzle-orm";
 
 import { db } from "@/db/index";
 import { audioFiles, companies, events } from "@/db/schema";
-import { presignGetUrl } from "@/lib/r2";
 import { bulkZipUsesSyncPath } from "@/lib/bulk-zip-policy";
+import type { DbAudioFileRow } from "@/lib/display-audio-files";
+import { getRetailPlaybackPicks } from "@/lib/display-audio-files";
+import { presignGetUrl } from "@/lib/r2";
 
 import type { RetailBulkZip } from "@/lib/retail-types";
 
@@ -18,6 +20,8 @@ export type RetailPublicAudioFile = {
   originalFilename: string;
   durationSeconds: number | null;
   playbackUrl: string;
+  /** When MP3 is transcoded from lossless, link retail download to this id */
+  losslessOriginalFileId: string | null;
 };
 
 export type RetailPublicEventPayload = {
@@ -69,35 +73,36 @@ export async function buildRetailPublicPayload(
     retailClientName: string;
     eventDate: Date;
     metadataOnlyAfter: Date | null;
-    audioFiles: Array<{
-      id: string;
-      originalFilename: string;
-      storageKey: string;
-      durationSeconds: number | null;
-      sizeBytes: number;
-    }>;
+    audioFiles: DbAudioFileRow[];
   },
   slugs: { companySlug: string; clientSlug: string }
 ): Promise<RetailPublicEventPayload> {
   const recordingFilesAvailable = event.metadataOnlyAfter == null;
   const apiSeg = `/api/retail/${encodeURIComponent(slugs.companySlug)}/${encodeURIComponent(slugs.clientSlug)}`;
 
+  const picks = getRetailPlaybackPicks(event.audioFiles);
+
   const files: RetailPublicAudioFile[] = [];
   if (recordingFilesAvailable) {
-    for (const f of event.audioFiles) {
+    for (const pick of picks) {
+      const f = pick.playbackRow;
       const playbackUrl = await presignGetUrl({ key: f.storageKey });
       files.push({
         id: f.id,
         originalFilename: f.originalFilename,
         durationSeconds: f.durationSeconds,
         playbackUrl,
+        losslessOriginalFileId: pick.losslessOriginal?.id ?? null,
       });
     }
   }
 
   let bulkZip: RetailPublicEventPayload["bulkZip"] = null;
-  if (recordingFilesAvailable && event.audioFiles.length > 0) {
-    if (bulkZipUsesSyncPath(event.audioFiles)) {
+  const zipMetrics = picks.map((p) => ({
+    sizeBytes: p.playbackRow.sizeBytes,
+  }));
+  if (recordingFilesAvailable && zipMetrics.length > 0) {
+    if (bulkZipUsesSyncPath(zipMetrics)) {
       bulkZip = { mode: "sync", zipUrl: `${apiSeg}/zip` };
     } else {
       bulkZip = {

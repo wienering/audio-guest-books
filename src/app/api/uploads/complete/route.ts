@@ -6,6 +6,7 @@ import { z } from "zod";
 import { db } from "@/db/index";
 import { audioFiles } from "@/db/schema";
 import { getMembershipWithCompany } from "@/lib/company";
+import { enqueueTranscodeAudioJob } from "@/lib/queue";
 import { headObject } from "@/lib/r2";
 
 const bodySchema = z.object({
@@ -84,6 +85,14 @@ export async function POST(req: Request) {
     .update(audioFiles)
     .set({ uploadedAt: new Date() })
     .where(eq(audioFiles.id, row.id));
+
+  if (row.transcodingStatus === "pending" && row.isOriginal) {
+    await enqueueTranscodeAudioJob({
+      audioFileId: row.id,
+      eventId: row.eventId,
+      companyId: row.event.companyId,
+    });
+  }
 
   return NextResponse.json({ ok: true });
 }

@@ -13,6 +13,11 @@ const BASE_EXT = new Set([
 
 const ULTIMATE_EXT = new Set(["wav", "flac", "aiff", "aif"]);
 
+/** Lossless originals that Ultimate transcodes client-side/worker-side to MP3. */
+export function extensionRequiresUltimateTranscode(ext: string | null): boolean {
+  return ext !== null && ULTIMATE_EXT.has(ext);
+}
+
 export function normalizeExtension(filename: string): string | null {
   const m = /\.([^.]+)$/.exec(filename.trim().toLowerCase());
   return m?.[1] ?? null;

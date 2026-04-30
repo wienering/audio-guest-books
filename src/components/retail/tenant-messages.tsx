@@ -17,17 +17,7 @@ export function ReservedSubdomainMessage() {
 }
 
 export function TenantNotFoundMessage() {
-  return (
-    <main className="mx-auto flex min-h-screen max-w-xl flex-col justify-center px-6 py-16">
-      <h1 className="font-semibold text-xl tracking-tight text-neutral-900">
-        Not found
-      </h1>
-      <p className="mt-3 text-neutral-600 leading-relaxed">
-        No workspace is configured for this address yet — double-check the link
-        you received.
-      </p>
-    </main>
-  );
+  return <RetailPageNotAvailableMessage />;
 }
 
 export function RetailPageNotAvailableMessage() {

@@ -10,12 +10,8 @@ import { z } from "zod";
 import type { AppDatabase } from "@/db/index";
 import { db } from "@/db/index";
 import { grantPlanFeaturesFromPlan } from "@/db/grant-features";
-import {
-  companies,
-  companyUsers,
-  plans,
-} from "@/db/schema";
-import { getMembershipWithCompany } from "@/lib/company";
+import { companies, companyUsers, plans } from "@/db/schema";
+import { getMembershipWithCompany, isCompanySlugTaken } from "@/lib/company";
 import { isReservedSubdomain } from "@/lib/reserved-subdomains";
 
 export type OnboardingFormValues = {
@@ -117,13 +113,7 @@ export async function completeOnboarding(
     });
   }
 
-  const [slugTaken] = await db
-    .select({ id: companies.id })
-    .from(companies)
-    .where(eq(companies.slug, parsed.data.companySlug))
-    .limit(1);
-
-  if (slugTaken) {
+  if (await isCompanySlugTaken(parsed.data.companySlug)) {
     return failOnboarding({
       message: `The slug "${parsed.data.companySlug}" is already taken.`,
       values: submittedValues,

@@ -9,6 +9,7 @@ import {
   or,
   ne,
   gte,
+  inArray,
 } from "drizzle-orm";
 import type { Logger } from "pino";
 
@@ -17,7 +18,21 @@ import { FilesDeletedEmail } from "@/emails/files-deleted";
 import { RetentionNotification60dEmail } from "@/emails/retention-notification-60d";
 import { RetentionNotification30dEmail } from "@/emails/retention-notification-30d";
 import { RetentionNotification7dEmail } from "@/emails/retention-notification-7d";
-import { audioFiles, companyUsers, downloadJobs, events } from "@/db/schema";
+import {
+  audioFiles,
+  companies,
+  companyFeatures,
+  companyUsers,
+  deletedCompaniesLog,
+  downloadJobs,
+  emailLog,
+  emailTemplates,
+  eventAnalyticsEvents,
+  events,
+  plans,
+  retailPageSessions,
+  uploadJobs,
+} from "@/db/schema";
 import { getAppBaseUrl } from "@/lib/app-url";
 import { getClerkPrimaryEmail } from "@/lib/clerk-primary-email";
 import { sendEmail } from "@/lib/email";
@@ -59,6 +74,7 @@ export async function runRetentionScheduler(
   await purgeFilesPastRetention(db, today, log);
   await hardDeleteStaleMetadata(db, today, log);
   await cleanupExpiredDownloadJobs(db, log);
+  await hardDeleteSoftDeletedCompaniesReady(db, today, log);
 }
 
 async function notifyRetentionWindow(
@@ -71,23 +87,27 @@ async function notifyRetentionWindow(
   const low = addUtcDays(today, days - 1);
   const high = addUtcDays(today, days);
 
-  const rows = await db.query.events.findMany({
-    where: and(
-      isNull(events.deletedAt),
-      isNull(events.metadataOnlyAfter),
-      gte(events.retentionUntil, low),
-      lte(events.retentionUntil, high),
-      or(
-        isNull(events.lastRetentionNotificationThreshold),
-        ne(events.lastRetentionNotificationThreshold, threshold)
+  const rows = await db
+    .select({ event: events })
+    .from(events)
+    .innerJoin(companies, eq(events.companyId, companies.id))
+    .where(
+      and(
+        isNull(companies.deletedAt),
+        isNull(events.deletedAt),
+        isNull(events.metadataOnlyAfter),
+        gte(events.retentionUntil, low),
+        lte(events.retentionUntil, high),
+        or(
+          isNull(events.lastRetentionNotificationThreshold),
+          ne(events.lastRetentionNotificationThreshold, threshold)
+        )
       )
-    ),
-    with: { company: { with: { plan: true } } },
-  });
+    );
 
   const baseUrl = getAppBaseUrl().replace(/\/$/, "");
 
-  for (const event of rows) {
+  for (const { event } of rows) {
     const ownerEmail = await findCompanyOwnerEmail(db, event.companyId);
     if (!ownerEmail) {
       log.warn({ eventId: event.id }, "retention notify: no owner email");
@@ -165,16 +185,20 @@ async function purgeFilesPastRetention(
   today: Date,
   log: Pick<Logger, "info" | "warn" | "error">
 ): Promise<void> {
-  const due = await db.query.events.findMany({
-    where: and(
-      isNull(events.deletedAt),
-      isNull(events.metadataOnlyAfter),
-      lt(events.retentionUntil, today)
-    ),
-    with: { company: { with: { plan: true } } },
-  });
+  const due = await db
+    .select({ event: events })
+    .from(events)
+    .innerJoin(companies, eq(events.companyId, companies.id))
+    .where(
+      and(
+        isNull(companies.deletedAt),
+        isNull(events.deletedAt),
+        isNull(events.metadataOnlyAfter),
+        lt(events.retentionUntil, today)
+      )
+    );
 
-  for (const event of due) {
+  for (const { event } of due) {
     const files = await db.query.audioFiles.findMany({
       where: and(
         eq(audioFiles.eventId, event.id),
@@ -265,15 +289,20 @@ async function hardDeleteStaleMetadata(
 ): Promise<void> {
   const cutoff = addUtcMonths(today, -12);
 
-  const stale = await db.query.events.findMany({
-    where: and(
-      isNull(events.deletedAt),
-      isNotNull(events.metadataOnlyAfter),
-      lt(events.metadataOnlyAfter, cutoff)
-    ),
-  });
+  const stale = await db
+    .select({ event: events })
+    .from(events)
+    .innerJoin(companies, eq(events.companyId, companies.id))
+    .where(
+      and(
+        isNull(companies.deletedAt),
+        isNull(events.deletedAt),
+        isNotNull(events.metadataOnlyAfter),
+        lt(events.metadataOnlyAfter, cutoff)
+      )
+    );
 
-  for (const event of stale) {
+  for (const { event } of stale) {
     await db
       .update(events)
       .set({ metadataPurgedAt: new Date(), updatedAt: new Date() })
@@ -304,5 +333,154 @@ async function cleanupExpiredDownloadJobs(
       }
     }
     await db.delete(downloadJobs).where(eq(downloadJobs.id, job.id));
+  }
+}
+
+async function hardDeleteSoftDeletedCompaniesReady(
+  db: AppDatabase,
+  today: Date,
+  log: Pick<Logger, "info" | "warn" | "error">
+): Promise<void> {
+  const dueCompanies = await db
+    .select({
+      company: companies,
+      planCode: plans.code,
+    })
+    .from(companies)
+    .innerJoin(plans, eq(companies.planId, plans.id))
+    .where(
+      and(
+        isNotNull(companies.deletedAt),
+        isNotNull(companies.hardDeleteAfter),
+        lte(companies.hardDeleteAfter, today)
+      )
+    );
+
+  for (const { company, planCode } of dueCompanies) {
+    const eventIdRows = await db
+      .select({ id: events.id })
+      .from(events)
+      .where(eq(events.companyId, company.id));
+    const eventIds = eventIdRows.map((r) => r.id);
+    const eventCount = eventIds.length;
+
+    let totalFiles = 0;
+    let totalStorageBytes = 0;
+    const keysToDelete = new Set<string>();
+
+    if (company.logoStorageKey) {
+      keysToDelete.add(company.logoStorageKey);
+    }
+
+    if (eventIds.length > 0) {
+      const afRows = await db
+        .select({
+          storageKey: audioFiles.storageKey,
+          sizeBytes: audioFiles.sizeBytes,
+        })
+        .from(audioFiles)
+        .where(inArray(audioFiles.eventId, eventIds));
+      totalFiles = afRows.length;
+      for (const f of afRows) {
+        totalStorageBytes += f.sizeBytes;
+        keysToDelete.add(f.storageKey);
+      }
+
+      const evCovers = await db
+        .select({ coverImageStorageKey: events.coverImageStorageKey })
+        .from(events)
+        .where(inArray(events.id, eventIds));
+      for (const e of evCovers) {
+        if (e.coverImageStorageKey) keysToDelete.add(e.coverImageStorageKey);
+      }
+
+      const djs = await db
+        .select({ resultStorageKey: downloadJobs.resultStorageKey })
+        .from(downloadJobs)
+        .where(inArray(downloadJobs.eventId, eventIds));
+      for (const j of djs) {
+        if (j.resultStorageKey) keysToDelete.add(j.resultStorageKey);
+      }
+    }
+
+    const uploadRows = await db
+      .select({ storageKey: uploadJobs.storageKey })
+      .from(uploadJobs)
+      .where(eq(uploadJobs.companyId, company.id));
+    for (const u of uploadRows) {
+      keysToDelete.add(u.storageKey);
+    }
+
+    try {
+      await db.transaction(async (tx) => {
+        await tx.insert(deletedCompaniesLog).values({
+          originalCompanyId: company.id,
+          originalSlug: company.slug,
+          originalPlanCode: planCode,
+          totalEventsAtDeletion: eventCount,
+          totalFilesAtDeletion: totalFiles,
+          totalStorageBytesAtDeletion: totalStorageBytes,
+        });
+
+        if (eventIds.length > 0) {
+          await tx
+            .delete(retailPageSessions)
+            .where(inArray(retailPageSessions.eventId, eventIds));
+          await tx
+            .delete(eventAnalyticsEvents)
+            .where(inArray(eventAnalyticsEvents.eventId, eventIds));
+          await tx
+            .delete(audioFiles)
+            .where(inArray(audioFiles.eventId, eventIds));
+          await tx
+            .delete(downloadJobs)
+            .where(inArray(downloadJobs.eventId, eventIds));
+        }
+
+        await tx
+          .delete(uploadJobs)
+          .where(eq(uploadJobs.companyId, company.id));
+        await tx
+          .delete(emailTemplates)
+          .where(eq(emailTemplates.companyId, company.id));
+        await tx.delete(emailLog).where(eq(emailLog.companyId, company.id));
+
+        await tx.delete(events).where(eq(events.companyId, company.id));
+        await tx
+          .delete(companyFeatures)
+          .where(eq(companyFeatures.companyId, company.id));
+        await tx
+          .delete(companyUsers)
+          .where(eq(companyUsers.companyId, company.id));
+        await tx.delete(companies).where(eq(companies.id, company.id));
+      });
+    } catch (err) {
+      log.error(
+        { err, companyId: company.id, slug: company.slug },
+        "account hard-delete: transaction failed; will retry on next run"
+      );
+      continue;
+    }
+
+    for (const key of keysToDelete) {
+      try {
+        await deleteObject(key);
+      } catch (err) {
+        log.warn(
+          { err, key, companyId: company.id },
+          "account hard-delete: r2 delete failed (orphan object may remain)"
+        );
+      }
+    }
+
+    log.info(
+      {
+        originalCompanyId: company.id,
+        originalSlug: company.slug,
+        totalEventsAtDeletion: eventCount,
+        totalFilesAtDeletion: totalFiles,
+      },
+      "account hard-delete: company purged"
+    );
   }
 }

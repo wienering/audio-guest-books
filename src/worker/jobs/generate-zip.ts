@@ -11,6 +11,7 @@ import {
   events,
   eventAnalyticsEvents,
 } from "@/db/schema";
+import { getZipIncludedFilePicks } from "@/lib/display-audio-files";
 import { getR2BucketName, getR2Client, headObject } from "@/lib/r2";
 
 import { getWorkerDb } from "../db";
@@ -92,10 +93,12 @@ async function runGenerateZip(
     orderBy: [asc(audioFiles.displayOrder), asc(audioFiles.uploadedAt)],
   });
 
-  if (files.length === 0) {
+  const zipInputs = getZipIncludedFilePicks(files);
+
+  if (zipInputs.length === 0) {
     log.warn(
       { downloadJobId: payload.downloadJobId, eventId: payload.eventId },
-      "generate-zip: no audio files"
+      "generate-zip: no playable files"
     );
     await failJob(payload.downloadJobId, "No audio files to include", log);
     return;
@@ -127,7 +130,7 @@ async function runGenerateZip(
 
   const filling = (async () => {
     let i = 0;
-    for (const f of files) {
+    for (const f of zipInputs) {
       const out = await s3.send(
         new GetObjectCommand({ Bucket: bucket, Key: f.storageKey })
       );

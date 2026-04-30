@@ -276,7 +276,7 @@ export function RetailGuestbookClient({
                         </span>
                       ) : null}
                     </button>
-                    <div className="flex shrink-0 justify-end sm:pl-4">
+                    <div className="flex shrink-0 flex-col items-end gap-2 sm:pl-4">
                       <button
                         type="button"
                         onClick={(e) => {
@@ -292,6 +292,18 @@ export function RetailGuestbookClient({
                         <Download className="size-4" aria-hidden />
                         Download
                       </button>
+                      {f.losslessOriginalFileId ? (
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            void onDownloadOne(f.losslessOriginalFileId!);
+                          }}
+                          className="text-[var(--retail-muted)] text-sm underline underline-offset-2 hover:text-[var(--retail-text)]"
+                        >
+                          Download original
+                        </button>
+                      ) : null}
                     </div>
                   </div>
                 </li>
