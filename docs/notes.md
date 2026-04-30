@@ -46,3 +46,8 @@ Existing databases seeded before Stage 5 may still grant `remove_powered_by_foot
 - [ ] Final Pro tier pricing (launching free, will set price later)
 - [ ] Final retention notification copy and timing details
 - [ ] Custom email template variables list (Stage 7)
+## Known small issues
+- [ ] Threshold for sync vs async bulk download (50 MB / 20 files) is hardcoded — consider making configurable per-plan or via super admin
+- [ ] No "kill all retail page sessions" button when password is changed (sessions stay valid for 7 days)
+- [ ] Drizzle relational queries with `with: { event: ... }` were causing column errors — pattern is now avoided in favor of explicit joins, but worth a code review pass before launch
+- [ ] Worker logs are functional but not centralized — production deployment should send to a real logging service
