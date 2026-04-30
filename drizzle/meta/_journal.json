@@ -29,6 +29,13 @@
       "when": 1777510370868,
       "tag": "0003_upload_jobs",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1777600000000,
+      "tag": "0004_stage5_branding_password",
+      "breakpoints": true
     }
   ]
 }

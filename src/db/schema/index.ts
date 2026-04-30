@@ -107,6 +107,13 @@ export const companies = pgTable(
     cancelAtPeriodEnd: timestamp("cancel_at_period_end", { withTimezone: true }),
     currentPeriodEnd: timestamp("current_period_end", { withTimezone: true }),
     isFoundingMember: boolean("is_founding_member").notNull().default(false),
+    logoStorageKey: text("logo_storage_key"),
+    themePrimary: text("theme_primary"),
+    themeSecondary: text("theme_secondary"),
+    themeAccent: text("theme_accent"),
+    themeBackground: text("theme_background"),
+    /** Optional explicit text color; when null, derived from background for contrast */
+    themeText: text("theme_text"),
     deletedAt: timestamp("deleted_at", { withTimezone: true }),
     createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
@@ -161,7 +168,8 @@ export const events = pgTable(
     retailClientEmail: text("retail_client_email").notNull(),
     retailClientSlug: text("retail_client_slug").notNull(),
     passwordHash: text("password_hash"),
-    coverImageKey: text("cover_image_key"),
+    passwordSetAt: timestamp("password_set_at", { withTimezone: true }),
+    coverImageStorageKey: text("cover_image_storage_key"),
     /** Kept until: row creation instant + plan retention months (not `eventDate`). */
     retentionUntil: date("retention_until", { mode: "date" }).notNull(),
     createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
@@ -173,6 +181,23 @@ export const events = pgTable(
       .on(t.companyId, t.retailClientSlug)
       .where(sql`${t.deletedAt} is null`),
   ]
+);
+
+export const retailPageSessions = pgTable(
+  "retail_page_sessions",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    eventId: uuid("event_id")
+      .references(() => events.id, { onDelete: "cascade" })
+      .notNull(),
+    sessionToken: text("session_token").notNull(),
+    ipHash: text("ip_hash").notNull(),
+    unlockedAt: timestamp("unlocked_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+    expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+  },
+  (t) => [uniqueIndex("retail_page_sessions_token_uidx").on(t.sessionToken)]
 );
 
 export const audioFiles = pgTable(
@@ -290,6 +315,16 @@ export const companyFeaturesRelations = relations(
   })
 );
 
+export const retailPageSessionsRelations = relations(
+  retailPageSessions,
+  ({ one }) => ({
+    event: one(events, {
+      fields: [retailPageSessions.eventId],
+      references: [events.id],
+    }),
+  })
+);
+
 export const eventsRelations = relations(events, ({ one, many }) => ({
   company: one(companies, {
     fields: [events.companyId],
@@ -298,6 +333,7 @@ export const eventsRelations = relations(events, ({ one, many }) => ({
   audioFiles: many(audioFiles),
   uploadJobs: many(uploadJobs),
   analyticsEvents: many(eventAnalyticsEvents),
+  retailPageSessions: many(retailPageSessions),
 }));
 
 export const audioFilesRelations = relations(audioFiles, ({ one, many }) => ({

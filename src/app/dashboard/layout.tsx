@@ -32,7 +32,15 @@ export default async function DashboardLayout({
               Audio Guest Books
             </Link>
             <nav className="hidden gap-4 text-muted-foreground text-sm md:flex">
-              <span className="text-foreground">Events</span>
+              <Link href="/dashboard" className="hover:text-foreground">
+                Events
+              </Link>
+              <Link
+                href="/dashboard/settings/branding"
+                className="hover:text-foreground"
+              >
+                Branding
+              </Link>
             </nav>
           </div>
           <div className="flex items-center gap-3">

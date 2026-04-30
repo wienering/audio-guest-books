@@ -42,7 +42,8 @@ export function RetailGuestbookClient({
   const onFirstPlayLogged = useCallback(
     (fileId: string) => {
       void fetch(
-        `${apiBase}/playback-url?file_id=${encodeURIComponent(fileId)}`
+        `${apiBase}/playback-url?file_id=${encodeURIComponent(fileId)}`,
+        { credentials: "same-origin" }
       ).catch(() => {});
     },
     [apiBase]
@@ -51,7 +52,8 @@ export function RetailGuestbookClient({
   const onDownloadOne = useCallback(
     async (fileId: string) => {
       const r = await fetch(
-        `${apiBase}/download-url?file_id=${encodeURIComponent(fileId)}`
+        `${apiBase}/download-url?file_id=${encodeURIComponent(fileId)}`,
+        { credentials: "same-origin" }
       );
       if (!r.ok) return;
       const j = (await r.json()) as { url?: string };
@@ -85,44 +87,61 @@ export function RetailGuestbookClient({
 
       <section aria-label="Recordings" className="space-y-4">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <h2 className="text-xl font-semibold text-neutral-900 sm:text-2xl">
+          <h2 className="text-xl font-semibold text-[var(--retail-text)] sm:text-2xl">
             Recordings
           </h2>
           <a
             href={zipHref}
             className={cn(
               buttonVariants({ size: "lg" }),
-              "h-11 min-h-11 justify-center bg-teal-600 px-5 text-base text-white hover:bg-teal-700 sm:text-lg"
+              "h-11 min-h-11 justify-center px-5 text-base text-white hover:brightness-110 sm:text-lg"
             )}
+            style={{ background: "var(--retail-accent)" }}
           >
             Download all (ZIP)
           </a>
         </div>
 
         {listFiles.length === 0 ? (
-          <p className="rounded-lg border border-dashed border-neutral-200 bg-neutral-50 px-4 py-10 text-center text-lg text-neutral-600">
+          <p
+            className="rounded-lg border border-dashed px-4 py-10 text-center text-lg text-[var(--retail-muted)]"
+            style={{
+              borderColor: "var(--retail-border)",
+              background:
+                "color-mix(in srgb, var(--retail-bg) 97%, var(--retail-muted) 3%)",
+            }}
+          >
             No messages yet — check back soon.
           </p>
         ) : (
-          <ul className="divide-y divide-neutral-200 rounded-xl border border-neutral-200 bg-white">
+          <ul
+            className="overflow-hidden rounded-xl border bg-[var(--retail-bg)]"
+            style={{ borderColor: "var(--retail-border)" }}
+          >
             {listFiles.map((f) => {
               const active = f.id === activeFileId;
               return (
-                <li key={f.id}>
+                <li
+                  key={f.id}
+                  className="border-t border-solid first:border-t-0"
+                  style={{ borderTopColor: "var(--retail-border)" }}
+                >
                   <div
-                    className={cn(
-                      "flex flex-col gap-3 px-3 py-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4 sm:px-4 sm:py-3",
-                      active && "bg-teal-50/80"
-                    )}
+                    className="flex flex-col gap-3 px-3 py-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4 sm:px-4 sm:py-3"
+                    style={
+                      active
+                        ? { background: "var(--retail-row-active)" }
+                        : undefined
+                    }
                   >
                     <button
                       type="button"
                       onClick={() => onRowActivate(f.id)}
-                      className="min-h-11 flex-1 rounded-lg py-2 text-left text-base text-neutral-900 transition-colors hover:bg-neutral-100/80 sm:min-h-0 sm:py-2.5 sm:text-lg"
+                      className="min-h-11 flex-1 rounded-lg py-2 text-left text-base text-[var(--retail-text)] transition-colors hover:opacity-90 sm:min-h-0 sm:py-2.5 sm:text-lg"
                     >
                       <span className="font-medium">{f.originalFilename}</span>
                       {f.durationSeconds != null ? (
-                        <span className="mt-1 block text-sm text-neutral-500 sm:text-base">
+                        <span className="mt-1 block text-sm text-[var(--retail-muted)] sm:text-base">
                           {f.durationSeconds}s
                         </span>
                       ) : null}
@@ -136,8 +155,9 @@ export function RetailGuestbookClient({
                         }}
                         className={cn(
                           buttonVariants({ variant: "outline", size: "lg" }),
-                          "h-11 min-h-11 gap-2 border-neutral-300 text-base sm:text-lg"
+                          "h-11 min-h-11 gap-2 border text-base sm:text-lg"
                         )}
+                        style={{ borderColor: "var(--retail-border)" }}
                       >
                         <Download className="size-4" aria-hidden />
                         Download

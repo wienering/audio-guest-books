@@ -25,6 +25,8 @@ import {
 } from "@/lib/audio-upload-policy";
 import { cn, formatBytes } from "@/lib/utils";
 
+import { EventRetailAppearanceSection } from "./event-retail-appearance";
+
 const ZIP_JOB_RECENT_MS = 10 * 60 * 1000;
 const DISMISSED_UPLOAD_JOB_IDS_KEY = "audio-guest-book:dismissed-upload-job-ids";
 
@@ -107,6 +109,11 @@ export type EventDetailClientProps = {
   allowUltimateFormats: boolean;
   fileLimit: number | null;
   activeFileCount: number;
+  retailCustomBranding: boolean;
+  retailPasswordProtection: boolean;
+  retailCoverPreviewUrl: string | null;
+  retailPasswordActive: boolean;
+  retailPasswordSetAtLabel: string | null;
 };
 
 function putToPresignedUrl(
@@ -683,6 +690,15 @@ export function EventDetailClient(props: EventDetailClientProps) {
           Retention until {props.retentionUntilLabel} (per plan).
         </p>
       </header>
+
+      <EventRetailAppearanceSection
+        eventId={props.eventId}
+        customBranding={props.retailCustomBranding}
+        passwordProtection={props.retailPasswordProtection}
+        coverPreviewUrl={props.retailCoverPreviewUrl}
+        passwordActive={props.retailPasswordActive}
+        passwordSetAtLabel={props.retailPasswordSetAtLabel}
+      />
 
       <section className="space-y-3">
         <h2 className="font-medium">Upload audio</h2>

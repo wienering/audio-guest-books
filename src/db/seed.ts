@@ -59,7 +59,6 @@ const PRO_FEATURES = new Set([
   "password_protection",
   "retail_analytics",
   "audit_log",
-  "remove_powered_by_footer",
 ]);
 
 const ULTIMATE_FEATURES = new Set(FEATURE_DEFS.map((f) => f.key));

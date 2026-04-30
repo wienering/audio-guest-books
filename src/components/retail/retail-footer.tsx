@@ -1,13 +1,22 @@
 import Link from "next/link";
 
-export function RetailFooter() {
+export function RetailFooter({ visible = true }: { visible?: boolean }) {
+  if (!visible) return null;
   return (
-    <footer className="mt-auto border-t border-neutral-200 bg-white px-4 py-8 sm:px-8">
-      <p className="mx-auto max-w-3xl text-center text-base text-neutral-600 sm:text-lg">
+    <footer
+      className="mt-auto border-t px-4 py-8 sm:px-8"
+      style={{
+        borderColor: "var(--retail-border)",
+        background: "var(--retail-bg)",
+        color: "var(--retail-muted)",
+      }}
+    >
+      <p className="mx-auto max-w-3xl text-center text-base sm:text-lg">
         Powered by{" "}
         <Link
           href="https://audioguestbooks.ca"
-          className="font-medium text-teal-700 underline decoration-teal-700/40 underline-offset-2 hover:text-teal-800"
+          className="font-medium underline decoration-current/40 underline-offset-2 hover:opacity-90"
+          style={{ color: "var(--retail-primary)" }}
           target="_blank"
           rel="noopener noreferrer"
         >

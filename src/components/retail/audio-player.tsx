@@ -137,16 +137,23 @@ export const RetailAudioPlayer = forwardRef<
   const maxDur = Number.isFinite(duration) && duration > 0 ? duration : 0;
 
   return (
-    <div className="rounded-xl border border-neutral-200 bg-neutral-50/90 p-4 sm:p-6">
+    <div
+      className="rounded-xl border p-4 sm:p-6"
+      style={{
+        borderColor: "var(--retail-border)",
+        background: "var(--retail-player-bg)",
+      }}
+    >
       <audio ref={audioRef} preload="metadata" className="hidden" />
-      <p className="text-lg font-semibold tracking-tight text-neutral-900 sm:text-xl">
+      <p className="text-lg font-semibold tracking-tight text-[var(--retail-text)] sm:text-xl">
         {activeFile?.originalFilename ?? "No recording selected"}
       </p>
       <div className="mt-6 flex flex-wrap items-center justify-center gap-3 sm:justify-start">
         <Button
           type="button"
           variant="outline"
-          className="h-11 w-11 min-h-11 min-w-11 shrink-0 rounded-full border-neutral-200 p-0"
+          className="h-11 w-11 min-h-11 min-w-11 shrink-0 rounded-full p-0"
+          style={{ borderColor: "var(--retail-border)" }}
           onClick={() => skip(-10)}
           aria-label="Skip back 10 seconds"
         >
@@ -154,7 +161,8 @@ export const RetailAudioPlayer = forwardRef<
         </Button>
         <Button
           type="button"
-          className="h-12 w-12 min-h-12 min-w-12 shrink-0 rounded-full bg-teal-600 p-0 text-white hover:bg-teal-700"
+          className="h-12 w-12 min-h-12 min-w-12 shrink-0 rounded-full p-0 text-white hover:brightness-110"
+          style={{ background: "var(--retail-accent)" }}
           onClick={() => {
             const el = audioRef.current;
             if (!el) return;
@@ -172,7 +180,8 @@ export const RetailAudioPlayer = forwardRef<
         <Button
           type="button"
           variant="outline"
-          className="h-11 w-11 min-h-11 min-w-11 shrink-0 rounded-full border-neutral-200 p-0"
+          className="h-11 w-11 min-h-11 min-w-11 shrink-0 rounded-full p-0"
+          style={{ borderColor: "var(--retail-border)" }}
           onClick={() => skip(10)}
           aria-label="Skip forward 10 seconds"
         >
@@ -189,11 +198,15 @@ export const RetailAudioPlayer = forwardRef<
           onChange={(e) => onSeek(Number(e.target.value))}
           disabled={!activeFileId || !maxDur}
           className={cn(
-            "h-11 w-full cursor-pointer accent-teal-600 disabled:cursor-not-allowed disabled:opacity-40"
+            "h-11 w-full cursor-pointer disabled:cursor-not-allowed disabled:opacity-40"
           )}
+          style={{ accentColor: "var(--retail-accent)" }}
           aria-label="Seek playback"
         />
-        <div className="flex justify-between text-base text-neutral-600 tabular-nums sm:text-lg">
+        <div
+          className="flex justify-between text-base tabular-nums sm:text-lg"
+          style={{ color: "var(--retail-muted)" }}
+        >
           <span>{formatClock(currentTime)}</span>
           <span>{formatClock(maxDur)}</span>
         </div>

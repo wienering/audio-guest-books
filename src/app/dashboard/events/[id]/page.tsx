@@ -6,6 +6,7 @@ import { db } from "@/db/index";
 import { audioFiles, events, uploadJobs } from "@/db/schema";
 import { getMembershipWithCompany } from "@/lib/company";
 import { companyHasFeatureKey } from "@/lib/company-features";
+import { presignGetUrl } from "@/lib/r2";
 
 import {
   EventDetailClient,
@@ -75,6 +76,33 @@ export default async function EventDetailPage(props: {
     "audio_transcoding"
   );
 
+  const [customBranding, passwordProtection] = await Promise.all([
+    companyHasFeatureKey(membership.company.id, "custom_branding"),
+    companyHasFeatureKey(membership.company.id, "password_protection"),
+  ]);
+
+  let retailCoverPreviewUrl: string | null = null;
+  if (eventRow.coverImageStorageKey) {
+    try {
+      retailCoverPreviewUrl = await presignGetUrl({
+        key: eventRow.coverImageStorageKey,
+        expiresInSeconds: 3600,
+      });
+    } catch {
+      retailCoverPreviewUrl = null;
+    }
+  }
+
+  const retailPasswordActive = !!eventRow.passwordHash?.trim();
+  const retailPasswordSetAtLabel =
+    retailPasswordActive && eventRow.passwordSetAt
+      ? eventRow.passwordSetAt.toLocaleDateString(undefined, {
+          year: "numeric",
+          month: "long",
+          day: "numeric",
+        })
+      : null;
+
   const clientFiles: EventDetailClientFile[] = files.map((f) => ({
     id: f.id,
     originalFilename: f.originalFilename,
@@ -143,6 +171,11 @@ export default async function EventDetailPage(props: {
       allowUltimateFormats={allowUltimateFormats}
       fileLimit={fileLimit}
       activeFileCount={activeFileCount}
+      retailCustomBranding={customBranding}
+      retailPasswordProtection={passwordProtection}
+      retailCoverPreviewUrl={retailCoverPreviewUrl}
+      retailPasswordActive={retailPasswordActive}
+      retailPasswordSetAtLabel={retailPasswordSetAtLabel}
     />
   );
 }

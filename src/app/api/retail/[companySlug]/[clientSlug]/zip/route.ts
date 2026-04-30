@@ -15,6 +15,7 @@ import {
   getClientIpFromRequest,
 } from "@/lib/retail-request-meta";
 import { getR2BucketName, getR2Client } from "@/lib/r2";
+import { hasValidRetailUnlockSession } from "@/lib/retail-session";
 
 type RouteCtx = {
   params: Promise<{ companySlug: string; clientSlug: string }>;
@@ -40,6 +41,14 @@ export async function GET(req: Request, ctx: RouteCtx) {
   );
   if ("error" in resolved) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
+  }
+
+  const sessionOk = await hasValidRetailUnlockSession(
+    resolved.event.id,
+    resolved.event.passwordHash
+  );
+  if (!sessionOk) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   const { event } = resolved;

@@ -215,7 +215,7 @@ export async function createEvent(
       retailClientSlug: parsed.data.retailClientSlug,
       retentionUntil,
       passwordHash: null,
-      coverImageKey: null,
+      coverImageStorageKey: null,
     })
     .returning({ id: events.id });
 

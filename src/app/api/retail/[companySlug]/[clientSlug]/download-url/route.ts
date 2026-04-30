@@ -9,6 +9,7 @@ import {
   analyticsContextFromRequest,
   getClientIpFromRequest,
 } from "@/lib/retail-request-meta";
+import { hasValidRetailUnlockSession } from "@/lib/retail-session";
 
 function contentDispositionAttachment(filename: string): string {
   const encoded = encodeURIComponent(filename);
@@ -45,6 +46,14 @@ export async function GET(req: Request, ctx: RouteCtx) {
   );
   if ("error" in resolved) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
+  }
+
+  const sessionOk = await hasValidRetailUnlockSession(
+    resolved.event.id,
+    resolved.event.passwordHash
+  );
+  if (!sessionOk) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   const row = await getUploadedAudioFileForEvent(resolved.event.id, fileId);

@@ -1,14 +1,18 @@
+import type { CSSProperties } from "react";
 import { headers } from "next/headers";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
 import { RetailFooter } from "@/components/retail/retail-footer";
 import { RetailGuestbookClient } from "@/components/retail/retail-guestbook-client";
+import { RetailMaybeImage } from "@/components/retail/retail-maybe-image";
+import { RetailPasswordGate } from "@/components/retail/retail-password-gate";
 import {
   RetailPageNotAvailableMessage,
   ReservedSubdomainMessage,
   TenantNotFoundMessage,
 } from "@/components/retail/tenant-messages";
+import { companyHasFeatureKey } from "@/lib/company-features";
 import { hashIp, logRetailAnalytics } from "@/lib/retail-analytics";
 import {
   buildRetailPublicPayload,
@@ -16,6 +20,9 @@ import {
   resolveRetailEventForSlugs,
 } from "@/lib/retail-public";
 import { analyticsContextFromHeaders } from "@/lib/retail-request-meta";
+import { presignGetUrl } from "@/lib/r2";
+import { buildRetailThemeCssVars } from "@/lib/retail-theme-vars";
+import { hasValidRetailUnlockSession } from "@/lib/retail-session";
 
 type Props = { params: Promise<{ clientSlug: string }> };
 
@@ -53,8 +60,8 @@ export default async function RetailClientPage({ params }: Props) {
   }
 
   const companySlug = h.get("x-company-slug");
-  const companyId = h.get("x-company-id");
-  if (tenantStatus !== "ok" || !companySlug || !companyId) {
+  const headerCompanyId = h.get("x-company-id");
+  if (tenantStatus !== "ok" || !companySlug || !headerCompanyId) {
     notFound();
   }
 
@@ -66,7 +73,22 @@ export default async function RetailClientPage({ params }: Props) {
     return <RetailPageNotAvailableMessage />;
   }
 
-  const { event } = resolved;
+  const { company, event } = resolved;
+
+  const unlocked = await hasValidRetailUnlockSession(
+    event.id,
+    event.passwordHash
+  );
+  if (!unlocked) {
+    return (
+      <RetailPasswordGate
+        companySlug={companySlug}
+        clientSlug={clientSlug}
+        eventName={event.name}
+      />
+    );
+  }
+
   const ac = analyticsContextFromHeaders(h);
   try {
     await logRetailAnalytics({
@@ -80,23 +102,97 @@ export default async function RetailClientPage({ params }: Props) {
     console.error("retail page_view log", e);
   }
 
+  const [customBranding, removePoweredByFooter] = await Promise.all([
+    companyHasFeatureKey(company.id, "custom_branding"),
+    companyHasFeatureKey(company.id, "remove_powered_by_footer"),
+  ]);
+
+  const useCustomTheme =
+    customBranding &&
+    !!(
+      company.themePrimary ||
+      company.themeSecondary ||
+      company.themeAccent ||
+      company.themeBackground
+    );
+
+  const themeStyle = buildRetailThemeCssVars({
+    useCustomTheme,
+    themePrimary: company.themePrimary,
+    themeSecondary: company.themeSecondary,
+    themeAccent: company.themeAccent,
+    themeBackground: company.themeBackground,
+    themeText: company.themeText,
+  }) as CSSProperties;
+
+  let logoUrl: string | null = null;
+  if (customBranding && company.logoStorageKey) {
+    try {
+      logoUrl = await presignGetUrl({ key: company.logoStorageKey });
+    } catch {
+      logoUrl = null;
+    }
+  }
+
+  let coverUrl: string | null = null;
+  if (customBranding && event.coverImageStorageKey) {
+    try {
+      coverUrl = await presignGetUrl({ key: event.coverImageStorageKey });
+    } catch {
+      coverUrl = null;
+    }
+  }
+
   const payload = await buildRetailPublicPayload(event);
   const eventDateLabel = formatRetailEventDate(payload.eventDateIso);
 
   return (
-    <div className="flex min-h-screen flex-col bg-white text-neutral-900">
-      <header className="border-b border-neutral-200 bg-white px-4 py-10 sm:px-8">
-        <div className="mx-auto max-w-3xl space-y-2">
-          <p className="text-sm font-medium uppercase tracking-wide text-teal-700">
-            Audio guest book
-          </p>
-          <h1 className="text-3xl font-semibold tracking-tight text-neutral-950 sm:text-4xl">
-            {payload.eventName}
-          </h1>
-          <p className="text-xl text-neutral-800 sm:text-2xl">
-            {payload.retailClientName}
-          </p>
-          <p className="text-lg text-neutral-600 sm:text-xl">{eventDateLabel}</p>
+    <div
+      className="flex min-h-screen flex-col bg-[var(--retail-bg)] text-[var(--retail-text)]"
+      style={themeStyle}
+    >
+      <header
+        className="border-b bg-[var(--retail-bg)] px-4 py-10 sm:px-8"
+        style={{ borderColor: "var(--retail-border)" }}
+      >
+        <div className="mx-auto max-w-3xl space-y-4">
+          {logoUrl ? (
+            <RetailMaybeImage
+              src={logoUrl}
+              alt="Host logo"
+              className="max-h-16 w-auto max-w-full object-contain object-left"
+            />
+          ) : null}
+          {coverUrl ? (
+            <RetailMaybeImage
+              src={coverUrl}
+              alt="Event cover"
+              className="max-h-48 w-full rounded-lg object-cover"
+            />
+          ) : null}
+          <div className="space-y-2">
+            <p
+              className="text-sm font-medium uppercase tracking-wide"
+              style={{ color: "var(--retail-primary)" }}
+            >
+              Audio guest book
+            </p>
+            <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">
+              {payload.eventName}
+            </h1>
+            <p
+              className="text-xl sm:text-2xl"
+              style={{ color: "color-mix(in srgb, var(--retail-text) 92%, var(--retail-muted) 8%)" }}
+            >
+              {payload.retailClientName}
+            </p>
+            <p
+              className="text-lg sm:text-xl"
+              style={{ color: "var(--retail-muted)" }}
+            >
+              {eventDateLabel}
+            </p>
+          </div>
         </div>
       </header>
 
@@ -108,7 +204,7 @@ export default async function RetailClientPage({ params }: Props) {
         />
       </main>
 
-      <RetailFooter />
+      <RetailFooter visible={!removePoweredByFooter} />
     </div>
   );
 }

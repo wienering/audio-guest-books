@@ -14,6 +14,12 @@
 - [ ] WAV/FLAC transcoding for Ultimate tier (Stage 12)
 - [ ] Custom domains for Ultimate tier (yourcompany.com instead of subdomain)
 
+## Stage 5 — Password sessions
+
+Retail unlock cookies (`rgb_retail_<eventId>`) stay valid until they expire (7 days). Changing the event password does **not** revoke existing sessions; there is no “sign everyone out” control yet — add later if hosts need forced resets.
+
+Existing databases seeded before Stage 5 may still grant `remove_powered_by_footer` on **Pro** via `plan_features`; re-run seed after adjusting `seed.ts`, or delete that row from `plan_features` for the Pro plan so only Ultimate keeps the footer-removal feature.
+
 ## Decisions deferred
 - [ ] Final Pro tier pricing (launching free, will set price later)
 - [ ] Final retention notification copy and timing details
