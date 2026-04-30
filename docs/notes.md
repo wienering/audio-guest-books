@@ -77,3 +77,13 @@ Disable Clerk's built-in account deletion in UserButton config (force users thro
 Fix "Return to sign in" link on deletion page to actually call Clerk signOut + redirect
 Add /sign-out route or Clerk-managed sign-out URL for emergency exits
 Audit middleware: deleted users should be hard-redirected to deletion-status page on EVERY navigation, with a single "Sign out" button there that actually works
+## Pre-launch hardening (account deletion flow)
+- [ ] Disable Clerk's built-in UserButton "Delete account" option to force users through /dashboard/settings/account
+- [ ] Fix "Return to sign in" link on /account-scheduled-for-deletion page (currently doesn't actually sign user out)
+- [ ] Add /sign-out route or use Clerk-managed sign-out URL for emergency exits
+- [ ] Audit middleware: deleted users should always redirect to deletion-status page on every protected route, with working sign-out
+
+## Pre-launch hardening (transcoding)
+- [ ] FFMPEG_PATH must be set in production environment (Railway deployment will need FFmpeg in container)
+- [ ] Document FFmpeg requirement in deployment runbook
+- [ ] Consider pre-built FFmpeg binary alternatives (ffmpeg-static npm package) to avoid system dependency
