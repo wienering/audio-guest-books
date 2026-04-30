@@ -15,6 +15,13 @@
       "when": 1777503465818,
       "tag": "0001_misty_blockbuster",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1777507736459,
+      "tag": "0002_event_analytics_events",
+      "breakpoints": true
     }
   ]
 }

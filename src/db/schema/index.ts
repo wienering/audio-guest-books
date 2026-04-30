@@ -31,6 +31,11 @@ export const eventTypeEnum = pgEnum("event_type", [
   "other",
 ]);
 
+export const retailAnalyticsEventTypeEnum = pgEnum(
+  "retail_analytics_event_type",
+  ["page_view", "file_play", "file_download", "zip_download"]
+);
+
 export const plans = pgTable(
   "plans",
   {
@@ -175,6 +180,23 @@ export const audioFiles = pgTable(
   (t) => [uniqueIndex("audio_files_storage_key_uidx").on(t.storageKey)]
 );
 
+export const eventAnalyticsEvents = pgTable("event_analytics_events", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  eventId: uuid("event_id")
+    .references(() => events.id, { onDelete: "cascade" })
+    .notNull(),
+  audioFileId: uuid("audio_file_id").references(() => audioFiles.id, {
+    onDelete: "set null",
+  }),
+  eventType: retailAnalyticsEventTypeEnum("event_type").notNull(),
+  ipHash: text("ip_hash"),
+  userAgent: text("user_agent"),
+  referrer: text("referrer"),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+});
+
 export const plansRelations = relations(plans, ({ many }) => ({
   companies: many(companies),
   planFeatures: many(planFeatures),
@@ -233,11 +255,27 @@ export const eventsRelations = relations(events, ({ one, many }) => ({
     references: [companies.id],
   }),
   audioFiles: many(audioFiles),
+  analyticsEvents: many(eventAnalyticsEvents),
 }));
 
-export const audioFilesRelations = relations(audioFiles, ({ one }) => ({
+export const audioFilesRelations = relations(audioFiles, ({ one, many }) => ({
   event: one(events, {
     fields: [audioFiles.eventId],
     references: [events.id],
   }),
+  analyticsEvents: many(eventAnalyticsEvents),
 }));
+
+export const eventAnalyticsEventsRelations = relations(
+  eventAnalyticsEvents,
+  ({ one }) => ({
+    event: one(events, {
+      fields: [eventAnalyticsEvents.eventId],
+      references: [events.id],
+    }),
+    audioFile: one(audioFiles, {
+      fields: [eventAnalyticsEvents.audioFileId],
+      references: [audioFiles.id],
+    }),
+  })
+);

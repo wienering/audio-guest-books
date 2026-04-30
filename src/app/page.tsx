@@ -2,65 +2,22 @@ import Link from "next/link";
 import { headers } from "next/headers";
 
 import { buttonVariants } from "@/components/ui/button";
+import {
+  TenantRootPlaceholder,
+  ReservedSubdomainMessage,
+  TenantNotFoundMessage,
+} from "@/components/retail/tenant-messages";
 import { resolveAppBaseUrl } from "@/lib/app-url";
-import { cn } from "@/lib/utils";
-
-function TenantPlaceholder({
-  companySlug,
-  appUrl,
-}: {
-  companySlug: string;
-  appUrl: string;
-}) {
-  return (
-    <main className="mx-auto flex min-h-screen max-w-2xl flex-col justify-center px-6 py-16">
-      <h1 className="font-semibold text-2xl tracking-tight">{companySlug}</h1>
-      <p className="mt-4 text-muted-foreground leading-relaxed">
-        Retail guest galleries will render here starting in Stage 3 — play,
-        download, branding, and password protection come next.
-      </p>
-      <Link
-        href={`${appUrl}/dashboard`}
-        className={cn(buttonVariants({ variant: "outline" }), "mt-8 w-fit")}
-      >
-        Manage in dashboard →
-      </Link>
-    </main>
-  );
-}
-
-function ReservedSubdomain() {
-  return (
-    <main className="mx-auto flex min-h-screen max-w-xl flex-col justify-center px-6 py-16">
-      <h1 className="font-semibold text-xl tracking-tight">Unavailable</h1>
-      <p className="mt-3 text-muted-foreground leading-relaxed">
-        This subdomain is reserved and cannot host a company gallery.
-      </p>
-    </main>
-  );
-}
-
-function TenantNotFound() {
-  return (
-    <main className="mx-auto flex min-h-screen max-w-xl flex-col justify-center px-6 py-16">
-      <h1 className="font-semibold text-xl tracking-tight">Not found</h1>
-      <p className="mt-3 text-muted-foreground leading-relaxed">
-        No workspace is configured for this address yet — double-check the link
-        you received.
-      </p>
-    </main>
-  );
-}
 
 export default async function Home() {
   const h = await headers();
   const tenantStatus = h.get("x-tenant-status");
 
   if (tenantStatus === "reserved") {
-    return <ReservedSubdomain />;
+    return <ReservedSubdomainMessage />;
   }
   if (tenantStatus === "not-found") {
-    return <TenantNotFound />;
+    return <TenantNotFoundMessage />;
   }
 
   const companySlug = h.get("x-company-slug");
@@ -68,7 +25,7 @@ export default async function Home() {
   const appUrl = resolveAppBaseUrl(h.get("host"));
   if (tenantStatus === "ok" && companyId && companySlug) {
     return (
-      <TenantPlaceholder companySlug={companySlug} appUrl={appUrl} />
+      <TenantRootPlaceholder companySlug={companySlug} appUrl={appUrl} />
     );
   }
 
