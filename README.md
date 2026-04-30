@@ -33,9 +33,14 @@ Multi-tenant SaaS for delivering audio guest book recordings (**Stage 1** — fo
 
 3. **Dev**
 
+   Zip extraction runs in a **background worker** (BullMQ + Redis). In development, run the app and worker in **two terminals**:
+
    ```bash
    npm run dev
+   npm run worker
    ```
+
+   Set `REDIS_URL` in `.env` (e.g. Upstash `rediss://…`). The worker uses the same `DATABASE_URL` and R2 variables as the Next.js app.
 
    - **Marketing**: [http://localhost:3000](http://localhost:3000)
 
@@ -60,6 +65,7 @@ Multi-tenant SaaS for delivering audio guest book recordings (**Stage 1** — fo
 | `npm run db:push` | Push schema directly (dev shortcuts) |
 | `npm run db:seed` | Seed plans/features |
 | `npm run db:studio` | Drizzle Studio |
+| `npm run worker` | BullMQ worker (`tsx watch`; `import "dotenv/config"` loads `.env`) |
 
 ## Host routing
 

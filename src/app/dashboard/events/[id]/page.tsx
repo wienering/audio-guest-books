@@ -1,15 +1,16 @@
 import { auth } from "@clerk/nextjs/server";
-import { and, asc, count, eq, isNotNull, isNull } from "drizzle-orm";
+import { and, asc, count, desc, eq, gt, inArray, isNotNull, isNull, or } from "drizzle-orm";
 import { notFound, redirect } from "next/navigation";
 
 import { db } from "@/db/index";
-import { audioFiles, events } from "@/db/schema";
+import { audioFiles, events, uploadJobs } from "@/db/schema";
 import { getMembershipWithCompany } from "@/lib/company";
 import { companyHasFeatureKey } from "@/lib/company-features";
 
 import {
   EventDetailClient,
   type EventDetailClientFile,
+  type EventUploadJobSnapshot,
 } from "./event-detail-client";
 
 const EVENT_TYPE_LABEL: Record<string, string> = {
@@ -82,6 +83,37 @@ export default async function EventDetailPage(props: {
     displayOrder: f.displayOrder,
   }));
 
+  const zipJobVisibleCutoff = new Date(Date.now() - 10 * 60 * 1000);
+
+  const jobRows = await db.query.uploadJobs.findMany({
+    where: and(
+      eq(uploadJobs.eventId, id),
+      or(
+        inArray(uploadJobs.status, ["pending", "processing"]),
+        and(
+          inArray(uploadJobs.status, ["succeeded", "partial", "failed"]),
+          gt(uploadJobs.completedAt, zipJobVisibleCutoff)
+        )
+      )
+    ),
+    orderBy: (t) => [desc(t.createdAt)],
+    limit: 30,
+  });
+
+  const clientUploadJobs: EventUploadJobSnapshot[] = jobRows.map((j) => ({
+    id: j.id,
+    status: j.status,
+    originalFilename: j.originalFilename,
+    totalFilesInArchive: j.totalFilesInArchive,
+    filesProcessed: j.filesProcessed,
+    filesSucceeded: j.filesSucceeded,
+    filesFailed: j.filesFailed,
+    errorMessage: j.errorMessage,
+    errorDetails: j.errorDetails,
+    createdAt: j.createdAt.toISOString(),
+    completedAt: j.completedAt?.toISOString() ?? null,
+  }));
+
   return (
     <EventDetailClient
       eventId={eventRow.id}
@@ -107,6 +139,7 @@ export default async function EventDetailPage(props: {
         }
       )}
       files={clientFiles}
+      uploadJobs={clientUploadJobs}
       allowUltimateFormats={allowUltimateFormats}
       fileLimit={fileLimit}
       activeFileCount={activeFileCount}

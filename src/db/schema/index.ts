@@ -1,7 +1,9 @@
 import { relations, sql } from "drizzle-orm";
 import {
+  bigint,
   boolean,
   date,
+  jsonb,
   pgEnum,
   pgTable,
   timestamp,
@@ -35,6 +37,18 @@ export const retailAnalyticsEventTypeEnum = pgEnum(
   "retail_analytics_event_type",
   ["page_view", "file_play", "file_download", "zip_download"]
 );
+
+export const uploadJobKindEnum = pgEnum("upload_job_kind", ["zip_extraction"]);
+
+export const uploadJobStatusEnum = pgEnum("upload_job_status", [
+  "pending",
+  "processing",
+  "succeeded",
+  "failed",
+  "partial",
+]);
+
+export type UploadJobErrorDetail = { filename: string; reason: string };
 
 export const plans = pgTable(
   "plans",
@@ -180,6 +194,32 @@ export const audioFiles = pgTable(
   (t) => [uniqueIndex("audio_files_storage_key_uidx").on(t.storageKey)]
 );
 
+export const uploadJobs = pgTable("upload_jobs", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  eventId: uuid("event_id")
+    .references(() => events.id, { onDelete: "cascade" })
+    .notNull(),
+  companyId: uuid("company_id")
+    .references(() => companies.id, { onDelete: "cascade" })
+    .notNull(),
+  kind: uploadJobKindEnum("kind").notNull().default("zip_extraction"),
+  status: uploadJobStatusEnum("status").notNull().default("pending"),
+  originalFilename: text("original_filename").notNull(),
+  storageKey: text("storage_key").notNull(),
+  sizeBytes: bigint("size_bytes", { mode: "number" }).notNull(),
+  totalFilesInArchive: integer("total_files_in_archive"),
+  filesProcessed: integer("files_processed").notNull().default(0),
+  filesSucceeded: integer("files_succeeded").notNull().default(0),
+  filesFailed: integer("files_failed").notNull().default(0),
+  errorMessage: text("error_message"),
+  errorDetails: jsonb("error_details").$type<UploadJobErrorDetail[] | null>(),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+  startedAt: timestamp("started_at", { withTimezone: true }),
+  completedAt: timestamp("completed_at", { withTimezone: true }),
+});
+
 export const eventAnalyticsEvents = pgTable("event_analytics_events", {
   id: uuid("id").defaultRandom().primaryKey(),
   eventId: uuid("event_id")
@@ -226,6 +266,7 @@ export const companiesRelations = relations(companies, ({ one, many }) => ({
   companyUsers: many(companyUsers),
   companyFeatures: many(companyFeatures),
   events: many(events),
+  uploadJobs: many(uploadJobs),
 }));
 
 export const companyUsersRelations = relations(companyUsers, ({ one }) => ({
@@ -255,6 +296,7 @@ export const eventsRelations = relations(events, ({ one, many }) => ({
     references: [companies.id],
   }),
   audioFiles: many(audioFiles),
+  uploadJobs: many(uploadJobs),
   analyticsEvents: many(eventAnalyticsEvents),
 }));
 
@@ -264,6 +306,17 @@ export const audioFilesRelations = relations(audioFiles, ({ one, many }) => ({
     references: [events.id],
   }),
   analyticsEvents: many(eventAnalyticsEvents),
+}));
+
+export const uploadJobsRelations = relations(uploadJobs, ({ one }) => ({
+  event: one(events, {
+    fields: [uploadJobs.eventId],
+    references: [events.id],
+  }),
+  company: one(companies, {
+    fields: [uploadJobs.companyId],
+    references: [companies.id],
+  }),
 }));
 
 export const eventAnalyticsEventsRelations = relations(
