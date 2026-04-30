@@ -64,6 +64,13 @@
       "when": 1778000000000,
       "tag": "0008_stage12_audio_transcoding",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1778100000000,
+      "tag": "0009_stage8_analytics_indexes",
+      "breakpoints": true
     }
   ]
 }

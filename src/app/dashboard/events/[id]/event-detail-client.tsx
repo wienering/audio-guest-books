@@ -28,6 +28,8 @@ import {
 } from "@/lib/audio-upload-policy";
 import { cn, formatBytes } from "@/lib/utils";
 
+import { EventAnalyticsPanel } from "@/components/dashboard/analytics/event-analytics-panel";
+
 import { EventRetailAppearanceSection } from "./event-retail-appearance";
 import { SendLinkComposer } from "./send-link-composer";
 
@@ -459,6 +461,9 @@ function AudioRow(props: {
 
 export function EventDetailClient(props: EventDetailClientProps) {
   const router = useRouter();
+  const [dashTab, setDashTab] = useState<"overview" | "analytics">(
+    "overview"
+  );
   const inputId = useId();
   const [extendPending, startExtendTransition] = useTransition();
   const fileInputRef = useRef<HTMLInputElement | null>(null);
@@ -861,6 +866,45 @@ export function EventDetailClient(props: EventDetailClientProps) {
         )}
       </header>
 
+      <div
+        className="flex gap-2 border-border border-b pb-3"
+        role="tablist"
+        aria-label="Event sections"
+      >
+        <button
+          type="button"
+          role="tab"
+          aria-selected={dashTab === "overview"}
+          className={cn(
+            buttonVariants({
+              variant: dashTab === "overview" ? "default" : "ghost",
+              size: "sm",
+            })
+          )}
+          onClick={() => setDashTab("overview")}
+        >
+          Overview
+        </button>
+        <button
+          type="button"
+          role="tab"
+          aria-selected={dashTab === "analytics"}
+          className={cn(
+            buttonVariants({
+              variant: dashTab === "analytics" ? "default" : "ghost",
+              size: "sm",
+            })
+          )}
+          onClick={() => setDashTab("analytics")}
+        >
+          Analytics
+        </button>
+      </div>
+
+      {dashTab === "analytics" ? (
+        <EventAnalyticsPanel eventId={props.eventId} />
+      ) : (
+        <>
       <EventRetailAppearanceSection
         eventId={props.eventId}
         customBranding={props.retailCustomBranding}
@@ -1101,6 +1145,8 @@ export function EventDetailClient(props: EventDetailClientProps) {
           </ul>
         )}
       </section>
+        </>
+      )}
 
       <dialog
         ref={bulkDialogRef}

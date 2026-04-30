@@ -4,12 +4,14 @@ import {
   buildRetailPublicPayload,
   resolveRetailEventForSlugs,
 } from "@/lib/retail-public";
-import { hashIp, logRetailAnalytics } from "@/lib/retail-analytics";
 import { takeRetailRateLimit } from "@/lib/retail-rate-limit";
-import {
-  analyticsContextFromRequest,
-  getClientIpFromRequest,
-} from "@/lib/retail-request-meta";
+import { getClientIpFromRequest } from "@/lib/retail-request-meta";
+
+/**
+ * Retail page_view analytics are logged once from the server-rendered tenant page
+ * (`src/app/[clientSlug]/page.tsx`) after the guest passes the password gate — not here.
+ * Logging in both places duplicated counts (this route is called by the client after load).
+ */
 
 type RouteCtx = {
   params: Promise<{ companySlug: string; clientSlug: string }>;
@@ -41,18 +43,6 @@ export async function GET(req: Request, ctx: RouteCtx) {
   }
 
   const { event } = resolved;
-  const ac = analyticsContextFromRequest(req);
-  try {
-    await logRetailAnalytics({
-      eventId: event.id,
-      eventType: "page_view",
-      ipHash: hashIp(ac.ip),
-      userAgent: ac.userAgent,
-      referrer: ac.referrer,
-    });
-  } catch (e) {
-    console.error("retail page_view log", e);
-  }
 
   try {
     const payload = await buildRetailPublicPayload(event, {

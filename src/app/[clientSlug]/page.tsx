@@ -90,6 +90,10 @@ export default async function RetailClientPage({ params }: Props) {
     );
   }
 
+  /**
+   * Single source of truth for retail `page_view` analytics (after password unlock).
+   * Do not also log from `/api/retail/...` — the client fetches that route and would double-count.
+   */
   const ac = analyticsContextFromHeaders(h);
   try {
     await logRetailAnalytics({

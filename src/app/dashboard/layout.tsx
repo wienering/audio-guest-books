@@ -47,6 +47,12 @@ export default async function DashboardLayout({
                 Events
               </Link>
               <Link
+                href="/dashboard/analytics"
+                className="hover:text-foreground"
+              >
+                Analytics
+              </Link>
+              <Link
                 href="/dashboard/settings/email-templates"
                 className="hover:text-foreground"
               >

@@ -3,6 +3,7 @@ import {
   bigint,
   boolean,
   date,
+  index,
   jsonb,
   pgEnum,
   pgTable,
@@ -388,22 +389,32 @@ export const uploadJobs = pgTable("upload_jobs", {
   completedAt: timestamp("completed_at", { withTimezone: true }),
 });
 
-export const eventAnalyticsEvents = pgTable("event_analytics_events", {
-  id: uuid("id").defaultRandom().primaryKey(),
-  eventId: uuid("event_id")
-    .references(() => events.id, { onDelete: "cascade" })
-    .notNull(),
-  audioFileId: uuid("audio_file_id").references(() => audioFiles.id, {
-    onDelete: "set null",
-  }),
-  eventType: retailAnalyticsEventTypeEnum("event_type").notNull(),
-  ipHash: text("ip_hash"),
-  userAgent: text("user_agent"),
-  referrer: text("referrer"),
-  createdAt: timestamp("created_at", { withTimezone: true })
-    .defaultNow()
-    .notNull(),
-});
+export const eventAnalyticsEvents = pgTable(
+  "event_analytics_events",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    eventId: uuid("event_id")
+      .references(() => events.id, { onDelete: "cascade" })
+      .notNull(),
+    audioFileId: uuid("audio_file_id").references(() => audioFiles.id, {
+      onDelete: "set null",
+    }),
+    eventType: retailAnalyticsEventTypeEnum("event_type").notNull(),
+    ipHash: text("ip_hash"),
+    userAgent: text("user_agent"),
+    referrer: text("referrer"),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (t) => [
+    index("idx_event_analytics_events_event_id_created_at").on(
+      t.eventId,
+      t.createdAt
+    ),
+    index("idx_event_analytics_events_event_type").on(t.eventType),
+  ]
+);
 
 export const plansRelations = relations(plans, ({ many }) => ({
   companies: many(companies),
