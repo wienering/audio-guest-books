@@ -1,5 +1,7 @@
 "use server";
 
+import { randomUUID } from "node:crypto";
+
 import { auth } from "@clerk/nextjs/server";
 import { eq } from "drizzle-orm";
 import { redirect } from "next/navigation";
@@ -31,11 +33,18 @@ function readOnboardingFormValues(formData: FormData): OnboardingFormValues {
 export type OnboardingActionState =
   | {
       ok: false;
+      replayKey: string;
       message: string;
       values: OnboardingFormValues;
       fieldErrors?: { companyName?: string; companySlug?: string };
     }
   | { ok: true };
+
+function failOnboarding(
+  args: Omit<Extract<OnboardingActionState, { ok: false }>, "ok" | "replayKey">
+): Extract<OnboardingActionState, { ok: false }> {
+  return { ok: false, replayKey: randomUUID(), ...args };
+}
 
 const formSchema = z.object({
   companyName: z.string().trim().min(2).max(120),
@@ -69,11 +78,10 @@ export async function completeOnboarding(
   const session = await auth();
   const userId = session.userId;
   if (!userId) {
-    return {
-      ok: false,
+    return failOnboarding({
       message: "You must sign in before continuing.",
       values: submittedValues,
-    };
+    });
   }
 
   const parsed = formSchema.safeParse({
@@ -83,15 +91,14 @@ export async function completeOnboarding(
 
   if (!parsed.success) {
     const errs = parsed.error.flatten().fieldErrors;
-    return {
-      ok: false,
+    return failOnboarding({
       message: "Please fix the fields below.",
       values: submittedValues,
       fieldErrors: {
         companyName: errs.companyName?.[0],
         companySlug: errs.companySlug?.[0],
       },
-    };
+    });
   }
 
   const existingUser = await getMembershipWithCompany(userId);
@@ -100,15 +107,14 @@ export async function completeOnboarding(
   }
 
   if (isReservedSubdomain(parsed.data.companySlug)) {
-    return {
-      ok: false,
+    return failOnboarding({
       message:
         "This URL slug is reserved. Choose a different subdomain for your company.",
       values: submittedValues,
       fieldErrors: {
         companySlug: "Reserved slug — pick another.",
       },
-    };
+    });
   }
 
   const [slugTaken] = await db
@@ -118,12 +124,11 @@ export async function completeOnboarding(
     .limit(1);
 
   if (slugTaken) {
-    return {
-      ok: false,
+    return failOnboarding({
       message: `The slug "${parsed.data.companySlug}" is already taken.`,
       values: submittedValues,
       fieldErrors: { companySlug: "This slug is already taken." },
-    };
+    });
   }
 
   await db.transaction(async (tx) => {

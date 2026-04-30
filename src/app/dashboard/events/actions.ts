@@ -5,6 +5,8 @@ import { and, eq, isNull } from "drizzle-orm";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 
+import { randomUUID } from "node:crypto";
+
 import { db } from "@/db/index";
 import { events } from "@/db/schema";
 import { getMembershipWithCompany } from "@/lib/company";
@@ -86,6 +88,7 @@ export type CreateEventState =
   | { ok: true }
   | {
       ok: false;
+      replayKey: string;
       message: string;
       values: CreateEventFormValues;
       fieldErrors?: Partial<
@@ -102,6 +105,12 @@ export type CreateEventState =
       >;
     };
 
+function failCreateEvent(
+  args: Omit<Extract<CreateEventState, { ok: false }>, "ok" | "replayKey">
+): Extract<CreateEventState, { ok: false }> {
+  return { ok: false, replayKey: randomUUID(), ...args };
+}
+
 export async function createEvent(
   _prev: CreateEventState | undefined,
   formData: FormData
@@ -111,11 +120,10 @@ export async function createEvent(
   const session = await auth();
   const userId = session.userId;
   if (!userId) {
-    return {
-      ok: false,
+    return failCreateEvent({
       message: "You must sign in to create an event.",
       values: submittedValues,
-    };
+    });
   }
 
   const eventTypeRaw = formData.get("eventType");
@@ -134,8 +142,7 @@ export async function createEvent(
 
   if (!parsed.success) {
     const fe = parsed.error.flatten().fieldErrors;
-    return {
-      ok: false,
+    return failCreateEvent({
       message: "Please fix the fields below.",
       values: submittedValues,
       fieldErrors: {
@@ -147,25 +154,23 @@ export async function createEvent(
         retailClientEmail: fe.retailClientEmail?.[0],
         retailClientSlug: fe.retailClientSlug?.[0],
       },
-    };
+    });
   }
 
   const membership = await getMembershipWithCompany(userId);
   if (!membership) {
-    return {
-      ok: false,
+    return failCreateEvent({
       message: "Complete onboarding first.",
       values: submittedValues,
-    };
+    });
   }
 
   const plan = membership.company.plan;
   if (!plan) {
-    return {
-      ok: false,
+    return failCreateEvent({
       message: "Plan not found for your company.",
       values: submittedValues,
-    };
+    });
   }
 
   const [slugDup] = await db
@@ -181,15 +186,14 @@ export async function createEvent(
     .limit(1);
 
   if (slugDup) {
-    return {
-      ok: false,
+    return failCreateEvent({
       message:
         "That client URL slug is already used for another event in your workspace.",
       values: submittedValues,
       fieldErrors: {
         retailClientSlug: "This slug is already taken.",
       },
-    };
+    });
   }
 
   const eventDate = new Date(`${parsed.data.eventDate}T12:00:00.000Z`);
@@ -216,11 +220,10 @@ export async function createEvent(
     .returning({ id: events.id });
 
   if (!created) {
-    return {
-      ok: false,
+    return failCreateEvent({
       message: "Could not create event.",
       values: submittedValues,
-    };
+    });
   }
 
   redirect(`/dashboard/events/${created.id}`);

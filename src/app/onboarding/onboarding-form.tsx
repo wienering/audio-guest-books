@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useEffect, useState } from "react";
+import { useActionState } from "react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -24,27 +24,24 @@ type FormProps = {
   rootDomain: string;
 };
 
-const emptyValues = (): OnboardingFormValues => ({
+const emptyBaseline = (): OnboardingFormValues => ({
   companyName: "",
   companySlug: "",
 });
 
-export function OnboardingForm(props: FormProps) {
-  const { rootDomain } = props;
+type FieldsProps = {
+  baseline: OnboardingFormValues;
+  state: OnboardingActionState | undefined;
+  pending: boolean;
+  rootDomain: string;
+};
 
-  const [state, dispatch, pending] = useActionState(
-    completeOnboarding,
-    undefined as OnboardingActionState | undefined
-  );
-
-  const [fields, setFields] = useState<OnboardingFormValues>(emptyValues);
-
-  useEffect(() => {
-    if (state?.ok === false && state.values) {
-      setFields(state.values);
-    }
-  }, [state]);
-
+function OnboardingFormFields({
+  baseline,
+  state,
+  pending,
+  rootDomain,
+}: FieldsProps) {
   const nameError =
     state && "fieldErrors" in state ? state.fieldErrors?.companyName : undefined;
   const slugError =
@@ -62,6 +59,80 @@ export function OnboardingForm(props: FormProps) {
     );
 
   return (
+    <>
+      <CardContent className="space-y-6">
+        <div className="space-y-2">
+          <Label htmlFor="companyName">Company name</Label>
+          <Input
+            id="companyName"
+            name="companyName"
+            autoComplete="organization"
+            placeholder="Nova Audio Memories"
+            required
+            defaultValue={baseline.companyName}
+            aria-invalid={!!nameError}
+          />
+          {nameError ? (
+            <p className="text-destructive text-sm">{nameError}</p>
+          ) : null}
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="companySlug">Company URL slug</Label>
+          <p className="text-muted-foreground text-xs leading-relaxed">
+            Your guests will browse{" "}
+            <code className="rounded bg-muted px-1 py-0.5 font-mono text-[0.85rem]">{`slug.${rootDomain}`}</code>{" "}
+            in production. Retail paths like{" "}
+            <code className="rounded bg-muted px-1 py-0.5 font-mono text-[0.85rem]">{`slug.${rootDomain}/{client}`}</code>{" "}
+            arrive in Stage 3.
+          </p>
+          <Input
+            id="companySlug"
+            name="companySlug"
+            autoCapitalize="none"
+            autoCorrect="off"
+            spellCheck={false}
+            placeholder="nova-audio"
+            required
+            defaultValue={baseline.companySlug}
+            aria-invalid={!!slugError}
+          />
+          <p className="text-muted-foreground text-xs">
+            Lowercase letters, numbers, and hyphens — no leading or trailing
+            hyphen.
+          </p>
+          {slugError ? (
+            <p className="text-destructive text-sm">{slugError}</p>
+          ) : null}
+        </div>
+        {showGeneralBanner ? (
+          <div className="rounded-md bg-destructive/10 px-3 py-2 text-destructive text-sm">
+            {errorMessage}
+          </div>
+        ) : null}
+      </CardContent>
+      <CardFooter>
+        <Button type="submit" className="w-full" disabled={pending}>
+          {pending ? "Creating workspace…" : "Continue to dashboard"}
+        </Button>
+      </CardFooter>
+    </>
+  );
+}
+
+export function OnboardingForm(props: FormProps) {
+  const { rootDomain } = props;
+
+  const [state, dispatch, pending] = useActionState(
+    completeOnboarding,
+    undefined as OnboardingActionState | undefined
+  );
+
+  const baseline =
+    state?.ok === false ? state.values : emptyBaseline();
+  const formKey =
+    state?.ok === false ? state.replayKey : "onboarding-pristine";
+
+  return (
     <Card className="w-full max-w-md shadow-sm">
       <CardHeader>
         <CardTitle>Create your workspace</CardTitle>
@@ -69,68 +140,13 @@ export function OnboardingForm(props: FormProps) {
           Choose how clients will recognize you. You can refine details later.
         </CardDescription>
       </CardHeader>
-      <form action={dispatch} className="space-y-8">
-        <CardContent className="space-y-6">
-          <div className="space-y-2">
-            <Label htmlFor="companyName">Company name</Label>
-            <Input
-              id="companyName"
-              name="companyName"
-              autoComplete="organization"
-              placeholder="Nova Audio Memories"
-              required
-              value={fields.companyName}
-              onChange={(e) =>
-                setFields((f) => ({ ...f, companyName: e.target.value }))
-              }
-              aria-invalid={!!nameError}
-            />
-            {nameError ? (
-              <p className="text-destructive text-sm">{nameError}</p>
-            ) : null}
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="companySlug">Company URL slug</Label>
-            <p className="text-muted-foreground text-xs leading-relaxed">
-              Your guests will browse{" "}
-              <code className="rounded bg-muted px-1 py-0.5 font-mono text-[0.85rem]">{`slug.${rootDomain}`}</code>{" "}
-              in production. Retail paths like{" "}
-              <code className="rounded bg-muted px-1 py-0.5 font-mono text-[0.85rem]">{`slug.${rootDomain}/{client}`}</code>{" "}
-              arrive in Stage 3.
-            </p>
-            <Input
-              id="companySlug"
-              name="companySlug"
-              autoCapitalize="none"
-              autoCorrect="off"
-              spellCheck={false}
-              placeholder="nova-audio"
-              required
-              value={fields.companySlug}
-              onChange={(e) =>
-                setFields((f) => ({ ...f, companySlug: e.target.value }))
-              }
-              aria-invalid={!!slugError}
-            />
-            <p className="text-muted-foreground text-xs">
-              Lowercase letters, numbers, and hyphens — no leading or trailing
-              hyphen.
-            </p>
-            {slugError ? (
-              <p className="text-destructive text-sm">{slugError}</p>
-            ) : null}
-          </div>
-          {showGeneralBanner ? (
-            <div className="rounded-md bg-destructive/10 px-3 py-2 text-destructive text-sm">
-              {errorMessage}
-            </div>
-          ) : null}
-        </CardContent>
-        <CardFooter>
-          <Button type="submit" className="w-full" disabled={pending}>
-            {pending ? "Creating workspace…" : "Continue to dashboard"}
-          </Button>
-        </CardFooter>
+      <form key={formKey} action={dispatch} className="space-y-8">
+        <OnboardingFormFields
+          baseline={baseline}
+          state={state}
+          pending={pending}
+          rootDomain={rootDomain}
+        />
       </form>
     </Card>
   );

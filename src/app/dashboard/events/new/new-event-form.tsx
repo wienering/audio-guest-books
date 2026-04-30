@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useEffect, useRef, useState } from "react";
+import { useActionState, useRef, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -49,20 +49,19 @@ function emptyFormValues(): CreateEventFormValues {
   };
 }
 
-export function NewEventForm() {
-  const [state, dispatch, pending] = useActionState(
-    createEvent,
-    undefined as CreateEventState | undefined
+type FieldsProps = {
+  baseline: CreateEventFormValues;
+  state: CreateEventState | undefined;
+  pending: boolean;
+};
+
+/** Uncontrolled fields + isolated slug useState; remounted when `form` key changes after server errors. */
+function NewEventFormFields({ baseline, state, pending }: FieldsProps) {
+  const [slug, setSlug] = useState(baseline.retailClientSlug);
+  const [showOtherField, setShowOtherField] = useState(
+    baseline.eventType === "other"
   );
-
-  const [fields, setFields] = useState<CreateEventFormValues>(emptyFormValues);
-  const slugEdited = useRef(false);
-
-  useEffect(() => {
-    if (state?.ok === false && state.values) {
-      setFields(state.values);
-    }
-  }, [state]);
+  const slugTouchedRef = useRef(false);
 
   const nameError = state?.ok === false ? state.fieldErrors?.name : undefined;
   const eventTypeError =
@@ -90,6 +89,173 @@ export function NewEventForm() {
     );
 
   return (
+    <>
+      <CardContent className="space-y-6">
+        <div className="space-y-2">
+          <Label htmlFor="name">Event name</Label>
+          <Input
+            id="name"
+            name="name"
+            placeholder="Sarah & Jordan — wedding"
+            required
+            defaultValue={baseline.name}
+            aria-invalid={!!nameError}
+          />
+          {nameError ? (
+            <p className="text-destructive text-sm">{nameError}</p>
+          ) : null}
+        </div>
+
+        <div className="grid gap-6 md:grid-cols-2">
+          <div className="space-y-2">
+            <Label htmlFor="eventType">Event type</Label>
+            <select
+              id="eventType"
+              name="eventType"
+              defaultValue={baseline.eventType}
+              onChange={(e) => setShowOtherField(e.target.value === "other")}
+              className="h-8 w-full rounded-lg border border-input bg-transparent px-2.5 py-1 text-base transition-colors outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 md:text-sm dark:bg-input/30"
+              aria-invalid={!!eventTypeError}
+            >
+              {EVENT_TYPES.map((t) => (
+                <option key={t.value} value={t.value}>
+                  {t.label}
+                </option>
+              ))}
+            </select>
+            {eventTypeError ? (
+              <p className="text-destructive text-sm">{eventTypeError}</p>
+            ) : null}
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="eventDate">Event date</Label>
+            <Input
+              id="eventDate"
+              name="eventDate"
+              type="date"
+              required
+              defaultValue={baseline.eventDate}
+              aria-invalid={!!eventDateError}
+            />
+            {eventDateError ? (
+              <p className="text-destructive text-sm">{eventDateError}</p>
+            ) : null}
+          </div>
+        </div>
+
+        {showOtherField ? (
+          <div className="space-y-2">
+            <Label htmlFor="eventTypeOther">Custom type</Label>
+            <Input
+              id="eventTypeOther"
+              name="eventTypeOther"
+              placeholder="e.g. Baby shower, fundraiser…"
+              defaultValue={baseline.eventTypeOther}
+              aria-invalid={!!eventTypeOtherError}
+            />
+            {eventTypeOtherError ? (
+              <p className="text-destructive text-sm">{eventTypeOtherError}</p>
+            ) : null}
+          </div>
+        ) : null}
+
+        <div className="space-y-2">
+          <Label htmlFor="retailClientName">Retail client name</Label>
+          <Input
+            id="retailClientName"
+            name="retailClientName"
+            autoComplete="name"
+            placeholder="Jordan Lee"
+            required
+            defaultValue={baseline.retailClientName}
+            onChange={(e) => {
+              if (!slugTouchedRef.current) {
+                const next = slugifyRetailClientSlug(e.target.value);
+                if (next.length >= 2) {
+                  setSlug(next);
+                }
+              }
+            }}
+            aria-invalid={!!retailClientNameError}
+          />
+          {retailClientNameError ? (
+            <p className="text-destructive text-sm">{retailClientNameError}</p>
+          ) : null}
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="retailClientEmail">Retail client email</Label>
+          <Input
+            id="retailClientEmail"
+            name="retailClientEmail"
+            type="email"
+            autoComplete="email"
+            placeholder="jordan@example.com"
+            required
+            defaultValue={baseline.retailClientEmail}
+            aria-invalid={!!retailClientEmailError}
+          />
+          {retailClientEmailError ? (
+            <p className="text-destructive text-sm">
+              {retailClientEmailError}
+            </p>
+          ) : null}
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="retailClientSlug">Client URL slug</Label>
+          <p className="text-muted-foreground text-xs leading-relaxed">
+            Used on the retail link in Stage 3. Lowercase letters, numbers, and
+            hyphens only.
+          </p>
+          <Input
+            id="retailClientSlug"
+            name="retailClientSlug"
+            autoCapitalize="none"
+            autoCorrect="off"
+            spellCheck={false}
+            required
+            minLength={2}
+            value={slug}
+            onChange={(e) => {
+              slugTouchedRef.current = true;
+              setSlug(e.target.value);
+            }}
+            aria-invalid={!!retailClientSlugError}
+          />
+          {retailClientSlugError ? (
+            <p className="text-destructive text-sm">{retailClientSlugError}</p>
+          ) : null}
+        </div>
+
+        {showGeneralBanner ? (
+          <div className="rounded-md bg-destructive/10 px-3 py-2 text-destructive text-sm">
+            {errorMessage}
+          </div>
+        ) : null}
+      </CardContent>
+      <CardFooter className="flex flex-col gap-3 sm:flex-row sm:justify-end">
+        <Button type="submit" className="w-full sm:w-auto" disabled={pending}>
+          {pending ? "Creating…" : "Create event"}
+        </Button>
+      </CardFooter>
+    </>
+  );
+}
+
+export function NewEventForm() {
+  const [state, dispatch, pending] = useActionState(
+    createEvent,
+    undefined as CreateEventState | undefined
+  );
+
+  const baseline =
+    state?.ok === false ? state.values : emptyFormValues();
+  const formKey =
+    state?.ok === false ? state.replayKey : "new-event-pristine";
+
+  return (
     <Card className="shadow-sm">
       <CardHeader>
         <CardTitle>New event</CardTitle>
@@ -97,178 +263,12 @@ export function NewEventForm() {
           Create a guest book workspace. Retail client pages arrive in Stage 3.
         </CardDescription>
       </CardHeader>
-      <form action={dispatch} className="space-y-6">
-        <CardContent className="space-y-6">
-          <div className="space-y-2">
-            <Label htmlFor="name">Event name</Label>
-            <Input
-              id="name"
-              name="name"
-              placeholder="Sarah & Jordan — wedding"
-              required
-              value={fields.name}
-              onChange={(e) =>
-                setFields((f) => ({ ...f, name: e.target.value }))
-              }
-              aria-invalid={!!nameError}
-            />
-            {nameError ? (
-              <p className="text-destructive text-sm">{nameError}</p>
-            ) : null}
-          </div>
-
-          <div className="grid gap-6 md:grid-cols-2">
-            <div className="space-y-2">
-              <Label htmlFor="eventType">Event type</Label>
-              <select
-                id="eventType"
-                name="eventType"
-                value={fields.eventType}
-                onChange={(e) =>
-                  setFields((f) => ({ ...f, eventType: e.target.value }))
-                }
-                className="h-8 w-full rounded-lg border border-input bg-transparent px-2.5 py-1 text-base transition-colors outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 md:text-sm dark:bg-input/30"
-                aria-invalid={!!eventTypeError}
-              >
-                {EVENT_TYPES.map((t) => (
-                  <option key={t.value} value={t.value}>
-                    {t.label}
-                  </option>
-                ))}
-              </select>
-              {eventTypeError ? (
-                <p className="text-destructive text-sm">{eventTypeError}</p>
-              ) : null}
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="eventDate">Event date</Label>
-              <Input
-                id="eventDate"
-                name="eventDate"
-                type="date"
-                required
-                value={fields.eventDate}
-                onChange={(e) =>
-                  setFields((f) => ({ ...f, eventDate: e.target.value }))
-                }
-                aria-invalid={!!eventDateError}
-              />
-              {eventDateError ? (
-                <p className="text-destructive text-sm">{eventDateError}</p>
-              ) : null}
-            </div>
-          </div>
-
-          {fields.eventType === "other" ? (
-            <div className="space-y-2">
-              <Label htmlFor="eventTypeOther">Custom type</Label>
-              <Input
-                id="eventTypeOther"
-                name="eventTypeOther"
-                placeholder="e.g. Baby shower, fundraiser…"
-                value={fields.eventTypeOther}
-                onChange={(e) =>
-                  setFields((f) => ({ ...f, eventTypeOther: e.target.value }))
-                }
-                aria-invalid={!!eventTypeOtherError}
-              />
-              {eventTypeOtherError ? (
-                <p className="text-destructive text-sm">{eventTypeOtherError}</p>
-              ) : null}
-            </div>
-          ) : null}
-
-          <div className="space-y-2">
-            <Label htmlFor="retailClientName">Retail client name</Label>
-            <Input
-              id="retailClientName"
-              name="retailClientName"
-              autoComplete="name"
-              placeholder="Jordan Lee"
-              required
-              value={fields.retailClientName}
-              onChange={(e) => {
-                const name = e.target.value;
-                setFields((f) => {
-                  if (!slugEdited.current) {
-                    const slug = slugifyRetailClientSlug(name);
-                    if (slug.length >= 2) {
-                      return { ...f, name, retailClientSlug: slug };
-                    }
-                  }
-                  return { ...f, name };
-                });
-              }}
-              aria-invalid={!!retailClientNameError}
-            />
-            {retailClientNameError ? (
-              <p className="text-destructive text-sm">{retailClientNameError}</p>
-            ) : null}
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="retailClientEmail">Retail client email</Label>
-            <Input
-              id="retailClientEmail"
-              name="retailClientEmail"
-              type="email"
-              autoComplete="email"
-              placeholder="jordan@example.com"
-              required
-              value={fields.retailClientEmail}
-              onChange={(e) =>
-                setFields((f) => ({ ...f, retailClientEmail: e.target.value }))
-              }
-              aria-invalid={!!retailClientEmailError}
-            />
-            {retailClientEmailError ? (
-              <p className="text-destructive text-sm">
-                {retailClientEmailError}
-              </p>
-            ) : null}
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="retailClientSlug">Client URL slug</Label>
-            <p className="text-muted-foreground text-xs leading-relaxed">
-              Used on the retail link in Stage 3. Lowercase letters, numbers, and
-              hyphens only.
-            </p>
-            <Input
-              id="retailClientSlug"
-              name="retailClientSlug"
-              autoCapitalize="none"
-              autoCorrect="off"
-              spellCheck={false}
-              required
-              minLength={2}
-              value={fields.retailClientSlug}
-              onChange={(e) => {
-                slugEdited.current = true;
-                setFields((f) => ({
-                  ...f,
-                  retailClientSlug: e.target.value,
-                }));
-              }}
-              aria-invalid={!!retailClientSlugError}
-            />
-            {retailClientSlugError ? (
-              <p className="text-destructive text-sm">{retailClientSlugError}</p>
-            ) : null}
-          </div>
-
-          {showGeneralBanner ? (
-            <div className="rounded-md bg-destructive/10 px-3 py-2 text-destructive text-sm">
-              {errorMessage}
-            </div>
-          ) : null}
-        </CardContent>
-        <CardFooter className="flex flex-col gap-3 sm:flex-row sm:justify-end">
-          <Button type="submit" className="w-full sm:w-auto" disabled={pending}>
-            {pending ? "Creating…" : "Create event"}
-          </Button>
-        </CardFooter>
+      <form key={formKey} action={dispatch} className="space-y-6">
+        <NewEventFormFields
+          baseline={baseline}
+          state={state}
+          pending={pending}
+        />
       </form>
     </Card>
   );
