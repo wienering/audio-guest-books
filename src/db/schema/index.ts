@@ -204,6 +204,33 @@ export const billingAuditLog = pgTable(
   (t) => [index("billing_audit_log_company_id_idx").on(t.companyId)]
 );
 
+/**
+ * Admin actions performed against the platform (Stage 11 dashboard).
+ * Slug captured at action time so it persists if the company is later deleted.
+ */
+export const adminAuditLog = pgTable(
+  "admin_audit_log",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    adminClerkUserId: text("admin_clerk_user_id").notNull(),
+    actionType: text("action_type").notNull(),
+    targetCompanyId: uuid("target_company_id").references(() => companies.id, {
+      onDelete: "set null",
+    }),
+    targetCompanySlug: text("target_company_slug"),
+    targetUserClerkId: text("target_user_clerk_id"),
+    description: text("description").notNull(),
+    metadata: jsonb("metadata").$type<Record<string, unknown> | null>(),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (t) => [
+    index("admin_audit_log_created_at_idx").on(t.createdAt.desc()),
+    index("admin_audit_log_target_company_id_idx").on(t.targetCompanyId),
+  ]
+);
+
 /** Anonymized audit row kept after account hard-delete (no PII). */
 export const deletedCompaniesLog = pgTable("deleted_companies_log", {
   id: uuid("id").defaultRandom().primaryKey(),

@@ -4,6 +4,7 @@ import { eq, and, isNull } from "drizzle-orm";
 
 import { getMiddlewareDb } from "@/db/middleware";
 import { companies } from "@/db/schema";
+import { isAdminUser } from "@/lib/admin-auth";
 import {
   buildAppOriginFromHostHeader,
   parseHostContext,
@@ -16,6 +17,8 @@ const isPublicAuthRoute = createRouteMatcher([
   "/sign-in(.*)",
   "/sign-up(.*)",
 ]);
+
+const isAdminRoute = createRouteMatcher(["/admin(.*)", "/api/admin(.*)"]);
 
 export default clerkMiddleware(async (auth, request) => {
   const hostHeader = request.headers.get("host") ?? "";
@@ -106,10 +109,32 @@ export default clerkMiddleware(async (auth, request) => {
   const needsClerkProtection =
     appSurface &&
     (pathname.startsWith("/dashboard") ||
-      pathname.startsWith("/onboarding"));
+      pathname.startsWith("/onboarding") ||
+      isAdminRoute(request));
 
   if (needsClerkProtection && !isPublicAuthRoute(request)) {
     await auth.protect();
+  }
+
+  /**
+   * /admin/* (and /api/admin/*) are admin-only. Non-admins are redirected to
+   * /dashboard rather than 404'd so we don't leak the existence of admin
+   * routes. API requests get a 403 instead of a redirect.
+   */
+  if (appSurface && isAdminRoute(request)) {
+    const { userId } = await auth();
+    if (!isAdminUser(userId)) {
+      if (pathname.startsWith("/api/")) {
+        return NextResponse.json(
+          { error: "Forbidden" },
+          { status: 403 }
+        );
+      }
+      const dest = request.nextUrl.clone();
+      dest.pathname = "/dashboard";
+      dest.search = "";
+      return NextResponse.redirect(dest);
+    }
   }
 
   return NextResponse.next({

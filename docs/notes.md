@@ -87,3 +87,12 @@ Audit middleware: deleted users should be hard-redirected to deletion-status pag
 - [ ] FFMPEG_PATH must be set in production environment (Railway deployment will need FFmpeg in container)
 - [ ] Document FFmpeg requirement in deployment runbook
 - [ ] Consider pre-built FFmpeg binary alternatives (ffmpeg-static npm package) to avoid system dependency
+## Stripe billing follow-ups for production launch
+
+- [ ] Switch to Stripe live mode (currently test): regenerate API keys, webhook secret, recreate products + prices in live mode, update env vars
+- [ ] Configure Stripe Tax (if collecting tax)
+- [ ] Configure dunning emails in Stripe (or build custom flow)
+- [ ] Set up Stripe production webhook endpoint
+- [ ] Audit billing emails (subscription created, ended) for tone and accuracy
+- [ ] Decide on Pro tier monetization strategy and timing
+- [ ] Test "resume canceled subscription" flow if not done already
