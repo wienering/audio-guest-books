@@ -8,6 +8,7 @@ import { pipeline } from "node:stream/promises";
 import { GetObjectCommand } from "@aws-sdk/client-s3";
 import { Upload } from "@aws-sdk/lib-storage";
 import { and, eq, isNull, or } from "drizzle-orm";
+import ffmpegStatic from "ffmpeg-static";
 import ffmpeg from "fluent-ffmpeg";
 import type { Logger } from "pino";
 
@@ -17,8 +18,22 @@ import { audioFiles } from "@/db/schema";
 
 import { getWorkerDb } from "../db";
 
-if (process.env.FFMPEG_PATH?.trim()) {
-  ffmpeg.setFfmpegPath(process.env.FFMPEG_PATH.trim());
+/**
+ * `ffmpeg-static` is CJS; the default export is the absolute path to a
+ * platform-specific FFmpeg binary bundled with the package, or `null` if no
+ * binary exists for the current platform/arch (e.g. unsupported musl build).
+ *
+ * Production previously relied on `FFMPEG_PATH` / a system `ffmpeg` install,
+ * which broke on Railway with `spawn /usr/bin/ffmpeg ENOENT`. We now bundle
+ * the binary so transcoding has zero runtime system dependencies.
+ */
+if (ffmpegStatic) {
+  ffmpeg.setFfmpegPath(ffmpegStatic);
+} else {
+  console.warn(
+    "[transcode-audio] ffmpeg-static did not resolve a binary path for this " +
+      "platform; transcoding will fail until an FFmpeg binary is available."
+  );
 }
 
 function mp3DisplayName(originalFilename: string): string {

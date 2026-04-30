@@ -68,7 +68,7 @@ Manual Stage 10 verification: disposable company → events/files → delete via
 
 ## Stage 12 — Ultimate transcoding
 
-The BullMQ worker must find **FFmpeg** on PATH (Windows: `choco install ffmpeg`, or set `FFMPEG_PATH` to `ffmpeg.exe`). Railway/production: install FFmpeg in the worker image when you finalize deployment.
+The BullMQ worker now ships with FFmpeg bundled via the [`ffmpeg-static`](https://www.npmjs.com/package/ffmpeg-static) npm package — **no system FFmpeg install or `FFMPEG_PATH` env var required**, locally or on Railway. Remove `FFMPEG_PATH` from `.env` and Railway env vars; it's no longer read.
 
 Ultimate tier uses seeded feature `audio_transcoding`. WAV/FLAC/AIFF uploads enqueue `transcode-audio`; retail/sync zip/async zip generation prefers the transcoded MP3 when status is succeeded — optional **Download original** on retail when a lossless file remains.
 Account deletion UX hardening needed:
@@ -84,9 +84,9 @@ Audit middleware: deleted users should be hard-redirected to deletion-status pag
 - [ ] Audit middleware: deleted users should always redirect to deletion-status page on every protected route, with working sign-out
 
 ## Pre-launch hardening (transcoding)
-- [ ] FFMPEG_PATH must be set in production environment (Railway deployment will need FFmpeg in container)
-- [ ] Document FFmpeg requirement in deployment runbook
-- [ ] Consider pre-built FFmpeg binary alternatives (ffmpeg-static npm package) to avoid system dependency
+- [x] ~~FFMPEG_PATH must be set in production environment~~ — replaced with `ffmpeg-static` (no system dependency, no env var)
+- [x] ~~Document FFmpeg requirement in deployment runbook~~ — no longer required
+- [x] ~~Consider pre-built FFmpeg binary alternatives~~ — done via `ffmpeg-static`
 ## Stripe billing follow-ups for production launch
 
 - [ ] Switch to Stripe live mode (currently test): regenerate API keys, webhook secret, recreate products + prices in live mode, update env vars
