@@ -9,8 +9,11 @@ import unzipper from "unzipper";
 import type { UploadJobErrorDetail } from "@/db/schema";
 import {
   audioFiles,
+  companies,
   companyFeatures,
+  events,
   features,
+  plans,
   uploadJobs,
 } from "@/db/schema";
 import {
@@ -164,16 +167,21 @@ export async function processExtractZipJob(
 
   const jobRow = await db.query.uploadJobs.findFirst({
     where: eq(uploadJobs.id, payload.uploadJobId),
-    with: {
-      event: {
-        with: { company: { with: { plan: true } } },
-      },
-    },
   });
 
   if (!jobRow) {
     throw new UnrecoverableError(`upload job not found: ${payload.uploadJobId}`);
   }
+
+  const [planLimitRow] = await db
+    .select({ fileLimitPerEvent: plans.fileLimitPerEvent })
+    .from(events)
+    .innerJoin(companies, eq(events.companyId, companies.id))
+    .innerJoin(plans, eq(companies.planId, plans.id))
+    .where(eq(events.id, jobRow.eventId))
+    .limit(1);
+
+  const planLimit = planLimitRow?.fileLimitPerEvent ?? null;
 
   if (
     jobRow.completedAt &&
@@ -204,7 +212,6 @@ export async function processExtractZipJob(
   }
 
   const allowUltimate = await companyHasTranscodingFeature(payload.companyId);
-  const planLimit = jobRow.event.company.plan?.fileLimitPerEvent ?? null;
 
   const now = new Date();
   await db

@@ -7,6 +7,7 @@ import { audioFiles, events, uploadJobs } from "@/db/schema";
 import { getMembershipWithCompany } from "@/lib/company";
 import { companyHasFeatureKey } from "@/lib/company-features";
 import { presignGetUrl } from "@/lib/r2";
+import { addUtcMonths, daysUntilUtcCalendarEnd } from "@/lib/retention";
 
 import {
   EventDetailClient,
@@ -142,6 +143,36 @@ export default async function EventDetailPage(props: {
     completedAt: j.completedAt?.toISOString() ?? null,
   }));
 
+  const planName = membership.company.plan?.name ?? "your";
+
+  const metadataOnlyAfterLabel = eventRow.metadataOnlyAfter
+    ? eventRow.metadataOnlyAfter.toLocaleDateString(undefined, {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+      })
+    : null;
+
+  const permanentRemovalDate = eventRow.metadataOnlyAfter
+    ? addUtcMonths(eventRow.metadataOnlyAfter, 12)
+    : null;
+  const permanentRemovalLabel = permanentRemovalDate
+    ? permanentRemovalDate.toLocaleDateString(undefined, {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+      })
+    : null;
+
+  const daysUntilRetention = eventRow.metadataOnlyAfter
+    ? null
+    : daysUntilUtcCalendarEnd(new Date(), eventRow.retentionUntil);
+  const showRetentionWarning =
+    !eventRow.metadataOnlyAfter &&
+    daysUntilRetention !== null &&
+    daysUntilRetention > 0 &&
+    daysUntilRetention <= 90;
+
   return (
     <EventDetailClient
       eventId={eventRow.id}
@@ -176,6 +207,10 @@ export default async function EventDetailPage(props: {
       retailCoverPreviewUrl={retailCoverPreviewUrl}
       retailPasswordActive={retailPasswordActive}
       retailPasswordSetAtLabel={retailPasswordSetAtLabel}
+      planName={planName}
+      metadataOnlyAfterLabel={metadataOnlyAfterLabel}
+      permanentRemovalLabel={permanentRemovalLabel}
+      showRetentionWarning={showRetentionWarning}
     />
   );
 }

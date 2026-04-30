@@ -55,7 +55,10 @@ export async function GET(req: Request, ctx: RouteCtx) {
   }
 
   try {
-    const payload = await buildRetailPublicPayload(event);
+    const payload = await buildRetailPublicPayload(event, {
+      companySlug: decodeURIComponent(companySlug),
+      clientSlug: decodeURIComponent(clientSlug),
+    });
     return NextResponse.json(payload);
   } catch (e) {
     console.error("retail public payload", e);

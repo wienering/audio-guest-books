@@ -48,6 +48,37 @@ export const uploadJobStatusEnum = pgEnum("upload_job_status", [
   "partial",
 ]);
 
+export const retentionNotifyThresholdEnum = pgEnum("retention_notify_threshold", [
+  "60_days",
+  "30_days",
+  "7_days",
+]);
+
+export const downloadJobKindEnum = pgEnum("download_job_kind", ["bulk_zip"]);
+
+export const downloadJobStatusEnum = pgEnum("download_job_status", [
+  "pending",
+  "processing",
+  "succeeded",
+  "failed",
+  "expired",
+]);
+
+export const emailKindEnum = pgEnum("email_kind", [
+  "retention_notification_60d",
+  "retention_notification_30d",
+  "retention_notification_7d",
+  "files_deleted",
+  "retail_invitation_default",
+  "retail_invitation_custom",
+]);
+
+export const emailStatusEnum = pgEnum("email_status", [
+  "queued",
+  "sent",
+  "failed",
+]);
+
 export type UploadJobErrorDetail = { filename: string; reason: string };
 
 export const plans = pgTable(
@@ -59,6 +90,8 @@ export const plans = pgTable(
     priceCents: integer("price_cents").notNull().default(0),
     /** Max audio files per event; null means unlimited (Ultimate). */
     fileLimitPerEvent: integer("file_limit_per_event"),
+    /** Default retention length for new events (calendar months from creation). */
+    defaultRetentionMonths: integer("default_retention_months").notNull().default(6),
     stripePriceId: text("stripe_price_id"),
     createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
@@ -172,6 +205,20 @@ export const events = pgTable(
     coverImageStorageKey: text("cover_image_storage_key"),
     /** Kept until: row creation instant + plan retention months (not `eventDate`). */
     retentionUntil: date("retention_until", { mode: "date" }).notNull(),
+    retentionExtendedCount: integer("retention_extended_count")
+      .notNull()
+      .default(0),
+    lastRetentionNotificationSentAt: timestamp(
+      "last_retention_notification_sent_at",
+      { withTimezone: true }
+    ),
+    lastRetentionNotificationThreshold: retentionNotifyThresholdEnum(
+      "last_retention_notification_threshold"
+    ),
+    /** After file purge from R2; retail shows "files unavailable". */
+    metadataOnlyAfter: date("metadata_only_after", { mode: "date" }),
+    /** Set immediately before hard-delete for symmetry with spec (row removed after). */
+    metadataPurgedAt: timestamp("metadata_purged_at", { withTimezone: true }),
     createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
     deletedAt: timestamp("deleted_at", { withTimezone: true }),
@@ -218,6 +265,45 @@ export const audioFiles = pgTable(
   },
   (t) => [uniqueIndex("audio_files_storage_key_uidx").on(t.storageKey)]
 );
+
+export const downloadJobs = pgTable("download_jobs", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  eventId: uuid("event_id")
+    .references(() => events.id, { onDelete: "cascade" })
+    .notNull(),
+  kind: downloadJobKindEnum("kind").notNull().default("bulk_zip"),
+  status: downloadJobStatusEnum("status").notNull().default("pending"),
+  requestedByIpHash: text("requested_by_ip_hash").notNull(),
+  resultStorageKey: text("result_storage_key"),
+  resultSizeBytes: bigint("result_size_bytes", { mode: "number" }),
+  expiresAt: timestamp("expires_at", { withTimezone: true }),
+  errorMessage: text("error_message"),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+  startedAt: timestamp("started_at", { withTimezone: true }),
+  completedAt: timestamp("completed_at", { withTimezone: true }),
+});
+
+export const emailLog = pgTable("email_log", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  toEmail: text("to_email").notNull(),
+  kind: emailKindEnum("kind").notNull(),
+  eventId: uuid("event_id").references(() => events.id, {
+    onDelete: "set null",
+  }),
+  companyId: uuid("company_id").references(() => companies.id, {
+    onDelete: "set null",
+  }),
+  resendMessageId: text("resend_message_id"),
+  subject: text("subject").notNull(),
+  status: emailStatusEnum("status").notNull().default("queued"),
+  errorMessage: text("error_message"),
+  sentAt: timestamp("sent_at", { withTimezone: true }),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+});
 
 export const uploadJobs = pgTable("upload_jobs", {
   id: uuid("id").defaultRandom().primaryKey(),
@@ -325,6 +411,24 @@ export const retailPageSessionsRelations = relations(
   })
 );
 
+export const downloadJobsRelations = relations(downloadJobs, ({ one }) => ({
+  event: one(events, {
+    fields: [downloadJobs.eventId],
+    references: [events.id],
+  }),
+}));
+
+export const emailLogRelations = relations(emailLog, ({ one }) => ({
+  event: one(events, {
+    fields: [emailLog.eventId],
+    references: [events.id],
+  }),
+  company: one(companies, {
+    fields: [emailLog.companyId],
+    references: [companies.id],
+  }),
+}));
+
 export const eventsRelations = relations(events, ({ one, many }) => ({
   company: one(companies, {
     fields: [events.companyId],
@@ -332,6 +436,7 @@ export const eventsRelations = relations(events, ({ one, many }) => ({
   }),
   audioFiles: many(audioFiles),
   uploadJobs: many(uploadJobs),
+  downloadJobs: many(downloadJobs),
   analyticsEvents: many(eventAnalyticsEvents),
   retailPageSessions: many(retailPageSessions),
 }));

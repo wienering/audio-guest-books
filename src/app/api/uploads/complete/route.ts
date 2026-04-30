@@ -42,7 +42,12 @@ export async function POST(req: Request) {
       isNull(audioFiles.deletedAt)
     ),
     with: {
-      event: true,
+      event: {
+        columns: {
+          companyId: true,
+          deletedAt: true,
+        },
+      },
     },
   });
 

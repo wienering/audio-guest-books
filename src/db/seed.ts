@@ -80,6 +80,7 @@ async function main() {
         name: "Free",
         priceCents: 0,
         fileLimitPerEvent: 10,
+        defaultRetentionMonths: 6,
         stripePriceId: null,
       },
       {
@@ -87,6 +88,7 @@ async function main() {
         name: "Pro",
         priceCents: 0,
         fileLimitPerEvent: 100,
+        defaultRetentionMonths: 18,
         stripePriceId: null,
       },
       {
@@ -94,6 +96,7 @@ async function main() {
         name: "Ultimate",
         priceCents: 500,
         fileLimitPerEvent: null,
+        defaultRetentionMonths: 24,
         stripePriceId: null,
       },
     ])
@@ -145,15 +148,15 @@ async function main() {
 
   await db
     .update(plans)
-    .set({ fileLimitPerEvent: 10 })
+    .set({ fileLimitPerEvent: 10, defaultRetentionMonths: 6 })
     .where(eq(plans.code, "free"));
   await db
     .update(plans)
-    .set({ fileLimitPerEvent: 100 })
+    .set({ fileLimitPerEvent: 100, defaultRetentionMonths: 18 })
     .where(eq(plans.code, "pro"));
   await db
     .update(plans)
-    .set({ fileLimitPerEvent: null })
+    .set({ fileLimitPerEvent: null, defaultRetentionMonths: 24 })
     .where(eq(plans.code, "ultimate"));
 
   console.log("Seed completed: plans, features, plan_features.");

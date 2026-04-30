@@ -25,7 +25,6 @@ export async function GET(
 
   const row = await db.query.uploadJobs.findFirst({
     where: eq(uploadJobs.id, id),
-    with: { event: true },
   });
 
   if (!row || row.companyId !== membership.company.id) {

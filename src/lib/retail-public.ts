@@ -5,6 +5,11 @@ import { and, asc, eq, isNotNull, isNull } from "drizzle-orm";
 import { db } from "@/db/index";
 import { audioFiles, companies, events } from "@/db/schema";
 import { presignGetUrl } from "@/lib/r2";
+import { bulkZipUsesSyncPath } from "@/lib/bulk-zip-policy";
+
+import type { RetailBulkZip } from "@/lib/retail-types";
+
+export { formatRetailEventDate } from "@/lib/format-retail-event-date";
 
 export type RetailResolveError = "company_not_found" | "event_not_found";
 
@@ -21,6 +26,8 @@ export type RetailPublicEventPayload = {
   /** ISO date yyyy-mm-dd */
   eventDateIso: string;
   files: RetailPublicAudioFile[];
+  recordingFilesAvailable: boolean;
+  bulkZip: RetailBulkZip | null;
 };
 
 export async function resolveRetailEventForSlugs(
@@ -55,27 +62,50 @@ export async function resolveRetailEventForSlugs(
   return { company, event };
 }
 
-export async function buildRetailPublicPayload(event: {
-  id: string;
-  name: string;
-  retailClientName: string;
-  eventDate: Date;
-  audioFiles: Array<{
+export async function buildRetailPublicPayload(
+  event: {
     id: string;
-    originalFilename: string;
-    storageKey: string;
-    durationSeconds: number | null;
-  }>;
-}): Promise<RetailPublicEventPayload> {
+    name: string;
+    retailClientName: string;
+    eventDate: Date;
+    metadataOnlyAfter: Date | null;
+    audioFiles: Array<{
+      id: string;
+      originalFilename: string;
+      storageKey: string;
+      durationSeconds: number | null;
+      sizeBytes: number;
+    }>;
+  },
+  slugs: { companySlug: string; clientSlug: string }
+): Promise<RetailPublicEventPayload> {
+  const recordingFilesAvailable = event.metadataOnlyAfter == null;
+  const apiSeg = `/api/retail/${encodeURIComponent(slugs.companySlug)}/${encodeURIComponent(slugs.clientSlug)}`;
+
   const files: RetailPublicAudioFile[] = [];
-  for (const f of event.audioFiles) {
-    const playbackUrl = await presignGetUrl({ key: f.storageKey });
-    files.push({
-      id: f.id,
-      originalFilename: f.originalFilename,
-      durationSeconds: f.durationSeconds,
-      playbackUrl,
-    });
+  if (recordingFilesAvailable) {
+    for (const f of event.audioFiles) {
+      const playbackUrl = await presignGetUrl({ key: f.storageKey });
+      files.push({
+        id: f.id,
+        originalFilename: f.originalFilename,
+        durationSeconds: f.durationSeconds,
+        playbackUrl,
+      });
+    }
+  }
+
+  let bulkZip: RetailPublicEventPayload["bulkZip"] = null;
+  if (recordingFilesAvailable && event.audioFiles.length > 0) {
+    if (bulkZipUsesSyncPath(event.audioFiles)) {
+      bulkZip = { mode: "sync", zipUrl: `${apiSeg}/zip` };
+    } else {
+      bulkZip = {
+        mode: "async",
+        zipRequestUrl: `${apiSeg}/zip-request`,
+        zipStatusUrl: `${apiSeg}/zip-status`,
+      };
+    }
   }
 
   return {
@@ -83,20 +113,9 @@ export async function buildRetailPublicPayload(event: {
     retailClientName: event.retailClientName,
     eventDateIso: event.eventDate.toISOString().slice(0, 10),
     files,
+    recordingFilesAvailable,
+    bulkZip,
   };
-}
-
-export function formatRetailEventDate(isoDate: string): string {
-  const [y, m, d] = isoDate.split("-").map(Number);
-  if (!y || !m || !d) return isoDate;
-  const dt = new Date(Date.UTC(y, m - 1, d));
-  return new Intl.DateTimeFormat("en-US", {
-    weekday: "long",
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-    timeZone: "UTC",
-  }).format(dt);
 }
 
 export function sanitizeZipBaseName(name: string): string {

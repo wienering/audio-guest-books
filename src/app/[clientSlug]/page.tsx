@@ -8,6 +8,7 @@ import { RetailGuestbookClient } from "@/components/retail/retail-guestbook-clie
 import { RetailMaybeImage } from "@/components/retail/retail-maybe-image";
 import { RetailPasswordGate } from "@/components/retail/retail-password-gate";
 import {
+  RetailFilesRemovedMessage,
   RetailPageNotAvailableMessage,
   ReservedSubdomainMessage,
   TenantNotFoundMessage,
@@ -143,7 +144,10 @@ export default async function RetailClientPage({ params }: Props) {
     }
   }
 
-  const payload = await buildRetailPublicPayload(event);
+  const payload = await buildRetailPublicPayload(event, {
+    companySlug,
+    clientSlug,
+  });
   const eventDateLabel = formatRetailEventDate(payload.eventDateIso);
 
   return (
@@ -197,11 +201,16 @@ export default async function RetailClientPage({ params }: Props) {
       </header>
 
       <main className="mx-auto w-full max-w-3xl flex-1 px-4 py-10 sm:px-8">
-        <RetailGuestbookClient
-          companySlug={companySlug}
-          clientSlug={clientSlug}
-          files={payload.files}
-        />
+        {!payload.recordingFilesAvailable ? (
+          <RetailFilesRemovedMessage />
+        ) : (
+          <RetailGuestbookClient
+            companySlug={companySlug}
+            clientSlug={clientSlug}
+            files={payload.files}
+            bulkZip={payload.bulkZip}
+          />
+        )}
       </main>
 
       <RetailFooter visible={!removePoweredByFooter} />

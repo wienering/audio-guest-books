@@ -9,9 +9,12 @@ import {
   useMemo,
   useRef,
   useState,
+  useTransition,
 } from "react";
 import { toast } from "sonner";
 import { X } from "lucide-react";
+
+import { extendRetentionAction } from "./retention-actions";
 
 import { buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -114,6 +117,10 @@ export type EventDetailClientProps = {
   retailCoverPreviewUrl: string | null;
   retailPasswordActive: boolean;
   retailPasswordSetAtLabel: string | null;
+  planName: string;
+  metadataOnlyAfterLabel: string | null;
+  permanentRemovalLabel: string | null;
+  showRetentionWarning: boolean;
 };
 
 function putToPresignedUrl(
@@ -356,6 +363,7 @@ function AudioRow(props: {
 export function EventDetailClient(props: EventDetailClientProps) {
   const router = useRouter();
   const inputId = useId();
+  const [extendPending, startExtendTransition] = useTransition();
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [dragActive, setDragActive] = useState(false);
   const [uploadPct, setUploadPct] = useState<number | null>(null);
@@ -686,9 +694,51 @@ export function EventDetailClient(props: EventDetailClientProps) {
             {props.retailClientSlug}
           </code>
         </p>
-        <p className="text-muted-foreground text-xs">
-          Retention until {props.retentionUntilLabel} (per plan).
-        </p>
+        {props.metadataOnlyAfterLabel && props.permanentRemovalLabel ? (
+          <div className="rounded-lg border border-amber-500/35 bg-amber-500/10 px-4 py-3 text-amber-950 text-sm dark:border-amber-500/40 dark:bg-amber-500/10 dark:text-amber-100">
+            Files were deleted on {props.metadataOnlyAfterLabel}. This event
+            will be permanently removed on {props.permanentRemovalLabel}.
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {props.showRetentionWarning ? (
+              <div className="rounded-lg border border-amber-500/35 bg-amber-500/10 px-4 py-3 text-amber-950 text-sm dark:border-amber-500/40 dark:bg-amber-500/10 dark:text-amber-100">
+                Retention is approaching. Extend now if you need recordings
+                available longer (within your plan limits).
+              </div>
+            ) : null}
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <p className="text-muted-foreground text-sm">
+                Files retained until {props.retentionUntilLabel} (per{" "}
+                <span className="text-foreground font-medium">
+                  {props.planName}
+                </span>{" "}
+                plan).
+              </p>
+              <button
+                type="button"
+                disabled={extendPending}
+                className={cn(
+                  buttonVariants({ variant: "secondary", size: "sm" }),
+                  "shrink-0"
+                )}
+                onClick={() => {
+                  startExtendTransition(async () => {
+                    const r = await extendRetentionAction(props.eventId);
+                    if (r.ok) {
+                      toast.success("Retention extended by up to 12 months.");
+                      router.refresh();
+                    } else {
+                      toast.error(r.message);
+                    }
+                  });
+                }}
+              >
+                {extendPending ? "Extending…" : "Extend retention by 12 months"}
+              </button>
+            </div>
+          </div>
+        )}
       </header>
 
       <EventRetailAppearanceSection

@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo, useRef, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import { Download } from "lucide-react";
 
 import {
@@ -9,18 +9,140 @@ import {
   type RetailAudioPlayerHandle,
 } from "@/components/retail/audio-player";
 import { buttonVariants } from "@/components/ui/button";
+import type { RetailBulkZip } from "@/lib/retail-types";
 import { cn } from "@/lib/utils";
 
 type Props = {
   companySlug: string;
   clientSlug: string;
   files: RetailAudioFile[];
+  bulkZip: RetailBulkZip | null;
 };
+
+const POLL_MS = 3000;
+const MAX_POLLS = 240;
+
+function AsyncZipButton(props: { zipRequestUrl: string; zipStatusUrl: string }) {
+  const { zipRequestUrl, zipStatusUrl } = props;
+  const [phase, setPhase] = useState<"idle" | "working" | "error">("idle");
+  const [errMessage, setErrMessage] = useState<string | null>(null);
+
+  const run = useCallback(async () => {
+    setPhase("working");
+    setErrMessage(null);
+    try {
+      const r = await fetch(zipRequestUrl, {
+        method: "POST",
+        credentials: "same-origin",
+      });
+      const j = (await r.json()) as {
+        status?: string;
+        jobId?: string;
+        downloadUrl?: string;
+        error?: string;
+      };
+      if (!r.ok) {
+        setPhase("error");
+        setErrMessage(j.error ?? "Could not start download.");
+        return;
+      }
+      if (j.status === "ready" && j.downloadUrl) {
+        window.location.assign(j.downloadUrl);
+        setPhase("idle");
+        return;
+      }
+      const jobId = j.jobId;
+      if (!jobId) {
+        setPhase("error");
+        setErrMessage("Invalid server response.");
+        return;
+      }
+      for (let n = 0; n < MAX_POLLS; n += 1) {
+        await new Promise((res) => setTimeout(res, POLL_MS));
+        const s = await fetch(
+          `${zipStatusUrl}?jobId=${encodeURIComponent(jobId)}`,
+          { credentials: "same-origin" }
+        );
+        const sj = (await s.json()) as {
+          status?: string;
+          downloadUrl?: string;
+          error?: string;
+          message?: string;
+        };
+        if (sj.status === "ready" && sj.downloadUrl) {
+          window.location.assign(sj.downloadUrl);
+          setPhase("idle");
+          return;
+        }
+        if (sj.status === "failed") {
+          setPhase("error");
+          setErrMessage(sj.error ?? "Zip generation failed.");
+          return;
+        }
+        if (sj.status === "expired") {
+          setPhase("error");
+          setErrMessage(sj.message ?? "Download expired. Try again.");
+          return;
+        }
+      }
+      setPhase("error");
+      setErrMessage("Still preparing — try again in a few minutes.");
+    } catch {
+      setPhase("error");
+      setErrMessage("Network error.");
+    }
+  }, [zipRequestUrl, zipStatusUrl]);
+
+  return (
+    <div className="flex flex-col gap-2 sm:items-end">
+      <button
+        type="button"
+        disabled={phase === "working"}
+        onClick={() => void run()}
+        className={cn(
+          buttonVariants({ size: "lg" }),
+          "h-11 min-h-11 justify-center px-5 text-base text-white hover:brightness-110 sm:text-lg disabled:opacity-70"
+        )}
+        style={{ background: "var(--retail-accent)" }}
+      >
+        {phase === "working" ? (
+          "Preparing download…"
+        ) : (
+          <span className="flex items-center justify-center gap-2">
+            <Download className="size-4" aria-hidden />
+            Download all (ZIP)
+          </span>
+        )}
+      </button>
+      {phase === "working" ? (
+        <p className="max-w-md text-right text-sm text-[var(--retail-muted)]">
+          Preparing your download… This may take a few minutes for large events.
+        </p>
+      ) : null}
+      {phase === "error" && errMessage ? (
+        <div className="flex flex-col items-end gap-2 text-right text-sm text-red-600">
+          <p>{errMessage}</p>
+          <button
+            type="button"
+            className="font-medium underline underline-offset-2"
+            onClick={() => {
+              setPhase("idle");
+              setErrMessage(null);
+            }}
+          >
+            Dismiss
+          </button>
+        </div>
+      ) : null}
+    </div>
+  );
+}
 
 export function RetailGuestbookClient({
   companySlug,
   clientSlug,
   files,
+  bulkZip,
 }: Props) {
   const apiBase = `/api/retail/${encodeURIComponent(companySlug)}/${encodeURIComponent(clientSlug)}`;
   const playerRef = useRef<RetailAudioPlayerHandle>(null);
@@ -28,7 +150,7 @@ export function RetailGuestbookClient({
     files[0]?.id ?? null
   );
 
-  const listFiles = useMemo(() => files, [files]);
+  const listFiles = files;
 
   const onAdvanceToNext = useCallback(() => {
     setActiveFileId((cur) => {
@@ -62,8 +184,6 @@ export function RetailGuestbookClient({
     [apiBase]
   );
 
-  const zipHref = `${apiBase}/zip`;
-
   const onRowActivate = useCallback(
     (id: string) => {
       if (id === activeFileId) {
@@ -90,16 +210,26 @@ export function RetailGuestbookClient({
           <h2 className="text-xl font-semibold text-[var(--retail-text)] sm:text-2xl">
             Recordings
           </h2>
-          <a
-            href={zipHref}
-            className={cn(
-              buttonVariants({ size: "lg" }),
-              "h-11 min-h-11 justify-center px-5 text-base text-white hover:brightness-110 sm:text-lg"
-            )}
-            style={{ background: "var(--retail-accent)" }}
-          >
-            Download all (ZIP)
-          </a>
+          {bulkZip?.mode === "sync" ? (
+            <a
+              href={bulkZip.zipUrl}
+              className={cn(
+                buttonVariants({ size: "lg" }),
+                "h-11 min-h-11 justify-center px-5 text-base text-white hover:brightness-110 sm:text-lg"
+              )}
+              style={{ background: "var(--retail-accent)" }}
+            >
+              <span className="flex items-center justify-center gap-2">
+                <Download className="size-4" aria-hidden />
+                Download all (ZIP)
+              </span>
+            </a>
+          ) : bulkZip?.mode === "async" ? (
+            <AsyncZipButton
+              zipRequestUrl={bulkZip.zipRequestUrl}
+              zipStatusUrl={bulkZip.zipStatusUrl}
+            />
+          ) : null}
         </div>
 
         {listFiles.length === 0 ? (

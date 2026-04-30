@@ -4,7 +4,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 
 import { db } from "@/db/index";
-import { uploadJobs } from "@/db/schema";
+import { events, uploadJobs } from "@/db/schema";
 import { enqueueExtractZipJob } from "@/lib/queue";
 import { getMembershipWithCompany } from "@/lib/company";
 import { headObject } from "@/lib/r2";
@@ -39,16 +39,19 @@ export async function POST(req: Request) {
 
   const row = await db.query.uploadJobs.findFirst({
     where: eq(uploadJobs.id, parsed.data.upload_job_id),
-    with: {
-      event: true,
-    },
   });
 
-  if (!row || row.event.companyId !== membership.company.id) {
+  if (!row || row.companyId !== membership.company.id) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
 
-  if (row.event.deletedAt) {
+  const [ev] = await db
+    .select({ deletedAt: events.deletedAt })
+    .from(events)
+    .where(eq(events.id, row.eventId))
+    .limit(1);
+
+  if (!ev || ev.deletedAt) {
     return NextResponse.json({ error: "Event not available" }, { status: 400 });
   }
 

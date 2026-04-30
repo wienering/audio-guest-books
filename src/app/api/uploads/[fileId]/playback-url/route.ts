@@ -25,7 +25,14 @@ export async function GET(_req: Request, ctx: RouteCtx) {
 
   const row = await db.query.audioFiles.findFirst({
     where: and(eq(audioFiles.id, fileId), isNull(audioFiles.deletedAt)),
-    with: { event: true },
+    with: {
+      event: {
+        columns: {
+          companyId: true,
+          deletedAt: true,
+        },
+      },
+    },
   });
 
   if (!row || row.event.companyId !== membership.company.id) {

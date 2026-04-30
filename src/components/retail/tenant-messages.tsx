@@ -43,6 +43,31 @@ export function RetailPageNotAvailableMessage() {
   );
 }
 
+export function RetailFilesRemovedMessage() {
+  return (
+    <section
+      aria-label="Recordings unavailable"
+      className="rounded-xl border px-6 py-12 text-center"
+      style={{
+        borderColor: "var(--retail-border)",
+        background:
+          "color-mix(in srgb, var(--retail-bg) 96%, var(--retail-muted) 4%)",
+      }}
+    >
+      <h2 className="text-xl font-semibold text-[var(--retail-text)]">
+        Recordings no longer available
+      </h2>
+      <p
+        className="mx-auto mt-4 max-w-md text-lg leading-relaxed text-[var(--retail-muted)]"
+      >
+        The audio files for this guest book have been removed as part of the
+        studio&apos;s retention policy. If you need a copy, please reach out to
+        the host who shared this page.
+      </p>
+    </section>
+  );
+}
+
 export function TenantRootPlaceholder({
   companySlug,
   appUrl,

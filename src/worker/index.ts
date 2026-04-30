@@ -1,11 +1,17 @@
 import "dotenv/config";
 
-import { Worker } from "bullmq";
-import { eq } from "drizzle-orm";
+import { Queue, Worker } from "bullmq";
+import { and, eq } from "drizzle-orm";
 import pino from "pino";
 
-import { uploadJobs } from "@/db/schema";
-import { EXTRACT_ZIP_QUEUE_NAME } from "@/lib/queue";
+import type { AppDatabase } from "@/db/index";
+import { downloadJobs, uploadJobs } from "@/db/schema";
+import {
+  EXTRACT_ZIP_QUEUE_NAME,
+  GENERATE_ZIP_QUEUE_NAME,
+  RETENTION_SCHEDULER_QUEUE_NAME,
+} from "@/lib/queue";
+import { runRetentionScheduler } from "@/lib/retention-scheduler";
 import { createRedisFromEnv } from "@/lib/redis";
 
 import { closeWorkerDb, getWorkerDb } from "./db";
@@ -14,6 +20,10 @@ import {
   processExtractZipJob,
   type ExtractZipPayload,
 } from "./jobs/extract-zip";
+import {
+  processGenerateZipJob,
+  type GenerateZipPayload,
+} from "./jobs/generate-zip";
 
 const log = pino({
   level: process.env.LOG_LEVEL ?? "info",
@@ -22,7 +32,7 @@ const log = pino({
 
 const connection = createRedisFromEnv();
 
-const worker = new Worker<ExtractZipPayload>(
+const extractWorker = new Worker<ExtractZipPayload>(
   EXTRACT_ZIP_QUEUE_NAME,
   async (job) => {
     const started = Date.now();
@@ -58,21 +68,108 @@ const worker = new Worker<ExtractZipPayload>(
   }
 );
 
-worker.on("failed", async (job, err) => {
+const generateZipWorker = new Worker<GenerateZipPayload>(
+  GENERATE_ZIP_QUEUE_NAME,
+  async (job) => {
+    const started = Date.now();
+    log.info(
+      { bullmqJobId: job.id, ...job.data },
+      "generate-zip job start"
+    );
+    await processGenerateZipJob(job.data, log);
+    const row = await getWorkerDb().query.downloadJobs.findFirst({
+      where: eq(downloadJobs.id, job.data.downloadJobId),
+    });
+    log.info(
+      {
+        bullmqJobId: job.id,
+        jobId: job.data.downloadJobId,
+        status: row?.status ?? "unknown",
+        durationMs: Date.now() - started,
+      },
+      "generate-zip job end"
+    );
+  },
+  {
+    connection,
+    concurrency: 1,
+  }
+);
+
+const retentionWorker = new Worker(
+  RETENTION_SCHEDULER_QUEUE_NAME,
+  async () => {
+    log.info("retention scheduler job start");
+    await runRetentionScheduler(
+      getWorkerDb() as unknown as AppDatabase,
+      log
+    );
+    log.info("retention scheduler job end");
+  },
+  {
+    connection,
+    concurrency: 1,
+  }
+);
+
+void (async () => {
+  const q = new Queue(RETENTION_SCHEDULER_QUEUE_NAME, { connection });
+  try {
+    await q.add(
+      "retention-daily",
+      {},
+      {
+        repeat: { pattern: "0 3 * * *", tz: "UTC" },
+        jobId: "retention-daily-utc-v1",
+      }
+    );
+    log.info("retention scheduler repeatable job registered");
+  } catch (e) {
+    log.warn({ e }, "retention scheduler registration failed");
+  }
+})();
+
+extractWorker.on("failed", async (job, err) => {
   if (!job?.data?.uploadJobId || !err) return;
   if (!job.finishedOn) return;
   await markUploadJobFailedFromWorkerError(job.data.uploadJobId, err, log);
 });
 
-worker.on("error", (err) => {
-  log.error({ err }, "worker error");
+generateZipWorker.on("failed", async (job, err) => {
+  if (!job?.data?.downloadJobId || !err) return;
+  const db = getWorkerDb();
+  await db
+    .update(downloadJobs)
+    .set({
+      status: "failed",
+      completedAt: new Date(),
+      errorMessage: err.message.slice(0, 2000),
+    })
+    .where(
+      and(
+        eq(downloadJobs.id, job.data.downloadJobId),
+        eq(downloadJobs.status, "processing")
+      )
+    );
+});
+
+extractWorker.on("error", (err) => {
+  log.error({ err }, "extract worker error");
+});
+generateZipWorker.on("error", (err) => {
+  log.error({ err }, "generate-zip worker error");
+});
+retentionWorker.on("error", (err) => {
+  log.error({ err }, "retention worker error");
 });
 
 log.info("worker started");
 
 async function shutdown(signal: string) {
-  log.info({ signal }, "shutdown: closing worker");
-  await worker.close();
+  log.info({ signal }, "shutdown: closing workers");
+  await extractWorker.close();
+  await generateZipWorker.close();
+  await retentionWorker.close();
   await connection.quit();
   await closeWorkerDb();
   process.exit(0);

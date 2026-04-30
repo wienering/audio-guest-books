@@ -4,6 +4,7 @@ import { NextResponse } from "next/server";
 import { PassThrough } from "node:stream";
 import { Readable } from "node:stream";
 
+import { bulkZipUsesSyncPath } from "@/lib/bulk-zip-policy";
 import { hashIp, logRetailAnalytics } from "@/lib/retail-analytics";
 import {
   resolveRetailEventForSlugs,
@@ -52,6 +53,25 @@ export async function GET(req: Request, ctx: RouteCtx) {
   }
 
   const { event } = resolved;
+
+  if (event.metadataOnlyAfter) {
+    return NextResponse.json({ error: "Files no longer available" }, { status: 410 });
+  }
+
+  if (!event.audioFiles.length) {
+    return NextResponse.json({ error: "No files to zip" }, { status: 400 });
+  }
+
+  if (!bulkZipUsesSyncPath(event.audioFiles)) {
+    return NextResponse.json(
+      {
+        error: "This collection is too large for a direct download.",
+        code: "ASYNC_ZIP_REQUIRED",
+      },
+      { status: 409 }
+    );
+  }
+
   const ac = analyticsContextFromRequest(req);
   try {
     await logRetailAnalytics({

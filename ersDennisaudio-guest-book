@@ -1,0 +1,53 @@
+warning: in the working copy of 'src/worker/jobs/extract-zip.ts', LF will be replaced by CRLF the next time Git touches it
+[1mdiff --git a/src/worker/jobs/extract-zip.ts b/src/worker/jobs/extract-zip.ts[m
+[1mindex 517601a..b5cd9d9 100644[m
+[1m--- a/src/worker/jobs/extract-zip.ts[m
+[1m+++ b/src/worker/jobs/extract-zip.ts[m
+[36m@@ -9,8 +9,11 @@[m [mimport unzipper from "unzipper";[m
+ import type { UploadJobErrorDetail } from "@/db/schema";[m
+ import {[m
+   audioFiles,[m
+[32m+[m[32m  companies,[m
+   companyFeatures,[m
+[32m+[m[32m  events,[m
+   features,[m
+[32m+[m[32m  plans,[m
+   uploadJobs,[m
+ } from "@/db/schema";[m
+ import {[m
+[36m@@ -164,17 +167,22 @@[m [mexport async function processExtractZipJob([m
+ [m
+   const jobRow = await db.query.uploadJobs.findFirst({[m
+     where: eq(uploadJobs.id, payload.uploadJobId),[m
+[31m-    with: {[m
+[31m-      event: {[m
+[31m-        with: { company: { with: { plan: true } } },[m
+[31m-      },[m
+[31m-    },[m
+   });[m
+ [m
+   if (!jobRow) {[m
+     throw new UnrecoverableError(`upload job not found: ${payload.uploadJobId}`);[m
+   }[m
+ [m
+[32m+[m[32m  const [planLimitRow] = await db[m
+[32m+[m[32m    .select({ fileLimitPerEvent: plans.fileLimitPerEvent })[m
+[32m+[m[32m    .from(events)[m
+[32m+[m[32m    .innerJoin(companies, eq(events.companyId, companies.id))[m
+[32m+[m[32m    .innerJoin(plans, eq(companies.planId, plans.id))[m
+[32m+[m[32m    .where(eq(events.id, jobRow.eventId))[m
+[32m+[m[32m    .limit(1);[m
+[32m+[m
+[32m+[m[32m  const planLimit = planLimitRow?.fileLimitPerEvent ?? null;[m
+[32m+[m
+   if ([m
+     jobRow.completedAt &&[m
+     (jobRow.status === "succeeded" ||[m
+[36m@@ -204,7 +212,6 @@[m [mexport async function processExtractZipJob([m
+   }[m
+ [m
+   const allowUltimate = await companyHasTranscodingFeature(payload.companyId);[m
+[31m-  const planLimit = jobRow.event.company.plan?.fileLimitPerEvent ?? null;[m
+ [m
+   const now = new Date();[m
+   await db[m

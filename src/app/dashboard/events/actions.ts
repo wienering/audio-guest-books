@@ -10,7 +10,10 @@ import { randomUUID } from "node:crypto";
 import { db } from "@/db/index";
 import { events } from "@/db/schema";
 import { getMembershipWithCompany } from "@/lib/company";
-import { computeRetentionUntil } from "@/lib/retention";
+import {
+  computeRetentionUntil,
+  retentionMonthsForPlanCode,
+} from "@/lib/retention";
 
 const eventTypeSchema = z.enum([
   "wedding",
@@ -197,7 +200,9 @@ export async function createEvent(
   }
 
   const eventDate = new Date(`${parsed.data.eventDate}T12:00:00.000Z`);
-  const retentionUntil = computeRetentionUntil(plan.code, new Date());
+  const retentionMonths =
+    plan.defaultRetentionMonths ?? retentionMonthsForPlanCode(plan.code);
+  const retentionUntil = computeRetentionUntil(retentionMonths, new Date());
 
   const [created] = await db
     .insert(events)
