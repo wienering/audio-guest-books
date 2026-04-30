@@ -25,3 +25,8 @@ if (process.env.NODE_ENV !== "production") {
 }
 
 export type AppDatabase = typeof db;
+
+/** Same interface for inserts/updates inside `db.transaction`. */
+export type AppDbClient =
+  | AppDatabase
+  | Parameters<Parameters<AppDatabase["transaction"]>[0]>[0];

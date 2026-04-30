@@ -81,6 +81,8 @@ export const emailKindEnum = pgEnum("email_kind", [
   "retail_invitation_default",
   "retail_invitation_custom",
   "account_deletion_requested",
+  "billing_subscription_created",
+  "billing_subscription_ended",
 ]);
 
 export const emailStatusEnum = pgEnum("email_status", [
@@ -147,8 +149,14 @@ export const companies = pgTable(
     stripeCustomerId: text("stripe_customer_id"),
     stripeSubscriptionId: text("stripe_subscription_id"),
     subscriptionStatus: text("subscription_status"),
-    cancelAtPeriodEnd: timestamp("cancel_at_period_end", { withTimezone: true }),
-    currentPeriodEnd: timestamp("current_period_end", { withTimezone: true }),
+    /** When true, the subscription remains active until subscriptionCurrentPeriodEnd. */
+    subscriptionCancelAtPeriodEnd: boolean("subscription_cancel_at_period_end")
+      .notNull()
+      .default(false),
+    subscriptionCurrentPeriodEnd: timestamp("subscription_current_period_end", {
+      withTimezone: true,
+    }),
+    subscriptionPlanCode: text("subscription_plan_code"),
     isFoundingMember: boolean("is_founding_member").notNull().default(false),
     logoStorageKey: text("logo_storage_key"),
     themePrimary: text("theme_primary"),
@@ -166,6 +174,34 @@ export const companies = pgTable(
     updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
   },
   (t) => [uniqueIndex("companies_slug_uidx").on(t.slug)]
+);
+
+export const stripeEventsProcessed = pgTable("stripe_events_processed", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  stripeEventId: text("stripe_event_id").notNull().unique(),
+  eventType: text("event_type").notNull(),
+  processedAt: timestamp("processed_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+});
+
+export const billingAuditLog = pgTable(
+  "billing_audit_log",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    companyId: uuid("company_id")
+      .references(() => companies.id, { onDelete: "cascade" })
+      .notNull(),
+    eventType: text("event_type").notNull(),
+    fromState: text("from_state"),
+    toState: text("to_state"),
+    stripeEventId: text("stripe_event_id"),
+    metadata: jsonb("metadata").$type<Record<string, unknown> | null>(),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (t) => [index("billing_audit_log_company_id_idx").on(t.companyId)]
 );
 
 /** Anonymized audit row kept after account hard-delete (no PII). */
@@ -447,6 +483,14 @@ export const companiesRelations = relations(companies, ({ one, many }) => ({
   events: many(events),
   uploadJobs: many(uploadJobs),
   emailTemplates: many(emailTemplates),
+  billingAuditLogs: many(billingAuditLog),
+}));
+
+export const billingAuditLogRelations = relations(billingAuditLog, ({ one }) => ({
+  company: one(companies, {
+    fields: [billingAuditLog.companyId],
+    references: [companies.id],
+  }),
 }));
 
 export const companyUsersRelations = relations(companyUsers, ({ one }) => ({

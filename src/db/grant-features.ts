@@ -1,10 +1,10 @@
 import { eq } from "drizzle-orm";
 
-import type { AppDatabase } from "@/db/index";
+import type { AppDbClient } from "@/db/index";
 import { companyFeatures, planFeatures } from "@/db/schema";
 
 export async function grantPlanFeaturesFromPlan(
-  db: AppDatabase,
+  db: AppDbClient,
   companyId: string,
   planId: string
 ): Promise<void> {
@@ -25,5 +25,7 @@ export async function grantPlanFeaturesFromPlan(
       expiresAt: null as Date | null,
       source: "plan" as const,
     }))
-  );
+  ).onConflictDoNothing({
+    target: [companyFeatures.companyId, companyFeatures.featureId],
+  });
 }
