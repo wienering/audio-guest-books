@@ -43,6 +43,13 @@
       "when": 1777700000000,
       "tag": "0005_stage6_retention_email_downloads",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1777800000000,
+      "tag": "0006_stage7_retail_invitation_email_templates",
+      "breakpoints": true
     }
   ]
 }

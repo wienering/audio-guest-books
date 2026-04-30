@@ -3,10 +3,12 @@ import { and, asc, count, desc, eq, gt, inArray, isNotNull, isNull, or } from "d
 import { notFound, redirect } from "next/navigation";
 
 import { db } from "@/db/index";
-import { audioFiles, events, uploadJobs } from "@/db/schema";
+import { audioFiles, emailTemplates, events, uploadJobs } from "@/db/schema";
 import { getMembershipWithCompany } from "@/lib/company";
 import { companyHasFeatureKey } from "@/lib/company-features";
+import { buildRetailInvitationMergeValues } from "@/lib/email-merge-fields";
 import { presignGetUrl } from "@/lib/r2";
+import { buildRetailEventPublicUrl } from "@/lib/retail-public-url";
 import { addUtcMonths, daysUntilUtcCalendarEnd } from "@/lib/retention";
 
 import {
@@ -173,6 +175,44 @@ export default async function EventDetailPage(props: {
     daysUntilRetention > 0 &&
     daysUntilRetention <= 90;
 
+  const retailUrl = buildRetailEventPublicUrl(
+    membership.company.slug,
+    eventRow.retailClientSlug
+  );
+  const mergeFieldValues = buildRetailInvitationMergeValues({
+    companyName: membership.company.name,
+    retailClientName: eventRow.retailClientName,
+    eventName: eventRow.name,
+    eventType: eventRow.eventType,
+    eventTypeOther: eventRow.eventTypeOther,
+    eventDate: eventRow.eventDate,
+    retailUrl,
+  });
+
+  const canUseCustomEmailTemplates = await companyHasFeatureKey(
+    membership.company.id,
+    "custom_email_templates"
+  );
+
+  const composerTemplates = canUseCustomEmailTemplates
+    ? await db
+        .select({
+          id: emailTemplates.id,
+          name: emailTemplates.name,
+          subject_template: emailTemplates.subjectTemplate,
+          body_template: emailTemplates.bodyTemplate,
+          is_default: emailTemplates.isDefault,
+        })
+        .from(emailTemplates)
+        .where(
+          and(
+            eq(emailTemplates.companyId, membership.company.id),
+            isNull(emailTemplates.deletedAt)
+          )
+        )
+        .orderBy(desc(emailTemplates.updatedAt))
+    : [];
+
   return (
     <EventDetailClient
       eventId={eventRow.id}
@@ -189,6 +229,14 @@ export default async function EventDetailPage(props: {
       retailClientName={eventRow.retailClientName}
       retailClientEmail={eventRow.retailClientEmail}
       retailClientSlug={eventRow.retailClientSlug}
+      companyName={membership.company.name}
+      mergeFieldValues={mergeFieldValues}
+      canUseCustomEmailTemplates={canUseCustomEmailTemplates}
+      composerTemplates={composerTemplates}
+      retailLinkLastSentAtIso={
+        eventRow.retailLinkLastSentAt?.toISOString() ?? null
+      }
+      retailLinkSendCount={eventRow.retailLinkSendCount ?? 0}
       retentionUntilLabel={eventRow.retentionUntil.toLocaleDateString(
         undefined,
         {

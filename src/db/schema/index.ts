@@ -219,6 +219,10 @@ export const events = pgTable(
     metadataOnlyAfter: date("metadata_only_after", { mode: "date" }),
     /** Set immediately before hard-delete for symmetry with spec (row removed after). */
     metadataPurgedAt: timestamp("metadata_purged_at", { withTimezone: true }),
+    retailLinkLastSentAt: timestamp("retail_link_last_sent_at", {
+      withTimezone: true,
+    }),
+    retailLinkSendCount: integer("retail_link_send_count").notNull().default(0),
     createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
     deletedAt: timestamp("deleted_at", { withTimezone: true }),
@@ -228,6 +232,23 @@ export const events = pgTable(
       .on(t.companyId, t.retailClientSlug)
       .where(sql`${t.deletedAt} is null`),
   ]
+);
+
+export const emailTemplates = pgTable(
+  "email_templates",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    companyId: uuid("company_id")
+      .references(() => companies.id, { onDelete: "cascade" })
+      .notNull(),
+    name: text("name").notNull(),
+    subjectTemplate: text("subject_template").notNull(),
+    bodyTemplate: text("body_template").notNull(),
+    isDefault: boolean("is_default").notNull().default(false),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+    deletedAt: timestamp("deleted_at", { withTimezone: true }),
+  }
 );
 
 export const retailPageSessions = pgTable(
@@ -378,6 +399,7 @@ export const companiesRelations = relations(companies, ({ one, many }) => ({
   companyFeatures: many(companyFeatures),
   events: many(events),
   uploadJobs: many(uploadJobs),
+  emailTemplates: many(emailTemplates),
 }));
 
 export const companyUsersRelations = relations(companyUsers, ({ one }) => ({
@@ -439,6 +461,13 @@ export const eventsRelations = relations(events, ({ one, many }) => ({
   downloadJobs: many(downloadJobs),
   analyticsEvents: many(eventAnalyticsEvents),
   retailPageSessions: many(retailPageSessions),
+}));
+
+export const emailTemplatesRelations = relations(emailTemplates, ({ one }) => ({
+  company: one(companies, {
+    fields: [emailTemplates.companyId],
+    references: [companies.id],
+  }),
 }));
 
 export const audioFilesRelations = relations(audioFiles, ({ one, many }) => ({

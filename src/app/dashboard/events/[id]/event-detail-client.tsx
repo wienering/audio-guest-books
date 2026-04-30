@@ -29,6 +29,9 @@ import {
 import { cn, formatBytes } from "@/lib/utils";
 
 import { EventRetailAppearanceSection } from "./event-retail-appearance";
+import { SendLinkComposer } from "./send-link-composer";
+
+import { formatRelativeTimePast } from "@/lib/relative-time";
 
 const ZIP_JOB_RECENT_MS = 10 * 60 * 1000;
 const DISMISSED_UPLOAD_JOB_IDS_KEY = "audio-guest-book:dismissed-upload-job-ids";
@@ -106,6 +109,18 @@ export type EventDetailClientProps = {
   retailClientName: string;
   retailClientEmail: string;
   retailClientSlug: string;
+  companyName: string;
+  mergeFieldValues: Record<string, string>;
+  canUseCustomEmailTemplates: boolean;
+  composerTemplates: {
+    id: string;
+    name: string;
+    subject_template: string;
+    body_template: string;
+    is_default: boolean;
+  }[];
+  retailLinkLastSentAtIso: string | null;
+  retailLinkSendCount: number;
   retentionUntilLabel: string;
   files: EventDetailClientFile[];
   uploadJobs: EventUploadJobSnapshot[];
@@ -229,6 +244,25 @@ function useHydrationSafeUploadedAtLabel(iso: string) {
     setLabel(new Date(iso).toLocaleString(undefined, UPLOAD_AT_FORMAT));
   }, [iso]);
   return label;
+}
+
+function LinkSentIndicator(props: {
+  iso: string;
+  sendCount: number;
+}) {
+  const [label, setLabel] = useState("");
+  useEffect(() => {
+    setLabel(formatRelativeTimePast(props.iso));
+  }, [props.iso]);
+  if (!props.iso) return null;
+  const extra =
+    props.sendCount > 1 ? ` (sent ${props.sendCount} times)` : "";
+  return (
+    <p className="text-muted-foreground text-xs">
+      Link sent {label || "recently"}
+      {extra}
+    </p>
+  );
 }
 
 function AudioRow(props: {
@@ -684,16 +718,34 @@ export function EventDetailClient(props: EventDetailClientProps) {
         <h1 className="text-2xl font-semibold tracking-tight">
           {props.eventName}
         </h1>
-        <p className="text-muted-foreground text-sm">
-          <span className="text-foreground">{props.eventTypeLabel}</span>
-          {" · "}
-          {props.eventDateLabel}
-          {" · "}Client {props.retailClientName} ({props.retailClientEmail})
-          {" · "}Slug{" "}
-          <code className="rounded bg-muted px-1 py-0.5 text-xs">
-            {props.retailClientSlug}
-          </code>
-        </p>
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+          <div className="min-w-0 space-y-1">
+            <p className="text-muted-foreground text-sm">
+              <span className="text-foreground">{props.eventTypeLabel}</span>
+              {" · "}
+              {props.eventDateLabel}
+              {" · "}Client {props.retailClientName} ({props.retailClientEmail})
+              {" · "}Slug{" "}
+              <code className="rounded bg-muted px-1 py-0.5 text-xs">
+                {props.retailClientSlug}
+              </code>
+            </p>
+            {props.retailLinkLastSentAtIso ? (
+              <LinkSentIndicator
+                iso={props.retailLinkLastSentAtIso}
+                sendCount={props.retailLinkSendCount}
+              />
+            ) : null}
+          </div>
+          <SendLinkComposer
+            eventId={props.eventId}
+            companyName={props.companyName}
+            retailClientEmail={props.retailClientEmail}
+            mergeFieldValues={props.mergeFieldValues}
+            canUseCustomTemplates={props.canUseCustomEmailTemplates}
+            templates={props.composerTemplates}
+          />
+        </div>
         {props.metadataOnlyAfterLabel && props.permanentRemovalLabel ? (
           <div className="rounded-lg border border-amber-500/35 bg-amber-500/10 px-4 py-3 text-amber-950 text-sm dark:border-amber-500/40 dark:bg-amber-500/10 dark:text-amber-100">
             Files were deleted on {props.metadataOnlyAfterLabel}. This event
