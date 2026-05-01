@@ -241,6 +241,7 @@ export default async function EventDetailPage(props: {
       retailClientName={eventRow.retailClientName}
       retailClientEmail={eventRow.retailClientEmail}
       retailClientSlug={eventRow.retailClientSlug}
+      retailPublicUrl={retailUrl}
       companyName={membership.company.name}
       mergeFieldValues={mergeFieldValues}
       canUseCustomEmailTemplates={canUseCustomEmailTemplates}

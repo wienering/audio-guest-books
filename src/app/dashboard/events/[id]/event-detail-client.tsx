@@ -13,7 +13,7 @@ import {
   type DragEvent,
 } from "react";
 import { toast } from "sonner";
-import { GripVertical, Pencil, X } from "lucide-react";
+import { Copy, GripVertical, Pencil, X } from "lucide-react";
 
 import { extendRetentionAction } from "./retention-actions";
 import {
@@ -136,6 +136,8 @@ export type EventDetailClientProps = {
   retailClientName: string;
   retailClientEmail: string;
   retailClientSlug: string;
+  /** Full public gallery URL from `buildRetailEventPublicUrl` (tenant + client slug). */
+  retailPublicUrl: string;
   companyName: string;
   mergeFieldValues: Record<string, string>;
   canUseCustomEmailTemplates: boolean;
@@ -924,9 +926,32 @@ export function EventDetailClient(props: EventDetailClientProps) {
               {props.eventDateLabel}
               {" · "}Client {props.retailClientName} ({props.retailClientEmail})
               {" · "}Slug{" "}
-              <code className="rounded bg-muted px-1 py-0.5 text-xs">
-                {props.retailClientSlug}
-              </code>
+              <button
+                type="button"
+                className="group inline-flex cursor-pointer items-center gap-1 align-baseline rounded-sm border-0 bg-transparent p-0 font-inherit text-inherit focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                aria-label={`Copy client gallery URL for ${props.retailClientSlug}`}
+                onClick={async () => {
+                  try {
+                    await navigator.clipboard.writeText(props.retailPublicUrl);
+                    toast.success("Copied", { duration: 1500 });
+                  } catch {
+                    toast.error("Could not copy.");
+                  }
+                }}
+              >
+                <code
+                  className={cn(
+                    "rounded bg-muted px-1 py-0.5 text-xs transition-colors",
+                    "group-hover:bg-muted/80 group-hover:text-primary"
+                  )}
+                >
+                  {props.retailClientSlug}
+                </code>
+                <Copy
+                  className="size-3.5 shrink-0 text-muted-foreground transition-colors group-hover:text-primary"
+                  aria-hidden
+                />
+              </button>
             </p>
             {props.retailLinkLastSentAtIso ? (
               <LinkSentIndicator
