@@ -1,5 +1,6 @@
 "use client";
 
+import type { MutableRefObject } from "react";
 import {
   forwardRef,
   useCallback,
@@ -45,11 +46,19 @@ export const RetailAudioPlayer = forwardRef<
   {
     files: RetailAudioFile[];
     activeFileId: string | null;
+    /** Parent sets true immediately before selecting a track from user/advance; cleared here after load */
+    autoplayNextTrackLoadRef: MutableRefObject<boolean>;
     onAdvanceToNext: () => void;
     onFirstPlayLogged: (fileId: string) => void;
   }
 >(function AudioPlayer(
-  { files, activeFileId, onAdvanceToNext, onFirstPlayLogged },
+  {
+    files,
+    activeFileId,
+    autoplayNextTrackLoadRef,
+    onAdvanceToNext,
+    onFirstPlayLogged,
+  },
   ref
 ) {
   const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -79,8 +88,10 @@ export const RetailAudioPlayer = forwardRef<
     const f = files.find((x) => x.id === activeFileId);
     if (!f) return;
     a.src = f.playbackUrl;
-    void a.play().catch(() => {});
-  }, [activeFileId, files]);
+    const wantPlay = autoplayNextTrackLoadRef.current;
+    autoplayNextTrackLoadRef.current = false;
+    if (wantPlay) void a.play().catch(() => {});
+  }, [activeFileId, autoplayNextTrackLoadRef, files]);
 
   useEffect(() => {
     const a = audioRef.current;

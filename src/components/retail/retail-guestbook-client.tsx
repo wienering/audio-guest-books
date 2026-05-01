@@ -232,11 +232,17 @@ export function RetailGuestbookClient({
   const filterActive = searchQuery.trim().length > 0;
 
   const playerRef = useRef<RetailAudioPlayerHandle>(null);
+  /**
+   * When true before active track loads, player calls play(); cleared after consume.
+   * List-driven selection sync clears this so initial load / sort / filter never autoplay.
+   */
+  const autoplayNextTrackLoadRef = useRef(false);
   const [activeFileId, setActiveFileId] = useState<string | null>(
     files[0]?.id ?? null
   );
 
   useEffect(() => {
+    autoplayNextTrackLoadRef.current = false;
     if (displayFiles.length === 0) {
       setActiveFileId(null);
       return;
@@ -248,6 +254,7 @@ export function RetailGuestbookClient({
   }, [displayFiles]);
 
   const onAdvanceToNext = useCallback(() => {
+    autoplayNextTrackLoadRef.current = true;
     setActiveFileId((cur) => {
       if (!cur) return null;
       const idx = displayFiles.findIndex((f) => f.id === cur);
@@ -284,6 +291,7 @@ export function RetailGuestbookClient({
       if (id === activeFileId) {
         playerRef.current?.togglePlayPause();
       } else {
+        autoplayNextTrackLoadRef.current = true;
         setActiveFileId(id);
       }
     },
@@ -303,6 +311,7 @@ export function RetailGuestbookClient({
           ref={playerRef}
           files={listFiles}
           activeFileId={activeFileId}
+          autoplayNextTrackLoadRef={autoplayNextTrackLoadRef}
           onAdvanceToNext={onAdvanceToNext}
           onFirstPlayLogged={onFirstPlayLogged}
         />
