@@ -229,7 +229,7 @@ export default async function RetailClientPage({ params }: Props) {
               </div>
               <div
                 className={cn(
-                  "pt-10 md:grid md:grid-cols-[minmax(7.5rem,9rem)_1fr] md:gap-x-6 md:pt-14"
+                  "pt-4 md:grid md:grid-cols-[minmax(7.5rem,9rem)_1fr] md:items-start md:gap-x-6 md:pt-6"
                 )}
               >
                 <div className="hidden md:block" aria-hidden />
@@ -242,7 +242,7 @@ export default async function RetailClientPage({ params }: Props) {
               <div className="mt-6">{titleBlock("right")}</div>
             </>
           ) : hasLogo ? (
-            <div className="flex flex-col gap-6 sm:flex-row sm:items-start sm:justify-between sm:gap-8">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between sm:gap-6">
               <RetailMaybeImage
                 src={logoUrl!}
                 alt="Host logo"
