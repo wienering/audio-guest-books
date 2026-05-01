@@ -39,6 +39,10 @@ import { formatDateOnly } from "@/lib/date-format";
 import { sendEmail } from "@/lib/email";
 import { addUtcMonths, utcCalendarDate } from "@/lib/retention";
 import { formatRetailEventDate } from "@/lib/format-retail-event-date";
+import {
+  hardDeleteEvent,
+  listEventsDueForHardDelete,
+} from "@/lib/event-mutations";
 import { deleteObject } from "@/lib/r2";
 
 function addUtcDays(d: Date, days: number): Date {
@@ -75,7 +79,26 @@ export async function runRetentionScheduler(
   await purgeFilesPastRetention(db, today, log);
   await hardDeleteStaleMetadata(db, today, log);
   await cleanupExpiredDownloadJobs(db, log);
+  await hardDeleteSoftDeletedEventsReady(db, today, log);
   await hardDeleteSoftDeletedCompaniesReady(db, today, log);
+}
+
+async function hardDeleteSoftDeletedEventsReady(
+  db: AppDatabase,
+  today: Date,
+  log: Pick<Logger, "info" | "warn" | "error">
+): Promise<void> {
+  const due = await listEventsDueForHardDelete(db, today);
+  for (const ev of due) {
+    try {
+      await hardDeleteEvent(db, ev.id, log);
+    } catch (err) {
+      log.error(
+        { err, eventId: ev.id },
+        "event hard-delete: scheduled purge failed; will retry on next run"
+      );
+    }
+  }
 }
 
 async function notifyRetentionWindow(

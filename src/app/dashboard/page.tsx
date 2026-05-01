@@ -16,6 +16,7 @@ import { db } from "@/db/index";
 import { audioFiles, events } from "@/db/schema";
 import { getMembershipWithCompany } from "@/lib/company";
 import { formatDate } from "@/lib/date-format";
+import { countRestorableDeletedEvents } from "@/lib/event-mutations";
 
 export default async function DashboardPage() {
   const session = await auth();
@@ -40,6 +41,10 @@ export default async function DashboardPage() {
       },
     },
   });
+
+  const deletedEventCount = await countRestorableDeletedEvents(
+    membership.company.id
+  );
 
   return (
     <div className="space-y-8">
@@ -137,6 +142,17 @@ export default async function DashboardPage() {
           </CardContent>
         </Card>
       )}
+
+      {deletedEventCount > 0 ? (
+        <p className="text-center text-sm text-muted-foreground">
+          <Link
+            href="/dashboard/events/deleted"
+            className="hover:text-foreground hover:underline"
+          >
+            View deleted events ({deletedEventCount})
+          </Link>
+        </p>
+      ) : null}
     </div>
   );
 }

@@ -34,6 +34,8 @@ export type AdminCompanyDetailEventRow = {
   retailClientSlug: string;
   fileCount: number;
   createdAt: string;
+  deletedAt: string | null;
+  hardDeleteAfter: string | null;
 };
 
 export type AdminCompanyDetailBillingAuditRow = {
@@ -168,6 +170,8 @@ export async function getAdminCompanyDetailBySlug(
         retailClientName: events.retailClientName,
         retailClientSlug: events.retailClientSlug,
         createdAt: events.createdAt,
+        deletedAt: events.deletedAt,
+        hardDeleteAfter: events.hardDeleteAfter,
         fileCount: sql<number>`COALESCE((
           SELECT COUNT(*)::int
           FROM "audio_files" "af"
@@ -179,8 +183,7 @@ export async function getAdminCompanyDetailBySlug(
       })
       .from(events)
       .where(eq(events.companyId, c.id))
-      .orderBy(desc(events.createdAt))
-      .limit(10),
+      .orderBy(desc(events.createdAt)),
     db
       .select()
       .from(billingAuditLog)
@@ -280,6 +283,11 @@ export async function getAdminCompanyDetailBySlug(
       retailClientSlug: e.retailClientSlug,
       fileCount: Number(e.fileCount ?? 0),
       createdAt: e.createdAt.toISOString(),
+      deletedAt: e.deletedAt?.toISOString() ?? null,
+      hardDeleteAfter:
+        e.hardDeleteAfter instanceof Date
+          ? e.hardDeleteAfter.toISOString().slice(0, 10)
+          : (e.hardDeleteAfter ?? null),
     })),
     billingAudit: billingAuditRows.map((r) => ({
       id: r.id,

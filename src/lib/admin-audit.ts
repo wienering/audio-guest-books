@@ -17,7 +17,11 @@ export type AdminActionType =
   | "plan_changed"
   | "founding_member_toggled"
   | "retention_scheduler_run"
-  | "subscriptions_synced";
+  | "subscriptions_synced"
+  | "event_edited"
+  | "event_soft_deleted"
+  | "event_restored"
+  | "event_hard_deleted";
 
 export type LogAdminActionInput = {
   actionType: AdminActionType;

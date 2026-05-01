@@ -208,41 +208,88 @@ export default async function AdminCompanyDetailPage(props: {
 
       <Card>
         <CardHeader>
-          <CardTitle>Events ({detail.totalEvents} total)</CardTitle>
-          <CardDescription>Most recent 10.</CardDescription>
+          <CardTitle>
+            Events ({detail.totalEvents} active, {detail.recentEvents.length}{" "}
+            total)
+          </CardTitle>
+          <CardDescription>
+            Click any event for full admin controls (edit, soft/restore,
+            hard-delete now).
+          </CardDescription>
         </CardHeader>
         <CardContent>
           {detail.recentEvents.length === 0 ? (
             <p className="text-sm text-muted-foreground">No events yet.</p>
           ) : (
             <div className="overflow-x-auto">
-              <table className="w-full min-w-[640px] border-collapse text-sm">
+              <table className="w-full min-w-[760px] border-collapse text-sm">
                 <thead className="text-left text-muted-foreground">
                   <tr className="border-b">
                     <th className="py-2 pr-4 font-medium">Event</th>
                     <th className="py-2 pr-4 font-medium">Client</th>
                     <th className="py-2 pr-4 font-medium">Files</th>
+                    <th className="py-2 pr-4 font-medium">Status</th>
                     <th className="py-2 font-medium">Created</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {detail.recentEvents.map((ev) => (
-                    <tr key={ev.id} className="border-b last:border-0">
-                      <td className="py-2 pr-4 font-medium">{ev.name}</td>
-                      <td className="py-2 pr-4">
-                        {ev.retailClientName}
-                        <span className="ml-1 font-mono text-[11px] text-muted-foreground">
-                          /{ev.retailClientSlug}
-                        </span>
-                      </td>
-                      <td className="py-2 pr-4 tabular-nums">
-                        {ev.fileCount}
-                      </td>
-                      <td className="py-2 text-muted-foreground">
-                        {fmt(ev.createdAt)}
-                      </td>
-                    </tr>
-                  ))}
+                  {detail.recentEvents.map((ev) => {
+                    const isDeleted = ev.deletedAt != null;
+                    return (
+                      <tr
+                        key={ev.id}
+                        className={cn(
+                          "border-b last:border-0",
+                          isDeleted &&
+                            "bg-amber-50/40 dark:bg-amber-950/20"
+                        )}
+                      >
+                        <td className="py-2 pr-4 font-medium">
+                          <Link
+                            href={`/admin/companies/${encodeURIComponent(
+                              detail.slug
+                            )}/events/${ev.id}`}
+                            className="text-primary hover:underline"
+                          >
+                            {ev.name}
+                          </Link>
+                          {isDeleted ? (
+                            <span className="ml-2 rounded bg-amber-200 px-1.5 py-0.5 text-[10px] font-semibold text-amber-900 dark:bg-amber-900 dark:text-amber-100">
+                              SOFT-DELETED
+                            </span>
+                          ) : null}
+                        </td>
+                        <td className="py-2 pr-4">
+                          {ev.retailClientName}
+                          <span className="ml-1 font-mono text-[11px] text-muted-foreground">
+                            /{ev.retailClientSlug}
+                          </span>
+                        </td>
+                        <td className="py-2 pr-4 tabular-nums">
+                          {ev.fileCount}
+                        </td>
+                        <td className="py-2 pr-4 text-xs text-muted-foreground">
+                          {isDeleted ? (
+                            <>
+                              <span className="block">
+                                Deleted {fmt(ev.deletedAt)}
+                              </span>
+                              {ev.hardDeleteAfter ? (
+                                <span className="block">
+                                  Purges {fmtDate(ev.hardDeleteAfter)}
+                                </span>
+                              ) : null}
+                            </>
+                          ) : (
+                            <span>active</span>
+                          )}
+                        </td>
+                        <td className="py-2 text-muted-foreground">
+                          {fmt(ev.createdAt)}
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>

@@ -317,6 +317,8 @@ export const events = pgTable(
     createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
     deletedAt: timestamp("deleted_at", { withTimezone: true }),
+    /** UTC calendar date when the daily job will purge the event permanently. */
+    hardDeleteAfter: date("hard_delete_after", { mode: "date" }),
   },
   (t) => [
     uniqueIndex("events_company_retail_slug_active_uidx")

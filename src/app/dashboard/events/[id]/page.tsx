@@ -216,14 +216,22 @@ export default async function EventDetailPage(props: {
         .orderBy(desc(emailTemplates.updatedAt))
     : [];
 
+  const eventDateIso =
+    eventRow.eventDate instanceof Date
+      ? eventRow.eventDate.toISOString().slice(0, 10)
+      : String(eventRow.eventDate).slice(0, 10);
+
   return (
     <EventDetailClient
       eventId={eventRow.id}
       eventName={eventRow.name}
+      eventType={eventRow.eventType}
+      eventTypeOther={eventRow.eventTypeOther}
       eventTypeLabel={eventTypeLabel(
         eventRow.eventType,
         eventRow.eventTypeOther
       )}
+      eventDateIso={eventDateIso}
       eventDateLabel={formatDateOnly(eventRow.eventDate)}
       retailClientName={eventRow.retailClientName}
       retailClientEmail={eventRow.retailClientEmail}

@@ -12,9 +12,14 @@ import {
   useTransition,
 } from "react";
 import { toast } from "sonner";
-import { X } from "lucide-react";
+import { Pencil, X } from "lucide-react";
 
 import { extendRetentionAction } from "./retention-actions";
+import {
+  EventDeleteModal,
+  EventEditModal,
+  type EventEditInitial,
+} from "./event-edit-modal";
 
 import { buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -116,7 +121,16 @@ function isZipJobUiVisible(
 export type EventDetailClientProps = {
   eventId: string;
   eventName: string;
+  eventType:
+    | "wedding"
+    | "birthday"
+    | "corporate"
+    | "anniversary"
+    | "other";
+  eventTypeOther: string | null;
   eventTypeLabel: string;
+  /** YYYY-MM-DD for the date input */
+  eventDateIso: string;
   eventDateLabel: string;
   retailClientName: string;
   retailClientEmail: string;
@@ -591,6 +605,32 @@ export function EventDetailClient(props: EventDetailClientProps) {
   const [bulkTyped, setBulkTyped] = useState("");
   const [bulkBusy, setBulkBusy] = useState(false);
 
+  const [editOpen, setEditOpen] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
+
+  const editInitial: EventEditInitial = useMemo(
+    () => ({
+      name: props.eventName,
+      eventType: props.eventType,
+      eventTypeOther: props.eventTypeOther,
+      eventDate: props.eventDateIso,
+      retailClientName: props.retailClientName,
+      retailClientEmail: props.retailClientEmail,
+      retailClientSlug: props.retailClientSlug,
+      passwordActive: props.retailPasswordActive,
+    }),
+    [
+      props.eventName,
+      props.eventType,
+      props.eventTypeOther,
+      props.eventDateIso,
+      props.retailClientName,
+      props.retailClientEmail,
+      props.retailClientSlug,
+      props.retailPasswordActive,
+    ]
+  );
+
   const atCapacity =
     props.fileLimit !== null && props.activeFileCount >= props.fileLimit;
 
@@ -782,9 +822,19 @@ export function EventDetailClient(props: EventDetailClientProps) {
       </Link>
 
       <header className="space-y-2">
-        <h1 className="text-2xl font-semibold tracking-tight">
-          {props.eventName}
-        </h1>
+        <div className="flex items-center gap-2">
+          <h1 className="text-2xl font-semibold tracking-tight">
+            {props.eventName}
+          </h1>
+          <button
+            type="button"
+            className="text-muted-foreground hover:text-foreground rounded-md p-1.5 hover:bg-muted"
+            aria-label="Edit event details"
+            onClick={() => setEditOpen(true)}
+          >
+            <Pencil className="size-4" aria-hidden />
+          </button>
+        </div>
         <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
           <div className="min-w-0 space-y-1">
             <p className="text-muted-foreground text-sm">
@@ -894,6 +944,23 @@ export function EventDetailClient(props: EventDetailClientProps) {
           Analytics
         </button>
       </div>
+
+      <EventEditModal
+        open={editOpen}
+        onClose={() => setEditOpen(false)}
+        patchUrl={`/api/events/${props.eventId}`}
+        initial={editInitial}
+        passwordProtectionAllowed={props.retailPasswordProtection}
+      />
+
+      <EventDeleteModal
+        open={deleteOpen}
+        onClose={() => setDeleteOpen(false)}
+        eventName={props.eventName}
+        softDeleteUrl={`/api/events/${props.eventId}/soft-delete`}
+        hardDeleteNowUrl={`/api/events/${props.eventId}/hard-delete-now`}
+        redirectAfterDelete="/dashboard"
+      />
 
       {dashTab === "analytics" ? (
         <EventAnalyticsPanel eventId={props.eventId} />
@@ -1138,6 +1205,24 @@ export function EventDetailClient(props: EventDetailClientProps) {
             ))}
           </ul>
         )}
+      </section>
+
+      <section className="rounded-lg border border-destructive/40 bg-background p-5">
+        <h2 className="font-semibold text-destructive">Danger zone</h2>
+        <p className="mt-2 text-muted-foreground text-sm leading-relaxed">
+          Delete this event. The default delete is recoverable for 30 days; you
+          can also choose to wipe everything immediately.
+        </p>
+        <button
+          type="button"
+          className={cn(
+            buttonVariants({ variant: "destructive", size: "sm" }),
+            "mt-4"
+          )}
+          onClick={() => setDeleteOpen(true)}
+        >
+          Delete event
+        </button>
       </section>
         </>
       )}
