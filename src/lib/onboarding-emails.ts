@@ -68,10 +68,6 @@ export async function sendOnboardingCompletionEmails(opts: {
     } catch (e) {
       console.error("[onboarding] admin notification email error", e);
     }
-  } else {
-    console.warn(
-      "[onboarding] PLATFORM_ADMIN_EMAIL is not set; skipping admin signup notification"
-    );
   }
 
   if (signupEmail) {
