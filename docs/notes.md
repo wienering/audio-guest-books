@@ -2,6 +2,12 @@
 
 ## Worker compatibility rule (read before adding `server-only`)
 
+Worker compatibility rule (HIGH PRIORITY - recurring violation)
+Files imported by the worker (src/worker/*) or by retention-scheduler.tsx must NEVER use import "server-only". The worker is plain Node.js; server-only throws there.
+This rule has been violated three times during the project (Stages 6, 13a, comp subscription work). Future development MUST run this check before committing:
+Select-String -Path src/lib/*.ts -Pattern 'import "server-only"'
+For each result, verify the file is NOT in the worker's dependency tree before merging.
+
 **This has been broken multiple times:** any module in the worker’s import tree
 that contains `import "server-only"` will crash the Railway worker at startup
 with `This module cannot be imported from a Client Component module` (the

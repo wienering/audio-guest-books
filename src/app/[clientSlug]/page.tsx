@@ -24,6 +24,7 @@ import { analyticsContextFromHeaders } from "@/lib/retail-request-meta";
 import { presignGetUrl } from "@/lib/r2";
 import { buildRetailThemeCssVars } from "@/lib/retail-theme-vars";
 import { hasValidRetailUnlockSession } from "@/lib/retail-session";
+import { cn } from "@/lib/utils";
 
 type Props = { params: Promise<{ clientSlug: string }> };
 
@@ -154,53 +155,103 @@ export default async function RetailClientPage({ params }: Props) {
   });
   const eventDateLabel = formatRetailEventDate(payload.eventDateIso);
 
+  const hasCover = !!coverUrl;
+  const hasLogo = !!logoUrl;
+  const heroOverlap = hasCover && hasLogo;
+
+  const titleBlock = (align: "overlap" | "right") => (
+    <div
+      className={cn(
+        "space-y-1",
+        align === "overlap" ? "text-center md:text-right" : "text-right"
+      )}
+    >
+      <p
+        className="text-sm font-medium uppercase tracking-wide"
+        style={{ color: "var(--retail-primary)" }}
+      >
+        Audio guest book
+      </p>
+      <h1 className="font-serif text-3xl font-semibold tracking-tight text-[var(--retail-text)] md:text-4xl">
+        {payload.eventName}
+      </h1>
+      <p className="text-base font-normal text-[var(--retail-text)] md:text-lg">
+        {payload.retailClientName}
+      </p>
+      <p className="text-sm md:text-base" style={{ color: "var(--retail-muted)" }}>
+        {eventDateLabel}
+      </p>
+    </div>
+  );
+
+  const renderCoverHero = (url: string) => (
+    <div
+      className={cn(
+        "w-full overflow-hidden rounded-lg",
+        "h-[200px] sm:h-[220px] md:h-[300px] lg:h-[360px]"
+      )}
+    >
+      <RetailMaybeImage
+        src={url}
+        alt="Event cover"
+        className="h-full w-full object-cover object-center"
+      />
+    </div>
+  );
+
   return (
     <div
       className="flex min-h-screen flex-col bg-[var(--retail-bg)] text-[var(--retail-text)]"
       style={themeStyle}
     >
       <header
-        className="border-b bg-[var(--retail-bg)] px-4 py-10 sm:px-8"
+        className="border-b bg-[var(--retail-bg)] px-4 pb-8 pt-6 sm:px-8 sm:pb-10 sm:pt-8"
         style={{ borderColor: "var(--retail-border)" }}
       >
-        <div className="mx-auto max-w-3xl space-y-4">
-          {logoUrl ? (
-            <RetailMaybeImage
-              src={logoUrl}
-              alt="Host logo"
-              className="max-h-16 w-auto max-w-full object-contain object-left"
-            />
-          ) : null}
-          {coverUrl ? (
-            <RetailMaybeImage
-              src={coverUrl}
-              alt="Event cover"
-              className="max-h-48 w-full rounded-lg object-cover"
-            />
-          ) : null}
-          <div className="space-y-2">
-            <p
-              className="text-sm font-medium uppercase tracking-wide"
-              style={{ color: "var(--retail-primary)" }}
-            >
-              Audio guest book
-            </p>
-            <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">
-              {payload.eventName}
-            </h1>
-            <p
-              className="text-xl sm:text-2xl"
-              style={{ color: "color-mix(in srgb, var(--retail-text) 92%, var(--retail-muted) 8%)" }}
-            >
-              {payload.retailClientName}
-            </p>
-            <p
-              className="text-lg sm:text-xl"
-              style={{ color: "var(--retail-muted)" }}
-            >
-              {eventDateLabel}
-            </p>
-          </div>
+        <div className="mx-auto max-w-3xl">
+          {heroOverlap ? (
+            <>
+              <div className="relative">
+                {renderCoverHero(coverUrl!)}
+                <div
+                  className={cn(
+                    "absolute bottom-0 left-0 z-10 translate-y-1/2",
+                    "size-16 rounded-lg border-[3px] border-[var(--retail-bg)] bg-[var(--retail-bg)] sm:left-1 md:size-24 md:left-2"
+                  )}
+                >
+                  <RetailMaybeImage
+                    src={logoUrl!}
+                    alt="Host logo"
+                    className="size-full object-contain p-1"
+                  />
+                </div>
+              </div>
+              <div
+                className={cn(
+                  "pt-10 md:grid md:grid-cols-[minmax(7.5rem,9rem)_1fr] md:gap-x-6 md:pt-14"
+                )}
+              >
+                <div className="hidden md:block" aria-hidden />
+                {titleBlock("overlap")}
+              </div>
+            </>
+          ) : hasCover ? (
+            <>
+              {renderCoverHero(coverUrl!)}
+              <div className="mt-6">{titleBlock("right")}</div>
+            </>
+          ) : hasLogo ? (
+            <div className="flex flex-col gap-6 sm:flex-row sm:items-start sm:justify-between sm:gap-8">
+              <RetailMaybeImage
+                src={logoUrl!}
+                alt="Host logo"
+                className="max-h-16 w-auto max-w-full shrink-0 object-contain object-left"
+              />
+              <div className="min-w-0 flex-1">{titleBlock("right")}</div>
+            </div>
+          ) : (
+            titleBlock("right")
+          )}
         </div>
       </header>
 
