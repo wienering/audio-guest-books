@@ -4,6 +4,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 
 import { BrandLogo } from "@/components/brand/brand-logo";
+import { DashboardTopPillNav } from "@/components/dashboard/dashboard-top-pill-nav";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import {
@@ -69,55 +70,22 @@ export default async function DashboardLayout({
   return (
     <div className="min-h-screen bg-background">
       <header className="border-b border-border bg-card">
-        <div className="mx-auto flex h-14 max-w-5xl items-center justify-between px-4">
-          <div className="flex items-center gap-6">
-            <Link href="/dashboard" className="flex items-center shrink-0">
+        <div className="mx-auto flex max-w-5xl flex-col gap-3 px-4 py-3 md:h-14 md:flex-row md:items-center md:justify-between md:gap-4 md:py-0">
+          <div className="flex items-center justify-between md:contents">
+            <Link href="/dashboard" className="flex shrink-0 items-center">
               <BrandLogo className="h-7 w-auto max-w-[200px]" />
             </Link>
-            <nav className="hidden gap-4 text-muted-foreground text-sm md:flex">
-              <Link href="/dashboard" className="transition-colors hover:text-marketing-accent">
-                Events
-              </Link>
-              <Link
-                href="/dashboard/analytics"
-                className="transition-colors hover:text-marketing-accent"
-              >
-                Analytics
-              </Link>
-              <Link
-                href="/dashboard/settings/email-templates"
-                className="transition-colors hover:text-marketing-accent"
-              >
-                Email templates
-              </Link>
-              <Link
-                href="/dashboard/settings/branding"
-                className="transition-colors hover:text-marketing-accent"
-              >
-                Branding
-              </Link>
-              <Link
-                href="/dashboard/settings/public-page"
-                className="transition-colors hover:text-marketing-accent"
-              >
-                Public guest page
-              </Link>
-              <Link
-                href="/dashboard/settings/billing"
-                className="transition-colors hover:text-marketing-accent"
-              >
-                Billing
-              </Link>
-              <Link
-                href="/dashboard/settings/account"
-                className="transition-colors hover:text-marketing-accent"
-              >
-                Account
-              </Link>
-            </nav>
+            <div className="flex items-center gap-3 md:hidden">
+              <UserButton />
+            </div>
           </div>
-          <div className="flex items-center gap-3">
-            <span className="hidden max-w-[12rem] truncate text-muted-foreground text-sm md:inline">
+
+          <div className="flex w-full justify-center md:w-auto md:min-w-0 md:flex-1 md:justify-end md:px-2">
+            <DashboardTopPillNav />
+          </div>
+
+          <div className="hidden items-center gap-3 md:flex shrink-0">
+            <span className="max-w-[12rem] truncate text-muted-foreground text-sm">
               {membership.company.name}
             </span>
             <UserButton />
