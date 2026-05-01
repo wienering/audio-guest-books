@@ -77,10 +77,10 @@ function Hero({ signupHref }: { signupHref: string }) {
       <div className="absolute inset-x-0 -top-40 -z-10 h-96 bg-gradient-to-b from-marketing-accent-soft/40 to-transparent" />
       <div className="mx-auto max-w-5xl px-4 pt-20 pb-24 sm:px-6 sm:pt-28 sm:pb-32">
         <div className="space-y-6 text-center">
-          <p className="text-marketing-accent text-sm font-medium uppercase tracking-[0.18em]">
+          <p className="font-mono text-[11px] font-medium uppercase tracking-[0.18em] text-marketing-accent">
             Audio Guest Books
           </p>
-          <h1 className="font-serif text-4xl leading-tight tracking-tight text-marketing-ink sm:text-5xl md:text-6xl">
+          <h1 className="font-serif text-4xl font-light leading-tight tracking-tight text-marketing-ink sm:text-5xl md:text-6xl">
             Deliver Audio Guest Books the Professional Way
           </h1>
           <p className="mx-auto max-w-2xl text-marketing-muted text-lg leading-relaxed sm:text-xl">
@@ -91,7 +91,7 @@ function Hero({ signupHref }: { signupHref: string }) {
           <div className="flex flex-col items-center justify-center gap-3 pt-2 sm:flex-row">
             <a
               href={signupHref}
-              className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-md bg-marketing-accent px-7 text-base font-medium text-marketing-accent-foreground transition-opacity hover:opacity-90 sm:w-auto"
+              className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-md bg-marketing-ink px-7 text-base font-semibold tracking-tight text-marketing-bg transition-opacity hover:opacity-90 sm:w-auto"
             >
               Start Your Free Trial
               <ArrowRight className="size-4" />
@@ -135,10 +135,10 @@ function Problem() {
     <section className="border-y border-marketing-border bg-marketing-surface">
       <div className="mx-auto max-w-6xl px-4 py-20 sm:px-6 sm:py-24">
         <div className="mx-auto max-w-2xl space-y-3 text-center">
-          <p className="text-marketing-accent text-sm font-medium uppercase tracking-[0.18em]">
+          <p className="font-mono text-[11px] font-medium uppercase tracking-[0.18em] text-marketing-accent">
             The Problem
           </p>
-          <h2 className="font-serif text-3xl tracking-tight text-marketing-ink sm:text-4xl">
+          <h2 className="font-serif text-3xl font-light tracking-tight text-marketing-ink sm:text-4xl">
             Tired of Patching Together File Delivery After Every Event?
           </h2>
         </div>
@@ -148,7 +148,7 @@ function Problem() {
               <div className="inline-flex size-11 items-center justify-center rounded-md bg-marketing-accent-soft text-marketing-accent">
                 <Icon className="size-5" />
               </div>
-              <h3 className="font-serif text-xl tracking-tight text-marketing-ink">
+              <h3 className="font-serif text-xl font-light tracking-tight text-marketing-ink">
                 {title}
               </h3>
               <p className="text-marketing-muted text-base leading-relaxed">
@@ -185,10 +185,10 @@ function Solution() {
     <section className="bg-marketing-bg">
       <div className="mx-auto max-w-6xl px-4 py-20 sm:px-6 sm:py-24">
         <div className="mx-auto max-w-2xl space-y-3 text-center">
-          <p className="text-marketing-accent text-sm font-medium uppercase tracking-[0.18em]">
+          <p className="font-mono text-[11px] font-medium uppercase tracking-[0.18em] text-marketing-accent">
             The Solution
           </p>
-          <h2 className="font-serif text-3xl tracking-tight text-marketing-ink sm:text-4xl">
+          <h2 className="font-serif text-3xl font-light tracking-tight text-marketing-ink sm:text-4xl">
             Audio Guest Books Does This for You
           </h2>
           <p className="text-marketing-muted text-base leading-relaxed">
@@ -200,12 +200,12 @@ function Solution() {
           {SOLUTIONS.map(({ icon: Icon, title, body }) => (
             <div
               key={title}
-              className="rounded-xl border border-marketing-border bg-marketing-surface p-7 shadow-[0_1px_0_rgba(15,23,42,0.04)]"
+              className="rounded-xl border border-marketing-border bg-marketing-surface p-7 shadow-[0_1px_0_rgba(26,26,26,0.05)]"
             >
               <div className="inline-flex size-11 items-center justify-center rounded-md bg-marketing-accent-soft text-marketing-accent">
                 <Icon className="size-5" />
               </div>
-              <h3 className="mt-4 font-serif text-xl tracking-tight text-marketing-ink">
+              <h3 className="mt-4 font-serif text-xl font-light tracking-tight text-marketing-ink">
                 {title}
               </h3>
               <p className="mt-2 text-marketing-muted text-base leading-relaxed">
@@ -239,10 +239,10 @@ function HowItWorks() {
     <section className="border-y border-marketing-border bg-marketing-surface">
       <div className="mx-auto max-w-6xl px-4 py-20 sm:px-6 sm:py-24">
         <div className="mx-auto max-w-2xl space-y-3 text-center">
-          <p className="text-marketing-accent text-sm font-medium uppercase tracking-[0.18em]">
+          <p className="font-mono text-[11px] font-medium uppercase tracking-[0.18em] text-marketing-accent">
             How It Works
           </p>
-          <h2 className="font-serif text-3xl tracking-tight text-marketing-ink sm:text-4xl">
+          <h2 className="font-serif text-3xl font-light tracking-tight text-marketing-ink sm:text-4xl">
             Three Steps From Raw Files to Finished Delivery
           </h2>
         </div>
@@ -252,7 +252,7 @@ function HowItWorks() {
               <span className="inline-flex size-9 items-center justify-center rounded-full border border-marketing-accent/30 bg-marketing-accent-soft font-serif text-base text-marketing-accent">
                 {i + 1}
               </span>
-              <h3 className="font-serif text-xl tracking-tight text-marketing-ink">
+              <h3 className="font-serif text-xl font-light tracking-tight text-marketing-ink">
                 {step.title}
               </h3>
               <p className="text-marketing-muted text-base leading-relaxed">
@@ -271,10 +271,10 @@ function PricingTeaser({ signupHref }: { signupHref: string }) {
     <section className="bg-marketing-bg">
       <div className="mx-auto max-w-6xl px-4 py-20 sm:px-6 sm:py-24">
         <div className="mx-auto max-w-2xl space-y-3 text-center">
-          <p className="text-marketing-accent text-sm font-medium uppercase tracking-[0.18em]">
+          <p className="font-mono text-[11px] font-medium uppercase tracking-[0.18em] text-marketing-accent">
             Pricing
           </p>
-          <h2 className="font-serif text-3xl tracking-tight text-marketing-ink sm:text-4xl">
+          <h2 className="font-serif text-3xl font-light tracking-tight text-marketing-ink sm:text-4xl">
             Start Free. Upgrade When You&rsquo;re Ready.
           </h2>
         </div>
@@ -301,7 +301,7 @@ function FinalCta({ signupHref }: { signupHref: string }) {
   return (
     <section className="bg-marketing-surface">
       <div className="mx-auto max-w-3xl px-4 py-20 text-center sm:px-6 sm:py-24">
-        <h2 className="font-serif text-3xl tracking-tight text-marketing-ink sm:text-4xl">
+        <h2 className="font-serif text-3xl font-light tracking-tight text-marketing-ink sm:text-4xl">
           Ready to Deliver Audio Guest Books the Right Way?
         </h2>
         <p className="mx-auto mt-4 max-w-xl text-marketing-muted text-lg leading-relaxed">
@@ -310,7 +310,7 @@ function FinalCta({ signupHref }: { signupHref: string }) {
         </p>
         <a
           href={signupHref}
-          className="mt-8 inline-flex h-12 items-center justify-center gap-2 rounded-md bg-marketing-accent px-8 text-base font-medium text-marketing-accent-foreground transition-opacity hover:opacity-90"
+          className="mt-8 inline-flex h-12 items-center justify-center gap-2 rounded-md bg-marketing-ink px-8 text-base font-semibold tracking-tight text-marketing-bg transition-opacity hover:opacity-90"
         >
           Start Your Free Trial
           <ArrowRight className="size-4" />

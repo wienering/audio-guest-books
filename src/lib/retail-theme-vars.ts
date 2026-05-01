@@ -8,14 +8,15 @@ import {
 
 export type RetailThemeCssRecord = Record<string, string>;
 
+/** Default retail page theme when vendor custom theme is off (audioguestbooks brand sheet). */
 const DEFAULT_THEME: RetailThemeCssRecord = {
-  "--retail-bg": "#ffffff",
-  "--retail-text": "#171717",
-  "--retail-muted": "#737373",
-  "--retail-primary": "#0f766e",
-  "--retail-border": "#e5e5e5",
-  "--retail-accent": "#0d9488",
-  "--retail-row-active": "rgba(240, 253, 250, 0.85)",
+  "--retail-bg": "#f6f4ef",
+  "--retail-text": "#1a1a1a",
+  "--retail-muted": "#8a8580",
+  "--retail-primary": "#1a1a1a",
+  "--retail-border": "#e6e3dc",
+  "--retail-accent": "#c9a96e",
+  "--retail-row-active": "rgba(201, 169, 110, 0.14)",
   "--retail-player-bg": "color-mix(in srgb, var(--retail-bg) 94%, var(--retail-muted) 6%)",
 };
 
@@ -31,8 +32,8 @@ export function buildRetailThemeCssVars(input: {
     return { ...DEFAULT_THEME };
   }
 
-  const bg = normalizeHex(input.themeBackground) ?? "#ffffff";
-  const primary = normalizeHex(input.themePrimary) ?? "#0f766e";
+  const bg = normalizeHex(input.themeBackground) ?? "#f6f4ef";
+  const primary = normalizeHex(input.themePrimary) ?? "#1a1a1a";
   const secondary = normalizeHex(input.themeSecondary);
   const accent = normalizeHex(input.themeAccent) ?? primary;
   const text =

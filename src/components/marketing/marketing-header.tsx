@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { Menu, X } from "lucide-react";
 
+import { BrandLogo } from "@/components/brand/brand-logo";
 import { cn } from "@/lib/utils";
 
 type NavLink = { label: string; href: string };
@@ -32,10 +33,10 @@ export function MarketingHeader({ appUrl }: { appUrl: string }) {
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:px-6">
         <Link
           href="/"
-          className="font-serif text-xl tracking-tight text-marketing-ink"
+          className="flex shrink-0 items-center"
           onClick={() => setOpen(false)}
         >
-          Audio Guest Books
+          <BrandLogo className="h-8 w-auto max-w-[min(100%,240px)] sm:h-9" />
         </Link>
 
         <nav className="hidden items-center gap-7 md:flex">
@@ -43,7 +44,7 @@ export function MarketingHeader({ appUrl }: { appUrl: string }) {
             <Link
               key={l.href}
               href={l.href}
-              className="text-marketing-muted text-sm transition-colors hover:text-marketing-ink"
+              className="text-marketing-muted text-sm transition-colors hover:text-marketing-accent"
             >
               {l.label}
             </Link>
@@ -53,13 +54,13 @@ export function MarketingHeader({ appUrl }: { appUrl: string }) {
         <div className="hidden items-center gap-3 md:flex">
           <a
             href={`${appUrl}/sign-in`}
-            className="text-marketing-muted text-sm transition-colors hover:text-marketing-ink"
+            className="text-marketing-muted text-sm transition-colors hover:text-marketing-accent"
           >
             Sign In
           </a>
           <a
             href={`${appUrl}/sign-up`}
-            className="inline-flex h-9 items-center justify-center rounded-md bg-marketing-accent px-4 text-marketing-accent-foreground text-sm font-medium transition-opacity hover:opacity-90"
+            className="inline-flex h-9 items-center justify-center rounded-md bg-marketing-ink px-4 text-marketing-bg text-sm font-semibold tracking-tight transition-opacity hover:opacity-90"
           >
             Get Started
           </a>
@@ -102,7 +103,7 @@ export function MarketingHeader({ appUrl }: { appUrl: string }) {
             </a>
             <a
               href={`${appUrl}/sign-up`}
-              className="inline-flex h-10 items-center justify-center rounded-md bg-marketing-accent px-4 text-marketing-accent-foreground text-base font-medium hover:opacity-90"
+              className="inline-flex h-10 items-center justify-center rounded-md bg-marketing-ink px-4 text-marketing-bg text-base font-semibold tracking-tight hover:opacity-90"
             >
               Get Started
             </a>

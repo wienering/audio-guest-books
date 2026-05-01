@@ -35,13 +35,13 @@ const companyHeaderStyle = {
   fontSize: "13px",
   fontWeight: "600",
   textTransform: "uppercase" as const,
-  letterSpacing: "0.04em",
-  color: "#64748b",
+  letterSpacing: "0.14em",
+  color: "#8a8580",
   marginTop: "24px",
 };
 
 const footerStyle = {
-  color: "#94a3b8",
+  color: "#8a8580",
   fontSize: "13px",
   lineHeight: "1.5",
   marginTop: "32px",
@@ -54,7 +54,7 @@ function lineToEmailNodes(line: string, keyPrefix: string): ReactNode[] {
     const k = `${keyPrefix}-${i}`;
     if (s.kind === "link") {
       return (
-        <Link key={k} href={s.href} style={{ color: "#0f766e" }}>
+        <Link key={k} href={s.href} style={{ color: "#c9a96e" }}>
           {s.href}
         </Link>
       );

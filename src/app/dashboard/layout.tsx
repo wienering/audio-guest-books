@@ -3,6 +3,7 @@ import { auth } from "@clerk/nextjs/server";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 
+import { BrandLogo } from "@/components/brand/brand-logo";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import {
@@ -44,47 +45,44 @@ export default async function DashboardLayout({
     planCode === "ultimate";
 
   return (
-    <div className="min-h-screen bg-muted/40">
-      <header className="border-b bg-background">
+    <div className="min-h-screen bg-background">
+      <header className="border-b border-border bg-card">
         <div className="mx-auto flex h-14 max-w-5xl items-center justify-between px-4">
           <div className="flex items-center gap-6">
-            <Link
-              href="/dashboard"
-              className="font-semibold tracking-tight"
-            >
-              Audio Guest Books
+            <Link href="/dashboard" className="flex items-center shrink-0">
+              <BrandLogo className="h-7 w-auto max-w-[200px]" />
             </Link>
             <nav className="hidden gap-4 text-muted-foreground text-sm md:flex">
-              <Link href="/dashboard" className="hover:text-foreground">
+              <Link href="/dashboard" className="transition-colors hover:text-marketing-accent">
                 Events
               </Link>
               <Link
                 href="/dashboard/analytics"
-                className="hover:text-foreground"
+                className="transition-colors hover:text-marketing-accent"
               >
                 Analytics
               </Link>
               <Link
                 href="/dashboard/settings/email-templates"
-                className="hover:text-foreground"
+                className="transition-colors hover:text-marketing-accent"
               >
                 Email templates
               </Link>
               <Link
                 href="/dashboard/settings/branding"
-                className="hover:text-foreground"
+                className="transition-colors hover:text-marketing-accent"
               >
                 Branding
               </Link>
               <Link
                 href="/dashboard/settings/billing"
-                className="hover:text-foreground"
+                className="transition-colors hover:text-marketing-accent"
               >
                 Billing
               </Link>
               <Link
                 href="/dashboard/settings/account"
-                className="hover:text-foreground"
+                className="transition-colors hover:text-marketing-accent"
               >
                 Account
               </Link>

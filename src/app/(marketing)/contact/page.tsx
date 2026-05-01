@@ -27,10 +27,10 @@ export default function ContactPage() {
       <section className="relative overflow-hidden">
         <div className="absolute inset-x-0 -top-32 -z-10 h-72 bg-gradient-to-b from-marketing-accent-soft/40 to-transparent" />
         <div className="mx-auto max-w-3xl space-y-5 px-4 pt-20 pb-12 text-center sm:px-6 sm:pt-24">
-          <p className="text-marketing-accent text-sm font-medium uppercase tracking-[0.18em]">
+          <p className="font-mono text-[11px] font-medium uppercase tracking-[0.18em] text-marketing-accent">
             Contact
           </p>
-          <h1 className="font-serif text-4xl leading-tight tracking-tight text-marketing-ink sm:text-5xl">
+          <h1 className="font-serif text-4xl font-light leading-tight tracking-tight text-marketing-ink sm:text-5xl">
             Get in Touch
           </h1>
           <p className="text-marketing-muted text-lg leading-relaxed">
@@ -47,7 +47,7 @@ export default function ContactPage() {
               <Mail className="size-5" />
             </div>
             <div className="space-y-2">
-              <p className="font-serif text-xl tracking-tight text-marketing-ink">
+              <p className="font-serif text-xl font-light tracking-tight text-marketing-ink">
                 Email Support
               </p>
               <p className="text-marketing-muted text-base leading-relaxed">

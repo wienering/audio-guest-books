@@ -9,6 +9,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { BrandLogo } from "@/components/brand/brand-logo";
 import { cn } from "@/lib/utils";
 import {
   getMembershipWithCompany,
@@ -45,8 +46,8 @@ export default async function OnboardingPage() {
 
   return (
     <main className="mx-auto flex min-h-screen flex-col items-center px-6 py-12">
-      <div className="mb-8 flex flex-col gap-4 text-center sm:max-w-md">
-        <h1 className="text-xl font-semibold tracking-tight">Audio Guest Books</h1>
+      <div className="mb-8 flex flex-col items-center gap-4 text-center sm:max-w-md">
+        <BrandLogo className="h-10 w-auto" />
         <Card className="border-none bg-transparent py-4 shadow-none">
           <CardHeader className="px-2">
             <CardTitle className="text-base">Finish setting up</CardTitle>

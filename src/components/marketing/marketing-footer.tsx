@@ -1,5 +1,7 @@
 import Link from "next/link";
 
+import { BrandLogo } from "@/components/brand/brand-logo";
+
 export function MarketingFooter() {
   const year = new Date().getFullYear();
 
@@ -8,9 +10,7 @@ export function MarketingFooter() {
       <div className="mx-auto max-w-6xl px-4 py-14 sm:px-6">
         <div className="grid gap-10 sm:grid-cols-2 md:grid-cols-3">
           <div className="space-y-3">
-            <p className="font-serif text-lg tracking-tight text-marketing-ink">
-              Audio Guest Books
-            </p>
+            <BrandLogo className="h-8 w-auto max-w-[220px]" />
             <p className="max-w-xs text-marketing-muted text-sm leading-relaxed">
               The professional way to deliver wedding and event audio guest
               books to your clients.
@@ -53,7 +53,7 @@ function FooterColumn({
 }) {
   return (
     <div className="space-y-3">
-      <p className="font-medium text-marketing-ink text-sm uppercase tracking-wide">
+      <p className="font-mono text-[10px] font-medium text-marketing-muted uppercase tracking-[0.14em]">
         {title}
       </p>
       <ul className="space-y-2">
@@ -61,7 +61,7 @@ function FooterColumn({
           <li key={l.href}>
             <Link
               href={l.href}
-              className="text-marketing-muted text-sm transition-colors hover:text-marketing-ink"
+              className="text-marketing-muted text-sm transition-colors hover:text-marketing-accent"
             >
               {l.label}
             </Link>

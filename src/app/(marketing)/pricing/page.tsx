@@ -103,7 +103,7 @@ export default async function PricingPage() {
       <section className="mx-auto max-w-6xl px-4 pb-20 sm:px-6">
         <PricingPlanCards plans={plans} />
         {showFoundingBadge ? (
-          <p className="mt-10 text-center text-marketing-accent text-sm font-medium">
+          <p className="mt-10 text-center font-mono text-[11px] font-medium uppercase tracking-[0.14em] text-marketing-accent">
             {foundingSpotsRemaining} of 5 founding spots remaining
           </p>
         ) : null}
@@ -115,7 +115,7 @@ export default async function PricingPage() {
 
       <section className="border-t border-marketing-border bg-marketing-bg">
         <div className="mx-auto flex max-w-3xl flex-col items-center gap-4 px-4 py-16 text-center sm:px-6">
-          <h2 className="font-serif text-2xl tracking-tight text-marketing-ink sm:text-3xl">
+          <h2 className="font-serif text-2xl font-light tracking-tight text-marketing-ink sm:text-3xl">
             More Questions?
           </h2>
           <Link
@@ -136,10 +136,10 @@ function Hero() {
     <section className="relative overflow-hidden">
       <div className="absolute inset-x-0 -top-32 -z-10 h-72 bg-gradient-to-b from-marketing-accent-soft/40 to-transparent" />
       <div className="mx-auto max-w-3xl space-y-5 px-4 pt-20 pb-14 text-center sm:px-6 sm:pt-24">
-        <p className="text-marketing-accent text-sm font-medium uppercase tracking-[0.18em]">
+        <p className="font-mono text-[11px] font-medium uppercase tracking-[0.18em] text-marketing-accent">
           Pricing
         </p>
-        <h1 className="font-serif text-4xl leading-tight tracking-tight text-marketing-ink sm:text-5xl">
+        <h1 className="font-serif text-4xl font-light leading-tight tracking-tight text-marketing-ink sm:text-5xl">
           Simple Pricing That Scales With You
         </h1>
         <p className="text-marketing-muted text-lg leading-relaxed">
@@ -187,10 +187,10 @@ function ComparisonTable() {
     <section className="border-y border-marketing-border bg-marketing-surface">
       <div className="mx-auto max-w-5xl px-4 py-20 sm:px-6">
         <div className="mx-auto max-w-2xl space-y-3 text-center">
-          <p className="text-marketing-accent text-sm font-medium uppercase tracking-[0.18em]">
+          <p className="font-mono text-[11px] font-medium uppercase tracking-[0.18em] text-marketing-accent">
             Compare Plans
           </p>
-          <h2 className="font-serif text-3xl tracking-tight text-marketing-ink sm:text-4xl">
+          <h2 className="font-serif text-3xl font-light tracking-tight text-marketing-ink sm:text-4xl">
             Everything Side by Side
           </h2>
         </div>
@@ -198,16 +198,16 @@ function ComparisonTable() {
           <table className="w-full min-w-[640px] border-collapse text-sm">
             <thead>
               <tr className="border-b border-marketing-border bg-marketing-bg/60 text-left">
-                <th className="px-6 py-4 font-medium text-marketing-muted text-xs uppercase tracking-wide">
+                <th className="px-6 py-4 font-mono text-[11px] font-medium text-marketing-muted uppercase tracking-[0.14em]">
                   Feature
                 </th>
-                <th className="px-6 py-4 font-serif text-base text-marketing-ink">
+                <th className="px-6 py-4 font-serif text-base font-light text-marketing-ink">
                   Free
                 </th>
-                <th className="px-6 py-4 font-serif text-base text-marketing-ink">
+                <th className="px-6 py-4 font-serif text-base font-light text-marketing-ink">
                   Pro
                 </th>
-                <th className="px-6 py-4 font-serif text-base text-marketing-ink">
+                <th className="px-6 py-4 font-serif text-base font-light text-marketing-ink">
                   Ultimate
                 </th>
               </tr>
@@ -278,10 +278,10 @@ function PricingFaq() {
     <section className="bg-marketing-bg">
       <div className="mx-auto max-w-3xl px-4 py-20 sm:px-6">
         <div className="space-y-3 text-center">
-          <p className="text-marketing-accent text-sm font-medium uppercase tracking-[0.18em]">
+          <p className="font-mono text-[11px] font-medium uppercase tracking-[0.18em] text-marketing-accent">
             Pricing FAQ
           </p>
-          <h2 className="font-serif text-3xl tracking-tight text-marketing-ink sm:text-4xl">
+          <h2 className="font-serif text-3xl font-light tracking-tight text-marketing-ink sm:text-4xl">
             Common Pricing Questions
           </h2>
         </div>

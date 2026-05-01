@@ -2,24 +2,28 @@ import "./globals.css";
 
 import type { Metadata } from "next";
 import { ClerkProvider } from "@clerk/nextjs";
-import { Crimson_Pro, Geist, Geist_Mono } from "next/font/google";
+import { DM_Mono, Fraunces, Manrope } from "next/font/google";
 
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const manrope = Manrope({
+  variable: "--font-manrope",
   subsets: ["latin"],
+  display: "swap",
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+const dmMono = DM_Mono({
+  variable: "--font-dm-mono",
   subsets: ["latin"],
+  weight: ["400", "500"],
+  display: "swap",
 });
 
-const crimsonPro = Crimson_Pro({
-  variable: "--font-crimson",
+const fraunces = Fraunces({
+  variable: "--font-fraunces",
   subsets: ["latin"],
+  weight: ["300", "400"],
   display: "swap",
 });
 
@@ -44,9 +48,20 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} ${crimsonPro.variable} font-sans antialiased`}
+        className={`${manrope.variable} ${dmMono.variable} ${fraunces.variable} font-sans antialiased`}
       >
-        <ClerkProvider>
+        <ClerkProvider
+          appearance={{
+            variables: {
+              colorPrimary: "#1a1a1a",
+              colorBackground: "#f6f4ef",
+              colorText: "#1a1a1a",
+              colorTextSecondary: "#8a8580",
+              colorInputBackground: "#ffffff",
+              colorNeutral: "#e6e3dc",
+            },
+          }}
+        >
           <TooltipProvider delay={200}>
             {children}
             <Toaster />

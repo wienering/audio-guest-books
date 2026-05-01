@@ -154,10 +154,10 @@ export default function FaqPage() {
       <section className="relative overflow-hidden">
         <div className="absolute inset-x-0 -top-32 -z-10 h-72 bg-gradient-to-b from-marketing-accent-soft/40 to-transparent" />
         <div className="mx-auto max-w-3xl space-y-5 px-4 pt-20 pb-10 text-center sm:px-6 sm:pt-24">
-          <p className="text-marketing-accent text-sm font-medium uppercase tracking-[0.18em]">
+          <p className="font-mono text-[11px] font-medium uppercase tracking-[0.18em] text-marketing-accent">
             Frequently Asked Questions
           </p>
-          <h1 className="font-serif text-4xl leading-tight tracking-tight text-marketing-ink sm:text-5xl">
+          <h1 className="font-serif text-4xl font-light leading-tight tracking-tight text-marketing-ink sm:text-5xl">
             Everything You Might Be Wondering
           </h1>
           <p className="text-marketing-muted text-lg leading-relaxed">
@@ -176,7 +176,7 @@ export default function FaqPage() {
       <div className="mx-auto max-w-3xl space-y-12 px-4 pb-24 sm:px-6">
         {SECTIONS.map((section) => (
           <section key={section.title} className="space-y-4">
-            <h2 className="font-serif text-2xl tracking-tight text-marketing-ink">
+            <h2 className="font-serif text-2xl font-light tracking-tight text-marketing-ink">
               {section.title}
             </h2>
             <FaqAccordion items={section.items} />

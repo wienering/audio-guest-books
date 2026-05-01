@@ -55,21 +55,21 @@ export function BrandingClient(props: BrandingClientProps) {
   const [uploadBusy, setUploadBusy] = useState(false);
 
   const [primary, setPrimary] = useState(
-    props.initialPrimary ?? "#0f766e"
+    props.initialPrimary ?? "#1a1a1a"
   );
   const [secondary, setSecondary] = useState(
-    props.initialSecondary ?? "#e5e5e5"
+    props.initialSecondary ?? "#e6e3dc"
   );
-  const [accent, setAccent] = useState(props.initialAccent ?? "#0d9488");
+  const [accent, setAccent] = useState(props.initialAccent ?? "#c9a96e");
   const [background, setBackground] = useState(
-    props.initialBackground ?? "#ffffff"
+    props.initialBackground ?? "#f6f4ef"
   );
 
   useEffect(() => {
-    setPrimary(props.initialPrimary ?? "#0f766e");
-    setSecondary(props.initialSecondary ?? "#e5e5e5");
-    setAccent(props.initialAccent ?? "#0d9488");
-    setBackground(props.initialBackground ?? "#ffffff");
+    setPrimary(props.initialPrimary ?? "#1a1a1a");
+    setSecondary(props.initialSecondary ?? "#e6e3dc");
+    setAccent(props.initialAccent ?? "#c9a96e");
+    setBackground(props.initialBackground ?? "#f6f4ef");
   }, [
     props.initialPrimary,
     props.initialSecondary,

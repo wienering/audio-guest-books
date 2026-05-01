@@ -16,7 +16,7 @@ export function RetailFooter({ visible = true }: { visible?: boolean }) {
         <Link
           href="https://audioguestbooks.ca"
           className="font-medium underline decoration-current/40 underline-offset-2 hover:opacity-90"
-          style={{ color: "var(--retail-primary)" }}
+          style={{ color: "var(--retail-accent)" }}
           target="_blank"
           rel="noopener noreferrer"
         >

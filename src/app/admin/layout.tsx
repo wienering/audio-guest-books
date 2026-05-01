@@ -1,6 +1,7 @@
 import { UserButton } from "@clerk/nextjs";
 import Link from "next/link";
 
+import { BrandLogo } from "@/components/brand/brand-logo";
 import { requireAdminAccess } from "@/lib/admin-auth";
 
 export const metadata = {
@@ -42,7 +43,7 @@ export default async function AdminLayout({
               <span className="rounded bg-red-600 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-white">
                 Admin
               </span>
-              Audio Guest Books
+              <BrandLogo className="h-7 w-auto max-w-[180px]" />
             </Link>
           </div>
           <div className="flex items-center gap-3">

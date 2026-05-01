@@ -15,7 +15,7 @@ function lineToPreviewNodes(line: string, keyPrefix: string): ReactNode[] {
         <a
           key={k}
           href={s.href}
-          className="text-teal-700 underline dark:text-teal-400"
+          className="text-[#c9a96e] underline dark:text-[#e4cf9d]"
           target="_blank"
           rel="noreferrer"
         >
