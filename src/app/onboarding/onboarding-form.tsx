@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -36,12 +36,30 @@ type FieldsProps = {
   rootDomain: string;
 };
 
+/** Matches onboarding slug rules: lowercase, hyphens only between segments, max 63. */
+function slugifyFromCompanyName(name: string): string {
+  return name
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/-+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 63);
+}
+
 function OnboardingFormFields({
   baseline,
   state,
   pending,
   rootDomain,
 }: FieldsProps) {
+  const [companyName, setCompanyName] = useState(baseline.companyName);
+  const [companySlug, setCompanySlug] = useState(baseline.companySlug);
+  const [slugTouched, setSlugTouched] = useState(
+    () =>
+      baseline.companySlug !== slugifyFromCompanyName(baseline.companyName),
+  );
+
   const nameError =
     state && "fieldErrors" in state ? state.fieldErrors?.companyName : undefined;
   const slugError =
@@ -69,7 +87,15 @@ function OnboardingFormFields({
             autoComplete="organization"
             placeholder="Nova Audio Memories"
             required
-            defaultValue={baseline.companyName}
+            value={companyName}
+            onChange={(e) => {
+              const v = e.target.value;
+              setCompanyName(v);
+              if (!slugTouched) {
+                setCompanySlug(slugifyFromCompanyName(v));
+              }
+            }}
+            disabled={pending}
             aria-invalid={!!nameError}
           />
           {nameError ? (
@@ -93,7 +119,18 @@ function OnboardingFormFields({
             spellCheck={false}
             placeholder="nova-audio"
             required
-            defaultValue={baseline.companySlug}
+            value={companySlug}
+            onChange={(e) => {
+              const v = e.target.value;
+              if (v === "") {
+                setSlugTouched(false);
+                setCompanySlug(slugifyFromCompanyName(companyName));
+                return;
+              }
+              setSlugTouched(true);
+              setCompanySlug(v);
+            }}
+            disabled={pending}
             aria-invalid={!!slugError}
           />
           <p className="text-muted-foreground text-xs">

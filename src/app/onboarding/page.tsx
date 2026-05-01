@@ -3,12 +3,6 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 
 import { buttonVariants } from "@/components/ui/button";
-import {
-  Card,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 import { BrandLogo } from "@/components/brand/brand-logo";
 import { cn } from "@/lib/utils";
 import {
@@ -45,18 +39,18 @@ export default async function OnboardingPage() {
     "audioguestbooks.ca";
 
   return (
-    <main className="mx-auto flex min-h-screen flex-col items-center px-6 py-12">
-      <div className="mb-8 flex flex-col items-center gap-4 text-center sm:max-w-md">
-        <BrandLogo className="h-10 w-auto" />
-        <Card className="border-none bg-transparent py-4 shadow-none">
-          <CardHeader className="px-2">
-            <CardTitle className="text-base">Finish setting up</CardTitle>
-            <CardDescription>
-              You&apos;re authenticated with Clerk — now connect your workspace to
-              the platform tenant.
-            </CardDescription>
-          </CardHeader>
-        </Card>
+    <main className="mx-auto flex min-h-screen w-full max-w-lg flex-col items-center px-6 py-12">
+      <div className="mb-8 flex w-full max-w-md flex-col items-center gap-4 text-center">
+        <BrandLogo className="h-10 w-auto max-w-full shrink-0" />
+        <div className="w-full space-y-2 px-2 text-pretty">
+          <h1 className="text-base leading-snug font-medium">
+            Finish setting up
+          </h1>
+          <p className="text-muted-foreground text-sm">
+            You&apos;re authenticated with Clerk — now connect your workspace to
+            the platform tenant.
+          </p>
+        </div>
       </div>
       <OnboardingForm rootDomain={rootDomain} />
       <Link
