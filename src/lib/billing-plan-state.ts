@@ -1,4 +1,6 @@
-import "server-only";
+// NOTE: Intentionally does not import the Next.js `server-only` package — this
+// module loads from `comp-subscription-revoke-core` → complimentary expiry sweep
+// → `retention-scheduler` → BullMQ worker (plain Node).
 
 import { and, eq, inArray } from "drizzle-orm";
 

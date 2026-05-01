@@ -1,33 +1,45 @@
 # Audio Guest Books — Notes & TODOs
 
-## Worker compatibility rule
+## Worker compatibility rule (read before adding `server-only`)
 
-Files imported by the worker (`src/worker/*`) must NOT use `import "server-only"`.
-The worker is a Node.js process, not a Next.js runtime — `server-only` throws
-there with `This module cannot be imported from a Client Component module`.
+**This has been broken multiple times:** any module in the worker’s import tree
+that contains `import "server-only"` will crash the Railway worker at startup
+with `This module cannot be imported from a Client Component module` (the
+package treats non-Next contexts as “client-only” errors). The worker is plain
+Node.js (`src/worker/index.ts` + BullMQ jobs), not the Next.js server.
 
-Common shared files that need to avoid `server-only`:
-- `src/lib/r2.ts`
-- `src/lib/queue.ts`
-- `src/lib/redis.ts`
-- `src/lib/email.ts`
-- `src/lib/retention-scheduler.tsx`
-- `src/lib/event-mutations.ts`
-- `src/lib/display-audio-files.ts`
-- `src/lib/app-url.ts` / `src/lib/host.ts`
-- `src/lib/clerk-primary-email.ts`
-- `src/lib/date-format.ts` / `src/lib/format-retail-event-date.ts`
-- `src/lib/retention.ts`
-- Any file imported by webhook handlers or background jobs
+**Before adding `import "server-only"` to any file under `src/lib/` or
+`src/db/`:**
 
-When in doubt, audit with `rg -l 'import "server-only"' src/lib/` and check
-whether each file is reachable from `src/worker/index.ts` (or one of its
-transitive imports such as `runRetentionScheduler` or any job processor).
+1. Confirm that file is **not** reachable from `src/worker/index.ts` (directly
+   or transitively). High-risk entrypoints: `runRetentionScheduler`,
+   `event-mutations`, job processors under `src/worker/jobs/`, `queue`,
+   `redis`, `r2`, `email`, **complimentary subscription expiry**
+   (`comp-subscription-expiry-worker` → `comp-subscription-revoke-core` →
+   **`billing-plan-state`** — these must stay free of `server-only`).
+2. Quick audit (PowerShell):  
+   `Select-String -Path src/lib/*.ts,src/lib/*.tsx,src/db/*.ts -Pattern 'import "server-only"'`  
+   For each matching file, verify it does **not** appear in the worker graph.  
+   (**Don’t** paste the literal `import "server-only"` phrase into comments — it will
+   false-positive this search.)
 
-If the same logic must run in both contexts, keep the worker-shared portion in
-a file without `server-only`, then have the Next.js-only callers import that
-file (the wrapper file with `server-only` may add request-scoped helpers like
-Clerk auth on top, but should not be reached by the worker).
+**Prefer:** keep shared DB/business logic in modules **without** `server-only`;
+add `server-only` only on thin Next.js wrappers (route handlers, RSC loaders)
+that pull in Clerk / cookies and never import the worker stack.
+
+Common shared files that must **avoid** `server-only` (historical hotspots):
+
+- `src/lib/r2.ts`, `queue.ts`, `redis.ts`, `email.ts`
+- `src/lib/retention-scheduler.tsx`, `event-mutations.ts`, `billing-plan-state.ts`
+- `src/lib/comp-subscription-expiry-worker.ts`, `comp-subscription-revoke-core.ts`,
+  `comp-subscription-utils.ts`, `admin-audit-write.ts`
+- `src/db/grant-features.ts` (reachable via `billing-plan-state`)
+- `src/lib/display-audio-files.ts`, `src/lib/app-url.ts` / `host.ts`,
+  `clerk-primary-email.ts`, date/format helpers used by retention, `retention.ts`
+- Any module imported by webhooks **or** background jobs
+
+When in doubt: `rg -l 'import "server-only"' src/lib/` and trace imports back to
+`src/worker/index.ts`.
 
 
 ## Pre-launch design tasks
