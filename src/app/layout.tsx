@@ -52,13 +52,28 @@ export default function RootLayout({
       >
         <ClerkProvider
           appearance={{
+            cssLayerName: "clerk",
             variables: {
               colorPrimary: "#1a1a1a",
-              colorBackground: "#f6f4ef",
-              colorText: "#1a1a1a",
-              colorTextSecondary: "#8a8580",
-              colorInputBackground: "#ffffff",
-              colorNeutral: "#e6e3dc",
+              colorPrimaryForeground: "#f6f4ef",
+              colorForeground: "#1a1a1a",
+              colorMutedForeground: "#45423c",
+              colorBackground: "#ffffff",
+              colorMuted: "#f3efe8",
+              colorNeutral: "#9c9590",
+              colorBorder: "#e6e3dc",
+              colorInput: "#ffffff",
+              colorInputForeground: "#1a1a1a",
+              colorRing: "#c9a96e",
+              fontFamily: "inherit",
+            },
+            elements: {
+              userButtonPopoverActionButton: {
+                color: "#1a1a1a",
+              },
+              userButtonPopoverActionButtonIcon: {
+                color: "#1a1a1a",
+              },
             },
           }}
         >
