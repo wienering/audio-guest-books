@@ -157,7 +157,7 @@ export function SendLinkComposer(props: SendLinkComposerProps) {
       >
         <div className="border-b px-5 py-4">
           <h2 className="font-semibold text-lg tracking-tight">
-            Send retail link
+            Send client link
           </h2>
           <p className="mt-1 text-muted-foreground text-sm">
             Email your client the gallery link. You can edit the message before

@@ -10,24 +10,17 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { getAdminCompanyDetailBySlug } from "@/lib/admin-company-detail";
+import { formatDate, formatDateTime } from "@/lib/date-format";
 import { cn, formatBytes } from "@/lib/utils";
 
 function fmt(iso: string | null | undefined): string {
   if (!iso) return "—";
-  const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return "—";
-  return d.toLocaleString();
+  return formatDateTime(iso) || "—";
 }
 
 function fmtDate(iso: string | null | undefined): string {
   if (!iso) return "—";
-  const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return iso ?? "—";
-  return d.toLocaleDateString(undefined, {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  });
+  return formatDate(iso) || (iso ?? "—");
 }
 
 function stripeCustomerLink(id: string | null): string | null {
@@ -227,7 +220,7 @@ export default async function AdminCompanyDetailPage(props: {
                 <thead className="text-left text-muted-foreground">
                   <tr className="border-b">
                     <th className="py-2 pr-4 font-medium">Event</th>
-                    <th className="py-2 pr-4 font-medium">Retail client</th>
+                    <th className="py-2 pr-4 font-medium">Client</th>
                     <th className="py-2 pr-4 font-medium">Files</th>
                     <th className="py-2 font-medium">Created</th>
                   </tr>

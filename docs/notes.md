@@ -42,6 +42,7 @@ Existing databases seeded before Stage 5 may still grant `remove_powered_by_foot
 - [x] WAV/FLAC/AIFF transcoding for Ultimate tier (Stage 12 — see runbook at bottom)
 - [ ] Custom domains for Ultimate tier (yourcompany.com instead of subdomain)
 - [ ] Drag-to-reorder files (Stage 13 polish)
+- [ ] Per-company timezone preference is a future enhancement. Currently all dates default to America/Toronto (constant `APP_TIMEZONE` in `src/lib/date-format.ts`). Storage stays UTC; only display formatting uses the timezone. To override per company, thread a `timezone` argument through the helpers in `src/lib/date-format.ts` and update the analytics day-bucket SQL in `src/lib/analytics-queries.ts`.
 
 ## Decisions deferred
 - [ ] Final Pro tier pricing (launching free, will set price later)

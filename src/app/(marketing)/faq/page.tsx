@@ -68,7 +68,7 @@ const SECTIONS: ReadonlyArray<FaqSection> = [
       },
       {
         q: "What's a “guest visible” file vs. an “original” file?",
-        a: "Lossless uploads (WAV, FLAC, AIFF) on the Ultimate plan are automatically transcoded to MP3 for smooth in-browser playback. The MP3 is the “guest visible” file — that's what plays on the retail page. The “original” lossless file is preserved and offered as an optional download for guests who want studio quality.",
+        a: "Lossless uploads (WAV, FLAC, AIFF) on the Ultimate plan are automatically transcoded to MP3 for smooth in-browser playback. The MP3 is the “guest visible” file — that's what plays on the client page. The “original” lossless file is preserved and offered as an optional download for guests who want studio quality.",
       },
     ],
   },
@@ -77,19 +77,19 @@ const SECTIONS: ReadonlyArray<FaqSection> = [
     items: [
       {
         q: "Can I add my logo?",
-        a: "Yes, on Pro and Ultimate plans. Upload a logo from your branding settings and it appears at the top of every retail page your clients see.",
+        a: "Yes, on Pro and Ultimate plans. Upload a logo from your branding settings and it appears at the top of every client page your clients see.",
       },
       {
         q: "Can I customize colors?",
-        a: "Yes, on Pro and Ultimate plans. You can set your primary, secondary, accent, and background colors from the branding settings, and we apply them across all of your retail pages.",
+        a: "Yes, on Pro and Ultimate plans. You can set your primary, secondary, accent, and background colors from the branding settings, and we apply them across all of your client pages.",
       },
       {
-        q: "Can I password-protect retail pages?",
+        q: "Can I password-protect client pages?",
         a: "Yes, on Pro and Ultimate plans. Set an event password from the event settings and your client will be prompted to unlock the page before listening. Unlock sessions last 7 days per browser.",
       },
       {
         q: "Will clients see “Audio Guest Books” branding?",
-        a: "On Free and Pro a small “Powered by Audio Guest Books” line appears in the retail page footer. The Ultimate plan removes that footer so the page is fully your brand.",
+        a: "On Free and Pro a small “Powered by Audio Guest Books” line appears in the client page footer. The Ultimate plan removes that footer so the page is fully your brand.",
       },
     ],
   },

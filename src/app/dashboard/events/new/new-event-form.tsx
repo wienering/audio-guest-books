@@ -161,7 +161,7 @@ function NewEventFormFields({ baseline, state, pending }: FieldsProps) {
         ) : null}
 
         <div className="space-y-2">
-          <Label htmlFor="retailClientName">Retail client name</Label>
+          <Label htmlFor="retailClientName">Client name</Label>
           <Input
             id="retailClientName"
             name="retailClientName"
@@ -185,7 +185,7 @@ function NewEventFormFields({ baseline, state, pending }: FieldsProps) {
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="retailClientEmail">Retail client email</Label>
+          <Label htmlFor="retailClientEmail">Client email</Label>
           <Input
             id="retailClientEmail"
             name="retailClientEmail"
@@ -206,7 +206,7 @@ function NewEventFormFields({ baseline, state, pending }: FieldsProps) {
         <div className="space-y-2">
           <Label htmlFor="retailClientSlug">Client URL slug</Label>
           <p className="text-muted-foreground text-xs leading-relaxed">
-            Used on the retail link in Stage 3. Lowercase letters, numbers, and
+            Used on the client link in Stage 3. Lowercase letters, numbers, and
             hyphens only.
           </p>
           <Input
@@ -260,7 +260,7 @@ export function NewEventForm() {
       <CardHeader>
         <CardTitle>New event</CardTitle>
         <CardDescription>
-          Create a guest book workspace. Retail client pages arrive in Stage 3.
+          Create a guest book workspace. Client pages arrive in Stage 3.
         </CardDescription>
       </CardHeader>
       <form key={formKey} action={dispatch} className="space-y-6">

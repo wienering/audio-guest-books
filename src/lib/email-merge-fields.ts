@@ -1,3 +1,5 @@
+import { formatDateOnly } from "@/lib/date-format";
+
 export const SYSTEM_DEFAULT_RETAIL_INVITATION = {
   subjectTemplate: "{{company_name}} has uploaded your audio guest book files",
   bodyTemplate: `Hi {{client_first_name}},
@@ -53,12 +55,11 @@ export function eventTypeMergeLabel(
 }
 
 export function formatEventDateForMerge(eventDate: Date): string {
-  return new Intl.DateTimeFormat("en-US", {
+  return formatDateOnly(eventDate, {
     month: "long",
     day: "numeric",
     year: "numeric",
-    timeZone: "UTC",
-  }).format(eventDate);
+  });
 }
 
 export function buildRetailInvitationMergeValues(input: {
@@ -128,7 +129,7 @@ export const MERGE_FIELDS_UI: {
   { key: "event_date", label: "Event date", sample: "April 28, 2026" },
   {
     key: "retail_url",
-    label: "Retail URL",
+    label: "Client page URL",
     sample: "https://photoboothguys.audioguestbooks.ca/sarah-smith",
   },
 ];

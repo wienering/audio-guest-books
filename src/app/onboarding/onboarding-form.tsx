@@ -81,7 +81,7 @@ function OnboardingFormFields({
           <p className="text-muted-foreground text-xs leading-relaxed">
             Your guests will browse{" "}
             <code className="rounded bg-muted px-1 py-0.5 font-mono text-[0.85rem]">{`slug.${rootDomain}`}</code>{" "}
-            in production. Retail paths like{" "}
+            in production. Client page paths like{" "}
             <code className="rounded bg-muted px-1 py-0.5 font-mono text-[0.85rem]">{`slug.${rootDomain}/{client}`}</code>{" "}
             arrive in Stage 3.
           </p>

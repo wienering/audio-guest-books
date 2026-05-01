@@ -12,6 +12,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { formatDate, formatDateTime } from "@/lib/date-format";
 
 export type BillingAuditRow = {
   id: string;
@@ -180,11 +181,7 @@ export function BillingSettingsClient(props: BillingSettingsClientProps) {
   }
 
   const periodLabel = subscriptionCurrentPeriodEnd
-    ? new Date(subscriptionCurrentPeriodEnd).toLocaleDateString(undefined, {
-        year: "numeric",
-        month: "long",
-        day: "numeric",
-      })
+    ? formatDate(subscriptionCurrentPeriodEnd)
     : null;
 
   return (
@@ -295,7 +292,7 @@ export function BillingSettingsClient(props: BillingSettingsClientProps) {
                     </span>
                   ) : null}
                   <span className="block text-muted-foreground text-xs">
-                    {new Date(row.created_at).toLocaleString()}
+                    {formatDateTime(row.created_at)}
                   </span>
                 </li>
               ))}

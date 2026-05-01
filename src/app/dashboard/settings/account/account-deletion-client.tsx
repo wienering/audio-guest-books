@@ -105,7 +105,7 @@ export function AccountDeletionClient({ companyName, preview }: Props) {
                 {preview.audioFileCount === 1 ? "audio file" : "audio files"}{" "}
                 ({mbLabel} MB total storage)
               </li>
-              <li>All retail client pages</li>
+              <li>All client pages</li>
               <li>
                 All custom email templates ({preview.emailTemplateCount}{" "}
                 {preview.emailTemplateCount === 1 ? "template" : "templates"})

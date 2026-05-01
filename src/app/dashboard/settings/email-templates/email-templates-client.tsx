@@ -220,7 +220,7 @@ export function EmailTemplatesSettingsClient(props: {
       <div>
         <h1 className="text-2xl font-semibold tracking-tight">Email templates</h1>
         <p className="mt-2 text-muted-foreground text-sm">
-          Reusable &quot;send link&quot; messages for retail galleries. Ultimate
+          Reusable &quot;send link&quot; messages for client galleries. Ultimate
           can save custom templates with merge fields.
         </p>
       </div>

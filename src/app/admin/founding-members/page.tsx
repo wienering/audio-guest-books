@@ -9,18 +9,18 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { listFoundingMembers } from "@/lib/admin-company-detail";
+import { formatDate } from "@/lib/date-format";
 
 const FOUNDING_CAP = 5;
 
 function fmtDate(iso: string | null | undefined): string {
   if (!iso) return "—";
-  const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return "—";
-  return d.toLocaleDateString(undefined, {
+  const label = formatDate(iso, {
     year: "numeric",
     month: "short",
     day: "numeric",
   });
+  return label || "—";
 }
 
 export default async function AdminFoundingMembersPage() {

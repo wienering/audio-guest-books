@@ -385,7 +385,7 @@ export function EventRetailAppearanceSection(props: {
   return (
     <section className="space-y-8 rounded-xl border bg-card p-5 shadow-sm">
       <div>
-        <h2 className="font-medium">Retail page appearance</h2>
+        <h2 className="font-medium">Client page appearance</h2>
         <p className="mt-1 text-muted-foreground text-sm">
           Cover image and optional password apply to the client-facing guest book
           link for this event.
@@ -406,7 +406,7 @@ export function EventRetailAppearanceSection(props: {
         <h3 className="text-sm font-medium">Password protection</h3>
         <UpgradeTooltipLock
           locked={!props.passwordProtection}
-          message="Upgrade to Pro to protect retail pages with a password."
+          message="Upgrade to Pro to protect client pages with a password."
         >
           {passwordInner}
         </UpgradeTooltipLock>

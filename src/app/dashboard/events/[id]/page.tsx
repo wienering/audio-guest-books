@@ -6,6 +6,7 @@ import { db } from "@/db/index";
 import { audioFiles, emailTemplates, events, uploadJobs } from "@/db/schema";
 import { getMembershipWithCompany } from "@/lib/company";
 import { companyHasFeatureKey } from "@/lib/company-features";
+import { formatDate, formatDateOnly } from "@/lib/date-format";
 import { buildRetailInvitationMergeValues } from "@/lib/email-merge-fields";
 import { presignGetUrl } from "@/lib/r2";
 import { buildRetailEventPublicUrl } from "@/lib/retail-public-url";
@@ -105,7 +106,7 @@ export default async function EventDetailPage(props: {
   const retailPasswordActive = !!eventRow.passwordHash?.trim();
   const retailPasswordSetAtLabel =
     retailPasswordActive && eventRow.passwordSetAt
-      ? eventRow.passwordSetAt.toLocaleDateString(undefined, {
+      ? formatDate(eventRow.passwordSetAt, {
           year: "numeric",
           month: "long",
           day: "numeric",
@@ -158,22 +159,14 @@ export default async function EventDetailPage(props: {
   const planName = membership.company.plan?.name ?? "your";
 
   const metadataOnlyAfterLabel = eventRow.metadataOnlyAfter
-    ? eventRow.metadataOnlyAfter.toLocaleDateString(undefined, {
-        year: "numeric",
-        month: "long",
-        day: "numeric",
-      })
+    ? formatDateOnly(eventRow.metadataOnlyAfter)
     : null;
 
   const permanentRemovalDate = eventRow.metadataOnlyAfter
     ? addUtcMonths(eventRow.metadataOnlyAfter, 12)
     : null;
   const permanentRemovalLabel = permanentRemovalDate
-    ? permanentRemovalDate.toLocaleDateString(undefined, {
-        year: "numeric",
-        month: "long",
-        day: "numeric",
-      })
+    ? formatDateOnly(permanentRemovalDate)
     : null;
 
   const daysUntilRetention = eventRow.metadataOnlyAfter
@@ -231,11 +224,7 @@ export default async function EventDetailPage(props: {
         eventRow.eventType,
         eventRow.eventTypeOther
       )}
-      eventDateLabel={eventRow.eventDate.toLocaleDateString(undefined, {
-        year: "numeric",
-        month: "long",
-        day: "numeric",
-      })}
+      eventDateLabel={formatDateOnly(eventRow.eventDate)}
       retailClientName={eventRow.retailClientName}
       retailClientEmail={eventRow.retailClientEmail}
       retailClientSlug={eventRow.retailClientSlug}
@@ -247,14 +236,7 @@ export default async function EventDetailPage(props: {
         eventRow.retailLinkLastSentAt?.toISOString() ?? null
       }
       retailLinkSendCount={eventRow.retailLinkSendCount ?? 0}
-      retentionUntilLabel={eventRow.retentionUntil.toLocaleDateString(
-        undefined,
-        {
-          year: "numeric",
-          month: "long",
-          day: "numeric",
-        }
-      )}
+      retentionUntilLabel={formatDateOnly(eventRow.retentionUntil)}
       files={clientFiles}
       uploadJobs={clientUploadJobs}
       allowUltimateFormats={allowUltimateFormats}

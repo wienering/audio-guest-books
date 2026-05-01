@@ -9,6 +9,7 @@ import { AccountDeletionRequestedEmail } from "@/emails/account-deletion-request
 import { getAppBaseUrl } from "@/lib/app-url";
 import { getMembershipWithCompany } from "@/lib/company";
 import { getClerkPrimaryEmail } from "@/lib/clerk-primary-email";
+import { formatDateOnly } from "@/lib/date-format";
 import { sendEmailWithResult } from "@/lib/email";
 import { utcCalendarDate } from "@/lib/retention";
 
@@ -49,12 +50,7 @@ export async function POST(): Promise<Response> {
     .where(eq(companies.id, membership.company.id));
 
   const purgeDateIso = hardDeleteAfter.toISOString().slice(0, 10);
-  const hardDeleteAfterLabel = hardDeleteAfter.toLocaleDateString(undefined, {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-    timeZone: "UTC",
-  });
+  const hardDeleteAfterLabel = formatDateOnly(hardDeleteAfter);
 
   const toEmail = await getClerkPrimaryEmail(userId);
   if (toEmail) {

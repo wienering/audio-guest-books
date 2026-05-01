@@ -11,6 +11,7 @@ import {
   events,
   plans,
 } from "@/db/schema";
+import { formatDate, formatDateOnly } from "@/lib/date-format";
 import { utcCalendarDate } from "@/lib/retention";
 
 const FOUNDING_CAP = 5;
@@ -404,7 +405,7 @@ export async function fetchAdminStatsAtRisk(): Promise<{
       name: r.name,
       reason: r.subscriptionStatus ?? "past_due",
       detail: r.currentPeriodEnd
-        ? `Period ends ${r.currentPeriodEnd.toISOString().slice(0, 10)}`
+        ? `Period ends ${formatDate(r.currentPeriodEnd)}`
         : "No period end on record",
     })),
     hittingLimits: limitsTriggered,
@@ -417,16 +418,18 @@ export async function fetchAdminStatsAtRisk(): Promise<{
       })
       .map((r) => {
         const hda = r.hardDeleteAfter;
-        const dateStr =
+        const dateLabel =
           hda instanceof Date
-            ? hda.toISOString().slice(0, 10)
-            : (hda as unknown as string)?.slice?.(0, 10) ?? "—";
+            ? formatDateOnly(hda)
+            : typeof hda === "string"
+              ? formatDateOnly(hda)
+              : "—";
         return {
           id: r.id,
           slug: r.slug,
           name: r.name,
           reason: "Soft-deleted (grace period)",
-          detail: `Hard-delete on ${dateStr}`,
+          detail: `Hard-delete on ${dateLabel}`,
         };
       }),
   };

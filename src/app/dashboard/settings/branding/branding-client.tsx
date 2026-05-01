@@ -436,7 +436,7 @@ export function BrandingClient(props: BrandingClientProps) {
       </div>
       <header className="space-y-2">
         <h1 className="text-2xl font-semibold tracking-tight">
-          Retail branding
+          Client page branding
         </h1>
         <p className="text-muted-foreground text-sm">
           Logo and colors appear on client-facing guest book pages when your plan

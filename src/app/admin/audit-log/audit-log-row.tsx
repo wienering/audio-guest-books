@@ -4,11 +4,10 @@ import Link from "next/link";
 import { useState } from "react";
 
 import type { AdminAuditQueryRow } from "@/lib/admin-audit-query";
+import { formatDateTime } from "@/lib/date-format";
 
 function fmt(iso: string): string {
-  const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return iso;
-  return d.toLocaleString();
+  return formatDateTime(iso) || iso;
 }
 
 export function AuditLogRow({ row }: { row: AdminAuditQueryRow }) {

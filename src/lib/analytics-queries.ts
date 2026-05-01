@@ -22,7 +22,17 @@ import {
 } from "@/db/schema";
 
 import type { AnalyticsTimeRange } from "@/lib/analytics-range";
+import { APP_TIMEZONE } from "@/lib/date-format";
 import { formatUserAgentShort } from "@/lib/format-user-agent";
+
+/**
+ * Bucket activity by the calendar day in {@link APP_TIMEZONE} so dashboard
+ * timeline labels line up with the host's local sense of "today" rather than
+ * the underlying UTC storage day.
+ */
+const DAY_BUCKET_TZ_LITERAL = sql.raw(`'${APP_TIMEZONE}'`);
+const DAY_BUCKET_SQL = sql<string>`to_char(date_trunc('day', ${eventAnalyticsEvents.createdAt} AT TIME ZONE ${DAY_BUCKET_TZ_LITERAL}), 'YYYY-MM-DD')`;
+const DAY_BUCKET_GROUP_SQL = sql`date_trunc('day', ${eventAnalyticsEvents.createdAt} AT TIME ZONE ${DAY_BUCKET_TZ_LITERAL})`;
 
 function timeFilter(start: Date | null, endExclusive: Date | null) {
   const parts = [];
@@ -213,7 +223,7 @@ export async function fetchEventDailySeries(
   const tf = timeFilter(range.start, range.endExclusive);
   const rows = await db
     .select({
-      day: sql<string>`to_char(date_trunc('day', ${eventAnalyticsEvents.createdAt} AT TIME ZONE 'UTC'), 'YYYY-MM-DD')`,
+      day: DAY_BUCKET_SQL,
       eventType: eventAnalyticsEvents.eventType,
       n: count(),
     })
@@ -229,10 +239,7 @@ export async function fetchEventDailySeries(
         ])
       )
     )
-    .groupBy(
-      sql`date_trunc('day', ${eventAnalyticsEvents.createdAt} AT TIME ZONE 'UTC')`,
-      eventAnalyticsEvents.eventType
-    );
+    .groupBy(DAY_BUCKET_GROUP_SQL, eventAnalyticsEvents.eventType);
 
   const byDay = new Map<
     string,
@@ -504,7 +511,7 @@ export async function fetchCompanyDailySeries(
   const tf = timeFilter(range.start, range.endExclusive);
   const rows = await db
     .select({
-      day: sql<string>`to_char(date_trunc('day', ${eventAnalyticsEvents.createdAt} AT TIME ZONE 'UTC'), 'YYYY-MM-DD')`,
+      day: DAY_BUCKET_SQL,
       eventType: eventAnalyticsEvents.eventType,
       n: count(),
     })
@@ -522,10 +529,7 @@ export async function fetchCompanyDailySeries(
         ])
       )
     )
-    .groupBy(
-      sql`date_trunc('day', ${eventAnalyticsEvents.createdAt} AT TIME ZONE 'UTC')`,
-      eventAnalyticsEvents.eventType
-    );
+    .groupBy(DAY_BUCKET_GROUP_SQL, eventAnalyticsEvents.eventType);
 
   const byDay = new Map<
     string,

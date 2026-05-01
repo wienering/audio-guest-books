@@ -6,6 +6,7 @@ import {
   type AdminCompanyListSort,
   listAdminCompanies,
 } from "@/lib/admin-companies";
+import { formatDate } from "@/lib/date-format";
 import { cn, formatBytes } from "@/lib/utils";
 
 const PAGE_SIZE = 50;
@@ -85,13 +86,12 @@ function buildHref(
 
 function formatRelative(iso: string | null): string {
   if (!iso) return "—";
-  const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return "—";
-  return d.toLocaleDateString(undefined, {
+  const label = formatDate(iso, {
     year: "numeric",
     month: "short",
     day: "numeric",
   });
+  return label || "—";
 }
 
 export default async function AdminCompaniesPage(props: {

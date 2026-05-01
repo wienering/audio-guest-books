@@ -49,7 +49,7 @@ export default function PrivacyPolicyPage() {
           is a hosted platform that helps photo booth and event companies
           (&ldquo;customers&rdquo;) deliver audio guest book recordings to their
           clients. This privacy policy describes how we handle personal data for
-          customers, their team members, and the visitors of retail pages they
+          customers, their team members, and the visitors of client pages they
           publish.
         </p>
         <p>
@@ -78,14 +78,14 @@ export default function PrivacyPolicyPage() {
         <p>
           You upload audio files (and optionally branding assets like a logo and
           cover image) to events you create. These files are stored in
-          encrypted object storage and treated as your content. Retail page
+          encrypted object storage and treated as your content. Client page
           metadata such as event names, client names, and event dates is stored
           alongside the files.
         </p>
 
         <h3>2.3 Analytics and diagnostic data</h3>
         <p>
-          When a guest visits a retail page you publish, we record minimal
+          When a guest visits a client page you publish, we record minimal
           analytics events such as page view, audio play, audio download, and
           bulk-zip download. We collect a hashed IP, a coarse user-agent string,
           and the referrer for these events to help you understand engagement.
@@ -113,7 +113,7 @@ export default function PrivacyPolicyPage() {
       <section>
         <h2>3. How We Use Information</h2>
         <ul>
-          <li>To provide the service: storing your files, serving retail pages, processing uploads and downloads.</li>
+          <li>To provide the service: storing your files, serving client pages, processing uploads and downloads.</li>
           <li>To send transactional emails: account events, billing notifications, retention reminders, and replies to support requests.</li>
           <li>To prevent abuse: investigating suspected violations of our Terms of Service and securing the platform.</li>
           <li>To improve the product: understanding aggregate usage patterns so we can make better features.</li>
@@ -206,8 +206,8 @@ export default function PrivacyPolicyPage() {
             you sign in to the dashboard.
           </li>
           <li>
-            <strong>Retail unlock sessions.</strong> When a guest unlocks a
-            password-protected retail page, we set a cookie scoped to that event
+            <strong>Client page unlock sessions.</strong> When a guest unlocks a
+            password-protected client page, we set a cookie scoped to that event
             so they don&rsquo;t have to re-enter the password for up to 7 days.
           </li>
         </ul>

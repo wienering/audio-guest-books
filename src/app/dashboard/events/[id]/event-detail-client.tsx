@@ -33,6 +33,7 @@ import { EventAnalyticsPanel } from "@/components/dashboard/analytics/event-anal
 import { EventRetailAppearanceSection } from "./event-retail-appearance";
 import { SendLinkComposer } from "./send-link-composer";
 
+import { APP_TIMEZONE, formatDateTime } from "@/lib/date-format";
 import { formatRelativeTimePast } from "@/lib/relative-time";
 
 const ZIP_JOB_RECENT_MS = 10 * 60 * 1000;
@@ -241,20 +242,13 @@ const UPLOAD_AT_FORMAT: Intl.DateTimeFormatOptions = {
   minute: "2-digit",
 };
 
-/** Stable across Node vs browser (avoids hydration mismatch on locale / AM·PM). */
-function formatUploadedAtUtcEnUs(iso: string) {
-  return new Date(iso).toLocaleString("en-US", {
-    ...UPLOAD_AT_FORMAT,
-    timeZone: "UTC",
-  });
-}
-
-function useHydrationSafeUploadedAtLabel(iso: string) {
-  const [label, setLabel] = useState(() => formatUploadedAtUtcEnUs(iso));
-  useEffect(() => {
-    setLabel(new Date(iso).toLocaleString(undefined, UPLOAD_AT_FORMAT));
-  }, [iso]);
-  return label;
+/**
+ * Always formatted in {@link APP_TIMEZONE} so server-rendered HTML matches
+ * the client hydration output exactly, avoiding the AM/PM mismatch the old
+ * `undefined`-locale path used to cause for non-en-US visitors.
+ */
+function formatUploadedAtLabel(iso: string) {
+  return formatDateTime(iso, { ...UPLOAD_AT_FORMAT, timeZone: APP_TIMEZONE });
 }
 
 function LinkSentIndicator(props: {
@@ -281,7 +275,7 @@ function AudioRow(props: {
   onDeleted: () => void;
 }) {
   const { file, onDeleted } = props;
-  const uploadedAtLabel = useHydrationSafeUploadedAtLabel(file.uploadedAt);
+  const uploadedAtLabel = formatUploadedAtLabel(file.uploadedAt);
   const [src, setSrc] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const confirmRef = useRef<HTMLDialogElement | null>(null);

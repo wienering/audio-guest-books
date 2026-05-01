@@ -15,6 +15,7 @@ import { cn } from "@/lib/utils";
 import { db } from "@/db/index";
 import { audioFiles, events } from "@/db/schema";
 import { getMembershipWithCompany } from "@/lib/company";
+import { formatDate } from "@/lib/date-format";
 
 export default async function DashboardPage() {
   const session = await auth();
@@ -123,7 +124,7 @@ export default async function DashboardPage() {
                     <td className="py-3 pr-4">{ev.retailClientName}</td>
                     <td className="py-3 pr-4">{ev.audioFiles.length}</td>
                     <td className="py-3 text-muted-foreground">
-                      {ev.createdAt.toLocaleDateString(undefined, {
+                      {formatDate(ev.createdAt, {
                         year: "numeric",
                         month: "short",
                         day: "numeric",

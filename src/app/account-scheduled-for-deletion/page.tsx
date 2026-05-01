@@ -1,21 +1,14 @@
 import Link from "next/link";
 
+import { formatDateOnly } from "@/lib/date-format";
+
 type Props = { searchParams: Promise<{ purgeDate?: string }> };
 
 export default async function AccountScheduledForDeletionPage({ searchParams }: Props) {
   const { purgeDate } = await searchParams;
   const purgeDateLabel =
     purgeDate && /^[0-9]{4}-[0-9]{2}-[0-9]{2}$/.test(purgeDate)
-      ? (() => {
-          const [y, m, d] = purgeDate.split("-").map(Number);
-          const utc = new Date(Date.UTC(y, m - 1, d));
-          return utc.toLocaleDateString(undefined, {
-            year: "numeric",
-            month: "long",
-            day: "numeric",
-            timeZone: "UTC",
-          });
-        })()
+      ? formatDateOnly(purgeDate)
       : null;
 
   return (

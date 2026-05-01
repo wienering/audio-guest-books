@@ -17,6 +17,7 @@ import type {
   AdminCompanyDetailFeatureCatalogRow,
   AdminCompanyDetailFeatureRow,
 } from "@/lib/admin-company-detail";
+import { formatDateTime } from "@/lib/date-format";
 import { cn } from "@/lib/utils";
 
 type Props = {
@@ -312,7 +313,7 @@ export function AdminCompanyActions(props: Props) {
                       </span>
                     </td>
                     <td className="py-2 pr-4 text-muted-foreground">
-                      {new Date(f.grantedAt).toLocaleString()}
+                      {formatDateTime(f.grantedAt)}
                     </td>
                     <td className="py-2 text-right">
                       <Button

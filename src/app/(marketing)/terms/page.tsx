@@ -57,7 +57,7 @@ export default function TermsOfServicePage() {
         <p>
           Audio Guest Books (the &ldquo;Service&rdquo;) is a hosted platform
           that lets photo booth and event companies upload audio recordings,
-          customize a branded retail page, and share that page with their
+          customize a branded client page, and share that page with their
           clients. We may add, change, or remove features over time at our
           discretion.
         </p>
@@ -98,7 +98,7 @@ export default function TermsOfServicePage() {
           metadata you upload (&ldquo;Your Content&rdquo;). You grant us a
           limited license to host, process, and display Your Content as needed
           to operate the Service for you and your clients (for example,
-          serving the retail page, transcoding audio, generating zip bundles).
+          serving the client page, transcoding audio, generating zip bundles).
         </p>
         <p>
           You are responsible for having the rights necessary to upload and

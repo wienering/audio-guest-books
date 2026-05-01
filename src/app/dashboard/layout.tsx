@@ -9,6 +9,7 @@ import {
   getMembershipWithCompany,
   getSoftDeletedMembershipInfo,
 } from "@/lib/company";
+import { formatDate } from "@/lib/date-format";
 
 export default async function DashboardLayout({
   children,
@@ -119,14 +120,7 @@ export default async function DashboardLayout({
             <p className="text-sm">
               Subscription ending{" "}
               <strong>
-                {company.subscriptionCurrentPeriodEnd.toLocaleDateString(
-                  undefined,
-                  {
-                    year: "numeric",
-                    month: "long",
-                    day: "numeric",
-                  }
-                )}
+                {formatDate(company.subscriptionCurrentPeriodEnd)}
               </strong>
               . You can resume from the Stripe billing portal.
             </p>

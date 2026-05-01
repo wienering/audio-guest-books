@@ -10,16 +10,16 @@ const FEATURE_DEFS: { key: string; name: string; description: string }[] = [
   {
     key: "custom_branding",
     name: "Custom branding",
-    description: "Logo and color palette on retail pages",
+    description: "Logo and color palette on client pages",
   },
   {
     key: "password_protection",
     name: "Password protection",
-    description: "Protect retail pages with a password",
+    description: "Protect client pages with a password",
   },
   {
     key: "retail_analytics",
-    name: "Retail page analytics",
+    name: "Client page analytics",
     description: "Analytics for client-facing pages",
   },
   {

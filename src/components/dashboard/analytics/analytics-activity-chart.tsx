@@ -11,6 +11,8 @@ import {
   YAxis,
 } from "recharts";
 
+import { formatDateOnly } from "@/lib/date-format";
+
 export type ActivityChartRow = {
   day: string;
   pageViews: number;
@@ -35,7 +37,12 @@ export function AnalyticsActivityChart(props: Props) {
 
   const formatted = data.map((r) => ({
     ...r,
-    label: r.day.slice(5),
+    label: formatDateOnly(r.day, { month: "short", day: "numeric" }),
+    tooltipDay: formatDateOnly(r.day, {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    }),
   }));
 
   const height = compact ? 220 : 280;
@@ -53,8 +60,10 @@ export function AnalyticsActivityChart(props: Props) {
               fontSize: 12,
             }}
             labelFormatter={(_, payload) => {
-              const p = payload?.[0]?.payload as { day?: string } | undefined;
-              return p?.day ?? "";
+              const p = payload?.[0]?.payload as
+                | { tooltipDay?: string; day?: string }
+                | undefined;
+              return p?.tooltipDay ?? p?.day ?? "";
             }}
           />
           <Legend wrapperStyle={{ fontSize: 12 }} />

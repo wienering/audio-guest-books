@@ -35,6 +35,7 @@ import {
 } from "@/db/schema";
 import { getAppBaseUrl } from "@/lib/app-url";
 import { getClerkPrimaryEmail } from "@/lib/clerk-primary-email";
+import { formatDateOnly } from "@/lib/date-format";
 import { sendEmail } from "@/lib/email";
 import { addUtcMonths, utcCalendarDate } from "@/lib/retention";
 import { formatRetailEventDate } from "@/lib/format-retail-event-date";
@@ -258,11 +259,7 @@ async function purgeFilesPastRetention(
 
     const ownerEmail = await findCompanyOwnerEmail(db, event.companyId);
     if (ownerEmail) {
-      const deletedDateLabel = deletedDay.toLocaleDateString(undefined, {
-        year: "numeric",
-        month: "long",
-        day: "numeric",
-      });
+      const deletedDateLabel = formatDateOnly(deletedDay);
       sendEmail({
         to: ownerEmail,
         subject: `Audio files for ${event.name} have been deleted`,

@@ -36,7 +36,7 @@ const HOME_PRICING_TEASER: ReadonlyArray<PricingPlanSummary> = [
       "10 active events",
       "100 files per event",
       "Custom branding",
-      "Retail analytics",
+      "Client page analytics",
     ],
     cta: { label: "Get Pro Free", target: "signup" },
     highlighted: true,

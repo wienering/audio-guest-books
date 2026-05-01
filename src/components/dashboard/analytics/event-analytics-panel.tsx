@@ -15,6 +15,7 @@ import { AnalyticsLockedOverlay } from "@/components/dashboard/analytics/analyti
 import { buttonVariants } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { EventAnalyticsPayload } from "@/lib/analytics-sample-data";
+import { formatDateTime } from "@/lib/date-format";
 import { cn } from "@/lib/utils";
 
 type Range =
@@ -208,7 +209,7 @@ export function EventAnalyticsPanel(props: { eventId: string }) {
         <>
           {emptyReal ? (
             <div className="rounded-lg border border-dashed bg-muted/30 px-4 py-6 text-center text-muted-foreground text-sm">
-              No activity yet. Share your retail link to start collecting data.
+              No activity yet. Share your client link to start collecting data.
             </div>
           ) : null}
 
@@ -404,7 +405,7 @@ export function EventAnalyticsPanel(props: { eventId: string }) {
                         className="shrink-0 text-muted-foreground text-xs sm:text-right"
                         dateTime={r.created_at}
                       >
-                        {new Date(r.created_at).toLocaleString(undefined, {
+                        {formatDateTime(r.created_at, {
                           month: "short",
                           day: "numeric",
                           hour: "2-digit",

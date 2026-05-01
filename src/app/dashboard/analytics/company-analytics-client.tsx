@@ -18,6 +18,7 @@ import { AnalyticsLockedOverlay } from "@/components/dashboard/analytics/analyti
 import { buttonVariants } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { CompanyAnalyticsPayload } from "@/lib/analytics-sample-data";
+import { formatDate } from "@/lib/date-format";
 import { cn, formatBytes } from "@/lib/utils";
 
 type Range =
@@ -144,7 +145,7 @@ export function CompanyAnalyticsClient() {
       <header className="space-y-2">
         <h1 className="font-semibold text-2xl tracking-tight">Analytics</h1>
         <p className="text-muted-foreground text-sm">
-          Retail engagement across all events for your company.
+          Client engagement across all events for your company.
         </p>
       </header>
 
@@ -457,9 +458,7 @@ export function CompanyAnalyticsClient() {
                         </td>
                         <td className="py-2 text-muted-foreground text-xs">
                           {row.last_activity_at
-                            ? new Date(
-                                row.last_activity_at
-                              ).toLocaleDateString(undefined, {
+                            ? formatDate(row.last_activity_at, {
                                 month: "short",
                                 day: "numeric",
                                 year: "numeric",
