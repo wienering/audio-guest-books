@@ -172,16 +172,22 @@ export async function getAdminCompanyDetailBySlug(
         createdAt: events.createdAt,
         deletedAt: events.deletedAt,
         hardDeleteAfter: events.hardDeleteAfter,
-        fileCount: sql<number>`COALESCE((
-          SELECT COUNT("af"."id")::int
-          FROM "audio_files" "af"
-          WHERE "af"."event_id" = ${events.id}
-            AND "af"."is_original" = true
-            AND "af"."deleted_at" IS NULL
-        ), 0)`,
+        // Use join + SUM: `${events.id}` inside a correlated `sql` subquery binds as a standalone
+        // parameter, not the outer query row, so counts were always wrong (often 0).
+        fileCount: sql<number>`COALESCE(SUM(CASE WHEN ${audioFiles.isOriginal} = true AND ${audioFiles.deletedAt} IS NULL THEN 1 ELSE 0 END)::int, 0)`,
       })
       .from(events)
+      .leftJoin(audioFiles, eq(audioFiles.eventId, events.id))
       .where(eq(events.companyId, c.id))
+      .groupBy(
+        events.id,
+        events.name,
+        events.retailClientName,
+        events.retailClientSlug,
+        events.createdAt,
+        events.deletedAt,
+        events.hardDeleteAfter
+      )
       .orderBy(desc(events.createdAt)),
     db
       .select()
