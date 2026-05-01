@@ -20,6 +20,9 @@
 # production
 /build
 
+# local email HTML previews (scripts/render-onboarding-email-previews.ts)
+.email-previews/
+
 # misc
 .DS_Store
 *.pem

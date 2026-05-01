@@ -2,6 +2,7 @@ import { createElement } from "react";
 
 import { OnboardingAdminNotificationEmail } from "@/emails/onboarding-admin-notification";
 import { OnboardingWelcomeEmail } from "@/emails/onboarding-welcome";
+import { getAppBaseUrl } from "@/lib/app-url";
 import { getClerkSignupProfile } from "@/lib/clerk-primary-email";
 import { sendEmailWithResult } from "@/lib/email";
 import { getPlatformAdminEmail } from "@/lib/platform-admin-email";
@@ -26,6 +27,7 @@ export async function sendOnboardingCompletionEmails(opts: {
     opts;
   const workspaceUrl = getTenantPublicSiteUrl(companySlug);
   const torontoTime = formatTorontoTimestamp(new Date());
+  const adminDashboardUrl = `${getAppBaseUrl().replace(/\/$/, "")}/admin/companies`;
 
   let signupEmail: string | null = null;
   let signupName: string | null = null;
@@ -43,21 +45,20 @@ export async function sendOnboardingCompletionEmails(opts: {
   const adminTo = getPlatformAdminEmail();
   if (adminTo) {
     try {
-      const bodyText = [
-        `Company: ${companyName}`,
-        `Slug: ${companySlug}`,
-        `User email: ${signupEmail ?? "(unknown)"}`,
-        `User name: ${signupName ?? "(unknown)"}`,
-        `Plan tier: ${planTierName}`,
-        `Timestamp (America/Toronto): ${torontoTime}`,
-      ].join("\n");
-
       const result = await sendEmailWithResult({
         to: adminTo,
         subject: `New signup: ${companyName}`,
         kind: "onboarding_admin_notification",
         companyId,
-        react: createElement(OnboardingAdminNotificationEmail, { bodyText }),
+        react: createElement(OnboardingAdminNotificationEmail, {
+          companyName,
+          companySlug,
+          signedUpByName: signupName,
+          signedUpByEmail: signupEmail,
+          planTierName,
+          timestampToronto: torontoTime,
+          adminDashboardUrl,
+        }),
       });
       if (!result.ok) {
         console.error(
