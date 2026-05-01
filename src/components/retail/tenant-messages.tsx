@@ -1,8 +1,3 @@
-import Link from "next/link";
-
-import { buttonVariants } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
-
 export function ReservedSubdomainMessage() {
   return (
     <main className="mx-auto flex min-h-screen max-w-xl flex-col justify-center px-6 py-16">
@@ -55,35 +50,5 @@ export function RetailFilesRemovedMessage() {
         the host who shared this page.
       </p>
     </section>
-  );
-}
-
-export function TenantRootPlaceholder({
-  companySlug,
-  appUrl,
-}: {
-  companySlug: string;
-  appUrl: string;
-}) {
-  return (
-    <main className="mx-auto flex min-h-screen max-w-2xl flex-col justify-center px-6 py-16">
-      <h1 className="font-semibold text-2xl tracking-tight text-neutral-900">
-        {companySlug}
-      </h1>
-      <p className="mt-4 text-neutral-600 leading-relaxed">
-        Open your personal guest book link — it includes the event path after the
-        site address (for example:&nbsp;
-        <span className="font-medium text-neutral-800">
-          {companySlug}.localhost…
-        </span>
-        ). If you need the link, contact the studio that recorded your messages.
-      </p>
-      <Link
-        href={`${appUrl}/dashboard`}
-        className={cn(buttonVariants({ variant: "outline" }), "mt-8 w-fit")}
-      >
-        Manage in dashboard →
-      </Link>
-    </main>
   );
 }

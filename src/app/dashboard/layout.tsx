@@ -97,6 +97,12 @@ export default async function DashboardLayout({
                 Branding
               </Link>
               <Link
+                href="/dashboard/settings/public-page"
+                className="transition-colors hover:text-marketing-accent"
+              >
+                Public guest page
+              </Link>
+              <Link
                 href="/dashboard/settings/billing"
                 className="transition-colors hover:text-marketing-accent"
               >

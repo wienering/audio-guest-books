@@ -180,6 +180,10 @@ export const companies = pgTable(
     themeBackground: text("theme_background"),
     /** Optional explicit text color; when null, derived from background for contrast */
     themeText: text("theme_text"),
+    /** Public guest landing (company subdomain root). */
+    contactEmail: text("contact_email"),
+    contactPhone: text("contact_phone"),
+    contactWebsite: text("contact_website"),
     deletedAt: timestamp("deleted_at", { withTimezone: true }),
     /** UTC calendar date when the daily job will purge the company permanently. */
     hardDeleteAfter: date("hard_delete_after", { mode: "date" }),
