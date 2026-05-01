@@ -84,6 +84,8 @@ export const emailKindEnum = pgEnum("email_kind", [
   "account_deletion_requested",
   "billing_subscription_created",
   "billing_subscription_ended",
+  "onboarding_admin_notification",
+  "onboarding_welcome",
 ]);
 
 export const emailStatusEnum = pgEnum("email_status", [

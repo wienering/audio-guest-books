@@ -12,6 +12,7 @@ import { db } from "@/db/index";
 import { grantPlanFeaturesFromPlan } from "@/db/grant-features";
 import { companies, companyUsers, plans } from "@/db/schema";
 import { getMembershipWithCompany, isCompanySlugTaken } from "@/lib/company";
+import { sendOnboardingCompletionEmails } from "@/lib/onboarding-emails";
 import { isReservedSubdomain } from "@/lib/reserved-subdomains";
 
 export type OnboardingFormValues = {
@@ -121,7 +122,7 @@ export async function completeOnboarding(
     });
   }
 
-  await db.transaction(async (tx) => {
+  const onboarded = await db.transaction(async (tx) => {
     const [free] = await tx
       .select()
       .from(plans)
@@ -154,7 +155,21 @@ export async function completeOnboarding(
       company.id,
       free.id
     );
+
+    return { company, planTierName: free.name };
   });
+
+  try {
+    await sendOnboardingCompletionEmails({
+      clerkUserId: userId,
+      companyId: onboarded.company.id,
+      companyName: onboarded.company.name,
+      companySlug: onboarded.company.slug,
+      planTierName: onboarded.planTierName,
+    });
+  } catch (e) {
+    console.error("[onboarding] completion emails error", e);
+  }
 
   redirect("/dashboard");
 }
