@@ -158,3 +158,19 @@
     @apply font-sans;
   }
 }
+
+input.retail-audio-range[type="range"] {
+  accent-color: var(--brand-player-progress-fill);
+}
+
+input.retail-audio-range[type="range"]::-webkit-slider-runnable-track {
+  height: 10px;
+  border-radius: 9999px;
+  background: var(--brand-player-progress-track);
+}
+
+input.retail-audio-range[type="range"]::-moz-range-track {
+  height: 10px;
+  border-radius: 9999px;
+  background: var(--brand-player-progress-track);
+}

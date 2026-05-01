@@ -155,12 +155,15 @@ export const RetailAudioPlayer = forwardRef<
     <div
       className="rounded-xl border p-4 sm:p-6"
       style={{
-        borderColor: "var(--retail-border)",
-        background: "var(--retail-player-bg)",
+        borderColor: "var(--brand-body-border)",
+        background: "var(--brand-player-bg)",
       }}
     >
       <audio ref={audioRef} preload="metadata" className="hidden" />
-      <p className="text-lg font-semibold tracking-tight text-[var(--retail-text)] sm:text-xl">
+      <p
+        className="text-lg font-semibold tracking-tight sm:text-xl"
+        style={{ color: "var(--brand-player-text)" }}
+      >
         {activeFile
           ? formatFileDisplayName(activeFile.originalFilename)
           : "No recording selected"}
@@ -169,8 +172,11 @@ export const RetailAudioPlayer = forwardRef<
         <Button
           type="button"
           variant="outline"
-          className="h-11 w-11 min-h-11 min-w-11 shrink-0 rounded-full p-0"
-          style={{ borderColor: "var(--retail-border)" }}
+          className="h-11 w-11 min-h-11 min-w-11 shrink-0 rounded-full border bg-transparent p-0 hover:bg-transparent"
+          style={{
+            borderColor: "var(--brand-body-border)",
+            color: "var(--brand-player-text)",
+          }}
           onClick={() => skip(-10)}
           aria-label="Skip back 10 seconds"
         >
@@ -178,8 +184,11 @@ export const RetailAudioPlayer = forwardRef<
         </Button>
         <Button
           type="button"
-          className="h-12 w-12 min-h-12 min-w-12 shrink-0 rounded-full p-0 text-white hover:brightness-110"
-          style={{ background: "var(--retail-accent)" }}
+          className="h-12 w-12 min-h-12 min-w-12 shrink-0 rounded-full border-0 p-0 hover:brightness-110"
+          style={{
+            background: "var(--brand-player-control-bg)",
+            color: "var(--brand-player-control-icon)",
+          }}
           onClick={() => {
             const el = audioRef.current;
             if (!el) return;
@@ -197,8 +206,11 @@ export const RetailAudioPlayer = forwardRef<
         <Button
           type="button"
           variant="outline"
-          className="h-11 w-11 min-h-11 min-w-11 shrink-0 rounded-full p-0"
-          style={{ borderColor: "var(--retail-border)" }}
+          className="h-11 w-11 min-h-11 min-w-11 shrink-0 rounded-full border bg-transparent p-0 hover:bg-transparent"
+          style={{
+            borderColor: "var(--brand-body-border)",
+            color: "var(--brand-player-text)",
+          }}
           onClick={() => skip(10)}
           aria-label="Skip forward 10 seconds"
         >
@@ -215,14 +227,13 @@ export const RetailAudioPlayer = forwardRef<
           onChange={(e) => onSeek(Number(e.target.value))}
           disabled={!activeFileId || !maxDur}
           className={cn(
-            "h-11 w-full cursor-pointer disabled:cursor-not-allowed disabled:opacity-40"
+            "retail-audio-range h-11 w-full cursor-pointer disabled:cursor-not-allowed disabled:opacity-40"
           )}
-          style={{ accentColor: "var(--retail-accent)" }}
           aria-label="Seek playback"
         />
         <div
           className="flex justify-between text-base tabular-nums sm:text-lg"
-          style={{ color: "var(--retail-muted)" }}
+          style={{ color: "var(--brand-player-text)" }}
         >
           <span>{formatClock(currentTime)}</span>
           <span>{formatClock(maxDur)}</span>

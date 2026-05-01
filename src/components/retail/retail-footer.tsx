@@ -6,9 +6,9 @@ export function RetailFooter({ visible = true }: { visible?: boolean }) {
     <footer
       className="mt-auto border-t px-4 py-8 sm:px-8"
       style={{
-        borderColor: "var(--retail-border)",
-        background: "var(--retail-bg)",
-        color: "var(--retail-muted)",
+        borderColor: "var(--brand-body-border)",
+        background: "var(--brand-footer-bg)",
+        color: "var(--brand-footer-text)",
       }}
     >
       <p className="mx-auto max-w-3xl text-center text-base sm:text-lg">
@@ -16,7 +16,9 @@ export function RetailFooter({ visible = true }: { visible?: boolean }) {
         <Link
           href="https://audioguestbooks.ca"
           className="font-medium underline decoration-current/40 underline-offset-2 hover:opacity-90"
-          style={{ color: "var(--retail-accent)" }}
+          style={{
+            color: "var(--brand-footer-link)",
+          }}
           target="_blank"
           rel="noopener noreferrer"
         >

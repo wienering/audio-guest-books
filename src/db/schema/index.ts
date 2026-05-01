@@ -180,6 +180,8 @@ export const companies = pgTable(
     themeBackground: text("theme_background"),
     /** Optional explicit text color; when null, derived from background for contrast */
     themeText: text("theme_text"),
+    /** Granular retail page colors (validated as `CompanyBranding` in app code). Legacy theme_* columns retained. */
+    branding: jsonb("branding"),
     /** Public guest landing (company subdomain root). */
     contactEmail: text("contact_email"),
     contactPhone: text("contact_phone"),

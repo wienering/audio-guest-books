@@ -23,7 +23,7 @@ import {
 } from "@/lib/retail-public";
 import { analyticsContextFromHeaders } from "@/lib/retail-request-meta";
 import { presignGetUrl } from "@/lib/r2";
-import { buildRetailThemeCssVars } from "@/lib/retail-theme-vars";
+import { buildRetailBrandingStyle } from "@/lib/retail-theme-vars";
 import { hasValidRetailUnlockSession } from "@/lib/retail-session";
 import { cn } from "@/lib/utils";
 
@@ -114,22 +114,9 @@ export default async function RetailClientPage({ params }: Props) {
     companyHasFeatureKey(company.id, "remove_powered_by_footer"),
   ]);
 
-  const useCustomTheme =
-    customBranding &&
-    !!(
-      company.themePrimary ||
-      company.themeSecondary ||
-      company.themeAccent ||
-      company.themeBackground
-    );
-
-  const themeStyle = buildRetailThemeCssVars({
-    useCustomTheme,
-    themePrimary: company.themePrimary,
-    themeSecondary: company.themeSecondary,
-    themeAccent: company.themeAccent,
-    themeBackground: company.themeBackground,
-    themeText: company.themeText,
+  const themeStyle = buildRetailBrandingStyle({
+    customBrandingEnabled: customBranding,
+    brandingJson: company.branding,
   }) as CSSProperties;
 
   let logoUrl: string | null = null;
@@ -169,17 +156,26 @@ export default async function RetailClientPage({ params }: Props) {
     >
       <p
         className="text-sm font-medium uppercase tracking-wide"
-        style={{ color: "var(--retail-primary)" }}
+        style={{ color: "var(--brand-header-subtitle)" }}
       >
         Audio guest book
       </p>
-      <h1 className="font-serif text-3xl font-semibold tracking-tight text-[var(--retail-text)] md:text-4xl">
+      <h1
+        className="font-serif text-3xl font-semibold tracking-tight md:text-4xl"
+        style={{ color: "var(--brand-header-title)" }}
+      >
         {payload.eventName}
       </h1>
-      <p className="text-base font-normal text-[var(--retail-text)] md:text-lg">
+      <p
+        className="text-base font-normal md:text-lg"
+        style={{ color: "var(--brand-header-subtitle)" }}
+      >
         {payload.retailClientName}
       </p>
-      <p className="text-sm md:text-base" style={{ color: "var(--retail-muted)" }}>
+      <p
+        className="text-sm md:text-base"
+        style={{ color: "var(--brand-body-muted)" }}
+      >
         {eventDateLabel}
       </p>
     </div>
@@ -202,14 +198,24 @@ export default async function RetailClientPage({ params }: Props) {
 
   return (
     <div
-      className="flex min-h-screen flex-col bg-[var(--retail-bg)] text-[var(--retail-text)]"
+      className="flex min-h-screen flex-col bg-[var(--brand-body-page-bg)] text-[var(--brand-body-text)]"
       style={themeStyle}
     >
       <header
-        className="border-b bg-[var(--retail-bg)] px-4 pb-8 pt-6 sm:px-8 sm:pb-10 sm:pt-8"
-        style={{ borderColor: "var(--retail-border)" }}
+        className="border-b px-4 pb-8 pt-6 sm:px-8 sm:pb-10 sm:pt-8"
+        style={{
+          borderColor: "var(--brand-body-border)",
+          background: "var(--brand-body-page-bg)",
+        }}
       >
         <div className="mx-auto max-w-3xl">
+          {!hasCover ? (
+            <div
+              className="mb-6 w-full overflow-hidden rounded-lg h-[140px] sm:h-[160px] md:h-[180px]"
+              style={{ background: "var(--brand-header-cover-fallback-bg)" }}
+              aria-hidden
+            />
+          ) : null}
           {heroOverlap ? (
             <>
               <div className="relative">
@@ -217,8 +223,12 @@ export default async function RetailClientPage({ params }: Props) {
                 <div
                   className={cn(
                     "absolute bottom-0 left-0 z-10 translate-y-1/2",
-                    "size-16 rounded-lg border-[3px] border-[var(--retail-bg)] bg-[var(--retail-bg)] sm:left-1 md:size-24 md:left-2"
+                    "size-16 rounded-lg border-[3px] sm:left-1 md:size-24 md:left-2"
                   )}
+                  style={{
+                    borderColor: "var(--brand-header-logo-border)",
+                    background: "var(--brand-body-card-bg)",
+                  }}
                 >
                   <RetailMaybeImage
                     src={logoUrl!}

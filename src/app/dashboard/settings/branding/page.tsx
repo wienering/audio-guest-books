@@ -35,13 +35,11 @@ export default async function BrandingSettingsPage() {
   }
 
   return (
-    <BrandingClient
-      locked={!customBranding}
-      logoPreviewUrl={logoPreviewUrl}
-      initialPrimary={company.themePrimary}
-      initialSecondary={company.themeSecondary}
-      initialAccent={company.themeAccent}
-      initialBackground={company.themeBackground}
-    />
+      <BrandingClient
+        locked={!customBranding}
+        logoPreviewUrl={logoPreviewUrl}
+        brandingFromServer={company.branding ?? null}
+        brandingRevision={company.updatedAt?.getTime() ?? 0}
+      />
   );
 }

@@ -6,6 +6,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { cn } from "@/lib/utils";
 
 /** Matches dashboard validation for retail client URL slugs. */
 const RETAIL_CLIENT_SLUG = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
@@ -41,13 +42,20 @@ export function RetailTenantEnterCodeForm() {
           placeholder="e.g. jordan-alex-wedding"
           value={value}
           onChange={(ev) => setValue(ev.target.value)}
-          className="border-[var(--retail-border)] bg-transparent"
+          className={cn(
+            "border shadow-none bg-transparent focus-visible:border-[var(--brand-button-primary-bg)] focus-visible:ring-[var(--brand-button-primary-bg)]/25"
+          )}
+          style={{
+            borderColor: "var(--brand-body-border)",
+            color: "var(--brand-body-text)",
+          }}
         />
       </div>
       <Button
         type="submit"
-        variant="outline"
-        className="w-full border-2 shadow-none"
+        className={cn(
+          "w-full border-2 shadow-none transition-colors hover:[background-color:var(--brand-button-primary-hover-bg)]"
+        )}
         disabled={(() => {
           const code =
             value
@@ -62,14 +70,17 @@ export function RetailTenantEnterCodeForm() {
           );
         })()}
         style={{
-          borderColor: "var(--retail-accent)",
-          color: "var(--retail-accent)",
-          backgroundColor: "transparent",
+          borderColor: "var(--brand-button-primary-bg)",
+          color: "var(--brand-button-primary-text)",
+          backgroundColor: "var(--brand-button-primary-bg)",
         }}
       >
         Open guest book
       </Button>
-      <p className="text-center text-sm text-[var(--retail-muted)]">
+      <p
+        className="text-center text-sm"
+        style={{ color: "var(--brand-body-muted)" }}
+      >
         If you&apos;re unsure of the code, check your invitation email or contact
         the host below.
       </p>

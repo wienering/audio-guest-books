@@ -11,11 +11,7 @@ export type RetailTenantLandingCompanyRow = {
   name: string;
   slug: string;
   logoStorageKey: string | null;
-  themePrimary: string | null;
-  themeSecondary: string | null;
-  themeAccent: string | null;
-  themeBackground: string | null;
-  themeText: string | null;
+  branding: unknown;
   contactEmail: string | null;
   contactPhone: string | null;
   contactWebsite: string | null;
@@ -31,11 +27,7 @@ export const getRetailTenantLandingCompany = cache(
         name: companies.name,
         slug: companies.slug,
         logoStorageKey: companies.logoStorageKey,
-        themePrimary: companies.themePrimary,
-        themeSecondary: companies.themeSecondary,
-        themeAccent: companies.themeAccent,
-        themeBackground: companies.themeBackground,
-        themeText: companies.themeText,
+        branding: companies.branding,
         contactEmail: companies.contactEmail,
         contactPhone: companies.contactPhone,
         contactWebsite: companies.contactWebsite,

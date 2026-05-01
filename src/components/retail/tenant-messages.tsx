@@ -34,16 +34,20 @@ export function RetailFilesRemovedMessage() {
       aria-label="Recordings unavailable"
       className="rounded-xl border px-6 py-12 text-center"
       style={{
-        borderColor: "var(--retail-border)",
+        borderColor: "var(--brand-body-border)",
         background:
-          "color-mix(in srgb, var(--retail-bg) 96%, var(--retail-muted) 4%)",
+          "color-mix(in srgb, var(--brand-body-card-bg) 96%, var(--brand-body-muted) 4%)",
       }}
     >
-      <h2 className="text-xl font-semibold text-[var(--retail-text)]">
+      <h2
+        className="text-xl font-semibold"
+        style={{ color: "var(--brand-body-heading)" }}
+      >
         Recordings no longer available
       </h2>
       <p
-        className="mx-auto mt-4 max-w-md text-lg leading-relaxed text-[var(--retail-muted)]"
+        className="mx-auto mt-4 max-w-md text-lg leading-relaxed"
+        style={{ color: "var(--brand-body-muted)" }}
       >
         The audio files for this guest book have been removed as part of the
         studio&apos;s retention policy. If you need a copy, please reach out to

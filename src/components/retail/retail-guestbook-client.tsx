@@ -127,9 +127,12 @@ function AsyncZipButton(props: { zipRequestUrl: string; zipStatusUrl: string }) 
         onClick={() => void run()}
         className={cn(
           buttonVariants({ size: "lg" }),
-          "h-11 min-h-11 justify-center px-5 text-base text-white hover:brightness-110 sm:text-lg disabled:opacity-70"
+          "h-11 min-h-11 justify-center px-5 text-base transition-colors hover:[background-color:var(--brand-button-primary-hover-bg)] sm:text-lg disabled:opacity-70"
         )}
-        style={{ background: "var(--retail-accent)" }}
+        style={{
+          background: "var(--brand-button-primary-bg)",
+          color: "var(--brand-button-primary-text)",
+        }}
       >
         {phase === "working" ? (
           "Preparing download…"
@@ -141,7 +144,7 @@ function AsyncZipButton(props: { zipRequestUrl: string; zipStatusUrl: string }) 
         )}
       </button>
       {phase === "working" ? (
-        <p className="max-w-md text-right text-sm text-[var(--retail-muted)]">
+        <p className="max-w-md text-right text-sm" style={{ color: "var(--brand-body-muted)" }}>
           Preparing your download… This may take a few minutes for large events.
         </p>
       ) : null}
@@ -303,9 +306,9 @@ export function RetailGuestbookClient({
       <div
         className={cn(
           "sticky top-0 z-40 -mx-4 border-b px-4 pb-4 pt-1 sm:-mx-8 sm:px-8",
-          "bg-[var(--retail-bg)]/95 shadow-[0_4px_16px_-6px_rgba(0,0,0,0.18)] backdrop-blur-md supports-[backdrop-filter]:bg-[var(--retail-bg)]/80"
+          "bg-[var(--brand-body-page-bg)]/95 shadow-[0_4px_16px_-6px_rgba(0,0,0,0.18)] backdrop-blur-md supports-[backdrop-filter]:bg-[var(--brand-body-page-bg)]/80"
         )}
-        style={{ borderColor: "var(--retail-border)" }}
+        style={{ borderColor: "var(--brand-body-border)" }}
       >
         <RetailAudioPlayer
           ref={playerRef}
@@ -328,11 +331,15 @@ export function RetailGuestbookClient({
           onChange={(e) => setSearchQuery(e.target.value)}
           placeholder="Search files..."
           autoComplete="off"
-          className="h-11 w-full max-w-xl border text-base text-[var(--retail-text)] placeholder:text-[var(--retail-muted)]"
-          style={{ borderColor: "var(--retail-border)", background: "var(--retail-bg)" }}
+          className="h-11 w-full max-w-xl border text-base placeholder:text-[var(--brand-body-muted)]"
+          style={{
+            borderColor: "var(--brand-body-border)",
+            background: "var(--brand-body-card-bg)",
+            color: "var(--brand-body-text)",
+          }}
         />
         {filterActive ? (
-          <p className="text-sm text-[var(--retail-muted)]">
+          <p className="text-sm" style={{ color: "var(--brand-body-muted)" }}>
             {displayFiles.length} of {listFiles.length} files
           </p>
         ) : null}
@@ -340,20 +347,26 @@ export function RetailGuestbookClient({
 
       <section aria-label="Recordings" className="space-y-4">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between lg:gap-4">
-          <h2 className="text-xl font-semibold text-[var(--retail-text)] sm:text-2xl">
+          <h2
+            className="text-xl font-semibold sm:text-2xl"
+            style={{ color: "var(--brand-body-heading)" }}
+          >
             Recordings
           </h2>
           <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-end sm:gap-4">
-            <label className="flex min-w-0 flex-shrink-0 items-center gap-2 text-sm text-[var(--retail-text)] sm:text-base">
+            <label
+              className="flex min-w-0 flex-shrink-0 items-center gap-2 text-sm sm:text-base"
+              style={{ color: "var(--brand-body-text)" }}
+            >
               <span className="whitespace-nowrap">Sort by:</span>
               <select
                 value={sortKey}
                 onChange={(e) => setSortKey(e.target.value as SortValue)}
                 className="h-11 min-w-0 flex-1 rounded-md border px-3 py-2 text-base sm:min-w-[12rem] sm:flex-none"
                 style={{
-                  borderColor: "var(--retail-border)",
-                  background: "var(--retail-bg)",
-                  color: "var(--retail-text)",
+                  borderColor: "var(--brand-body-border)",
+                  background: "var(--brand-body-card-bg)",
+                  color: "var(--brand-body-text)",
                 }}
               >
                 {SORT_OPTIONS.map((o) => (
@@ -368,9 +381,12 @@ export function RetailGuestbookClient({
                 href={bulkZip.zipUrl}
                 className={cn(
                   buttonVariants({ size: "lg" }),
-                  "h-11 min-h-11 justify-center px-5 text-base text-white hover:brightness-110 sm:text-lg"
+                  "inline-flex h-11 min-h-11 items-center justify-center px-5 text-base transition-colors hover:[background-color:var(--brand-button-primary-hover-bg)] sm:text-lg"
                 )}
-                style={{ background: "var(--retail-accent)" }}
+                style={{
+                  background: "var(--brand-button-primary-bg)",
+                  color: "var(--brand-button-primary-text)",
+                }}
               >
                 <span className="flex items-center justify-center gap-2">
                   <Download className="size-4" aria-hidden />
@@ -388,30 +404,35 @@ export function RetailGuestbookClient({
 
         {listFiles.length === 0 ? (
           <p
-            className="rounded-lg border border-dashed px-4 py-10 text-center text-lg text-[var(--retail-muted)]"
+            className="rounded-lg border border-dashed px-4 py-10 text-center text-lg"
             style={{
-              borderColor: "var(--retail-border)",
+              borderColor: "var(--brand-body-border)",
               background:
-                "color-mix(in srgb, var(--retail-bg) 97%, var(--retail-muted) 3%)",
+                "color-mix(in srgb, var(--brand-body-card-bg) 97%, var(--brand-body-muted) 3%)",
+              color: "var(--brand-body-muted)",
             }}
           >
             No messages yet — check back soon.
           </p>
         ) : filterActive && displayFiles.length === 0 ? (
           <p
-            className="rounded-lg border border-dashed px-4 py-10 text-center text-lg text-[var(--retail-muted)]"
+            className="rounded-lg border border-dashed px-4 py-10 text-center text-lg"
             style={{
-              borderColor: "var(--retail-border)",
+              borderColor: "var(--brand-body-border)",
               background:
-                "color-mix(in srgb, var(--retail-bg) 97%, var(--retail-muted) 3%)",
+                "color-mix(in srgb, var(--brand-body-card-bg) 97%, var(--brand-body-muted) 3%)",
+              color: "var(--brand-body-muted)",
             }}
           >
             No files match your search
           </p>
         ) : (
           <ul
-            className="overflow-hidden rounded-xl border bg-[var(--retail-bg)]"
-            style={{ borderColor: "var(--retail-border)" }}
+            className="overflow-hidden rounded-xl border"
+            style={{
+              borderColor: "var(--brand-body-border)",
+              background: "var(--brand-body-card-bg)",
+            }}
           >
             {displayFiles.map((f) => {
               const active = f.id === activeFileId;
@@ -420,24 +441,28 @@ export function RetailGuestbookClient({
                 <li
                   key={f.id}
                   className="border-t border-solid first:border-t-0"
-                  style={{ borderTopColor: "var(--retail-border)" }}
+                  style={{ borderTopColor: "var(--brand-body-border)" }}
                 >
                   <div
                     className="flex flex-col gap-3 px-3 py-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4 sm:px-4 sm:py-3"
                     style={
                       active
-                        ? { background: "var(--retail-row-active)" }
+                        ? { background: "var(--brand-row-active)" }
                         : undefined
                     }
                   >
                     <button
                       type="button"
                       onClick={() => onRowActivate(f.id)}
-                      className="min-h-11 flex-1 rounded-lg py-2 text-left text-base text-[var(--retail-text)] transition-colors hover:opacity-90 sm:min-h-0 sm:py-2.5 sm:text-lg"
+                      className="min-h-11 flex-1 rounded-lg py-2 text-left text-base transition-colors hover:opacity-90 sm:min-h-0 sm:py-2.5 sm:text-lg"
+                      style={{ color: "var(--brand-body-text)" }}
                     >
                       <span className="font-medium">{displayName}</span>
                       {f.durationSeconds != null ? (
-                        <span className="mt-1 block text-sm text-[var(--retail-muted)] sm:text-base">
+                        <span
+                          className="mt-1 block text-sm sm:text-base"
+                          style={{ color: "var(--brand-body-muted)" }}
+                        >
                           {f.durationSeconds}s
                         </span>
                       ) : null}
@@ -453,7 +478,11 @@ export function RetailGuestbookClient({
                           buttonVariants({ variant: "outline", size: "lg" }),
                           "h-11 min-h-11 gap-2 border text-base sm:text-lg"
                         )}
-                        style={{ borderColor: "var(--retail-border)" }}
+                        style={{
+                          borderColor: "var(--brand-body-border)",
+                          background: "var(--brand-body-card-bg)",
+                          color: "var(--brand-body-text)",
+                        }}
                       >
                         <Download className="size-4" aria-hidden />
                         Download
@@ -465,7 +494,8 @@ export function RetailGuestbookClient({
                             e.stopPropagation();
                             void onDownloadOne(f.losslessOriginalFileId!);
                           }}
-                          className="text-[var(--retail-muted)] text-sm underline underline-offset-2 hover:text-[var(--retail-text)]"
+                          className="text-sm underline underline-offset-2 transition-colors hover:[color:var(--brand-link-hover)]"
+                          style={{ color: "var(--brand-link)" }}
                         >
                           Download original
                         </button>
