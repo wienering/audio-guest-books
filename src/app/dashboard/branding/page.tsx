@@ -4,11 +4,12 @@ import { redirect } from "next/navigation";
 import { Suspense } from "react";
 
 import {
-  DashboardStackedNavLayout,
   stackedSectionClassnames,
   stackedSectionHeadingClassnames,
   type DashboardStackedNavSection,
-} from "@/components/dashboard/dashboard-stacked-nav-layout";
+} from "@/lib/stacked-nav-utils";
+
+import { DashboardStackedNavLayout } from "@/components/dashboard/dashboard-stacked-nav-layout";
 import {
   Card,
   CardContent,

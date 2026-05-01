@@ -11,26 +11,7 @@ import {
 } from "react";
 
 import { cn } from "@/lib/utils";
-
-export type DashboardStackedNavSection = {
-  id: string;
-  label: string;
-};
-
-const HEADER_SCROLL_MARGIN_CLASS = "scroll-mt-28";
-
-export function stackedSectionHeadingClassnames() {
-  return "text-xl font-semibold tracking-tight text-foreground";
-}
-
-export function stackedSectionClassnames(isFirst: boolean) {
-  return cn(
-    HEADER_SCROLL_MARGIN_CLASS,
-    !isFirst && "border-border border-t",
-    !isFirst && "mt-14 pt-14",
-    isFirst && "pt-1"
-  );
-}
+import type { DashboardStackedNavSection } from "@/lib/stacked-nav-utils";
 
 function replaceHistoryHashPreservingSearch(pathnameLocal: string, hashId: string) {
   const qs = typeof window !== "undefined" ? window.location.search : "";
@@ -56,6 +37,7 @@ function scrollBehaviorForInitialLanding(): ScrollBehavior {
   return "auto";
 }
 
+/** Stacked sidebar + viewport-synced hash UX; `@/lib/stacked-nav-utils` exports section classname helpers safe for Server Components. */
 export function DashboardStackedNavLayout(props: {
   sections: readonly DashboardStackedNavSection[];
   children: ReactNode;

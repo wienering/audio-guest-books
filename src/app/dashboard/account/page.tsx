@@ -8,12 +8,12 @@ import {
   type BillingAuditRow,
 } from "@/app/dashboard/settings/billing/billing-settings-client";
 import { AccountDeletionClient } from "@/app/dashboard/settings/account/account-deletion-client";
+import { DashboardStackedNavLayout } from "@/components/dashboard/dashboard-stacked-nav-layout";
 import {
-  DashboardStackedNavLayout,
   stackedSectionClassnames,
   stackedSectionHeadingClassnames,
   type DashboardStackedNavSection,
-} from "@/components/dashboard/dashboard-stacked-nav-layout";
+} from "@/lib/stacked-nav-utils";
 import {
   Card,
   CardDescription,
