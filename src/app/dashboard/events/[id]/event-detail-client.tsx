@@ -10,9 +10,10 @@ import {
   useRef,
   useState,
   useTransition,
+  type DragEvent,
 } from "react";
 import { toast } from "sonner";
-import { Pencil, X } from "lucide-react";
+import { GripVertical, Pencil, X } from "lucide-react";
 
 import { extendRetentionAction } from "./retention-actions";
 import {
@@ -162,6 +163,7 @@ export type EventDetailClientProps = {
   metadataOnlyAfterLabel: string | null;
   permanentRemovalLabel: string | null;
   showRetentionWarning: boolean;
+  canDragReorderFiles: boolean;
 };
 
 function putToPresignedUrl(
@@ -284,11 +286,22 @@ function LinkSentIndicator(props: {
   );
 }
 
+type FileReorderUi = {
+  isDragging: boolean;
+  isDropTarget: boolean;
+  onGripDragStart: (e: DragEvent) => void;
+  onGripDragEnd: (e: DragEvent) => void;
+  onRowDragOver: (e: DragEvent) => void;
+  onRowDragLeave: (e: DragEvent) => void;
+  onRowDrop: (e: DragEvent) => void;
+};
+
 function AudioRow(props: {
   file: EventDetailClientFile;
   onDeleted: () => void;
+  reorder?: FileReorderUi;
 }) {
-  const { file, onDeleted } = props;
+  const { file, onDeleted, reorder } = props;
   const uploadedAtLabel = formatUploadedAtLabel(file.uploadedAt);
   const [src, setSrc] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -359,9 +372,35 @@ function AudioRow(props: {
       : null;
 
   return (
-    <li className="rounded-lg border bg-card p-4 shadow-sm">
+    <li
+      className={cn(
+        "rounded-lg border bg-card p-4 shadow-sm",
+        reorder?.isDragging && "opacity-50",
+        reorder?.isDropTarget && "ring-2 ring-primary ring-offset-2 ring-offset-background"
+      )}
+      onDragOver={reorder?.onRowDragOver}
+      onDragLeave={reorder?.onRowDragLeave}
+      onDrop={reorder?.onRowDrop}
+    >
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-        <div className="min-w-0 space-y-1">
+        <div className="flex min-w-0 flex-1 gap-2">
+          {reorder ? (
+            <div
+              draggable
+              role="button"
+              tabIndex={0}
+              className="mt-0.5 shrink-0 cursor-grab text-muted-foreground active:cursor-grabbing"
+              aria-label="Drag to reorder"
+              onDragStart={(e) => reorder.onGripDragStart(e)}
+              onDragEnd={(e) => reorder.onGripDragEnd(e)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") e.preventDefault();
+              }}
+            >
+              <GripVertical className="size-5 shrink-0" aria-hidden />
+            </div>
+          ) : null}
+          <div className="min-w-0 flex-1 space-y-1">
           <p className="font-medium break-words">
             {file.originalFilename}
             {file.isOriginal ? (
@@ -388,6 +427,7 @@ function AudioRow(props: {
           file.transcodingError ? (
             <p className="text-destructive text-xs">{file.transcodingError}</p>
           ) : null}
+          </div>
         </div>
         <div className="flex flex-wrap gap-2">
           {file.isOriginal && file.transcodingStatus === "failed" ? (
@@ -599,6 +639,47 @@ export function EventDetailClient(props: EventDetailClientProps) {
   const sourceFileCount = useMemo(
     () => sortedFiles.filter((f) => f.isOriginal).length,
     [sortedFiles]
+  );
+
+  const originalsOrdered = useMemo(
+    () => sortedFiles.filter((f) => f.isOriginal).map((f) => f.id),
+    [sortedFiles]
+  );
+
+  const [draggingFileId, setDraggingFileId] = useState<string | null>(null);
+  const [dropTargetId, setDropTargetId] = useState<string | null>(null);
+  const dragSourceIdRef = useRef<string | null>(null);
+
+  const commitReorder = useCallback(
+    async (draggedId: string, targetId: string) => {
+      if (draggedId === targetId) return;
+      const order = [...originalsOrdered];
+      const from = order.indexOf(draggedId);
+      const to = order.indexOf(targetId);
+      if (from < 0 || to < 0) return;
+      const next = [...order];
+      next.splice(from, 1);
+      next.splice(to, 0, draggedId);
+      try {
+        const r = await fetch(`/api/events/${props.eventId}/files/reorder`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ originalFileIds: next }),
+        });
+        if (!r.ok) {
+          const j = (await r.json().catch(() => null)) as {
+            error?: string;
+          } | null;
+          toast.error(j?.error ?? "Could not save order.");
+          return;
+        }
+        toast.success("Order updated.");
+        router.refresh();
+      } catch {
+        toast.error("Network error.");
+      }
+    },
+    [originalsOrdered, props.eventId, router]
   );
 
   const bulkDialogRef = useRef<HTMLDialogElement | null>(null);
@@ -1172,10 +1253,18 @@ export function EventDetailClient(props: EventDetailClientProps) {
 
       <section className="space-y-4">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <h2 className="font-medium">
-            Files ({sourceFileCount} source file
-            {sourceFileCount !== 1 ? "s" : ""}, {sortedFiles.length} total)
-          </h2>
+          <div>
+            <h2 className="font-medium">
+              Files ({sourceFileCount} source file
+              {sourceFileCount !== 1 ? "s" : ""}, {sortedFiles.length} total)
+            </h2>
+            {props.canDragReorderFiles ? (
+              <p className="mt-1 text-muted-foreground text-xs">
+                Drag the grip beside a source file to reorder. Transcoded copies
+                stay with their original.
+              </p>
+            ) : null}
+          </div>
           {sortedFiles.length > 0 ? (
             <button
               type="button"
@@ -1201,6 +1290,48 @@ export function EventDetailClient(props: EventDetailClientProps) {
                 key={f.id}
                 file={f}
                 onDeleted={() => router.refresh()}
+                reorder={
+                  props.canDragReorderFiles && f.isOriginal
+                    ? {
+                        isDragging: draggingFileId === f.id,
+                        isDropTarget:
+                          dropTargetId === f.id &&
+                          draggingFileId != null &&
+                          draggingFileId !== f.id,
+                        onGripDragStart: (e) => {
+                          e.dataTransfer.setData("text/plain", f.id);
+                          e.dataTransfer.effectAllowed = "move";
+                          dragSourceIdRef.current = f.id;
+                          setDraggingFileId(f.id);
+                        },
+                        onGripDragEnd: () => {
+                          dragSourceIdRef.current = null;
+                          setDraggingFileId(null);
+                          setDropTargetId(null);
+                        },
+                        onRowDragOver: (e) => {
+                          const src = dragSourceIdRef.current;
+                          if (!src || src === f.id) return;
+                          e.preventDefault();
+                          e.dataTransfer.dropEffect = "move";
+                          setDropTargetId(f.id);
+                        },
+                        onRowDragLeave: () => {
+                          setDropTargetId((cur) => (cur === f.id ? null : cur));
+                        },
+                        onRowDrop: (e) => {
+                          e.preventDefault();
+                          const dragged = e.dataTransfer.getData("text/plain");
+                          dragSourceIdRef.current = null;
+                          setDropTargetId(null);
+                          setDraggingFileId(null);
+                          if (dragged && dragged !== f.id) {
+                            void commitReorder(dragged, f.id);
+                          }
+                        },
+                      }
+                    : undefined
+                }
               />
             ))}
           </ul>

@@ -11,6 +11,7 @@ import {
 import { FastForward, Pause, Play, Rewind } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { formatFileDisplayName } from "@/lib/format-file-display-name";
 import { cn } from "@/lib/utils";
 
 export type RetailAudioFile = {
@@ -20,6 +21,7 @@ export type RetailAudioFile = {
   playbackUrl: string;
   /** When playing transcoded MP3, downloadable lossless id */
   losslessOriginalFileId?: string | null;
+  uploadedAtIso: string;
 };
 
 export type RetailAudioPlayerHandle = {
@@ -148,7 +150,9 @@ export const RetailAudioPlayer = forwardRef<
     >
       <audio ref={audioRef} preload="metadata" className="hidden" />
       <p className="text-lg font-semibold tracking-tight text-[var(--retail-text)] sm:text-xl">
-        {activeFile?.originalFilename ?? "No recording selected"}
+        {activeFile
+          ? formatFileDisplayName(activeFile.originalFilename)
+          : "No recording selected"}
       </p>
       <div className="mt-6 flex flex-wrap items-center justify-center gap-3 sm:justify-start">
         <Button

@@ -86,6 +86,11 @@ export default async function EventDetailPage(props: {
     "audio_transcoding"
   );
 
+  const canDragReorderFiles = await companyHasFeatureKey(
+    membership.company.id,
+    "drag_reorder_files"
+  );
+
   const [customBranding, passwordProtection] = await Promise.all([
     companyHasFeatureKey(membership.company.id, "custom_branding"),
     companyHasFeatureKey(membership.company.id, "password_protection"),
@@ -259,6 +264,7 @@ export default async function EventDetailPage(props: {
       metadataOnlyAfterLabel={metadataOnlyAfterLabel}
       permanentRemovalLabel={permanentRemovalLabel}
       showRetentionWarning={showRetentionWarning}
+      canDragReorderFiles={canDragReorderFiles}
     />
   );
 }

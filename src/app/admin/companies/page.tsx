@@ -189,16 +189,21 @@ export default async function AdminCompaniesPage(props: {
       </div>
 
       <div className="overflow-x-auto rounded-lg border">
-        <table className="w-full min-w-[1100px] border-collapse text-sm">
+        <table className="w-full border-collapse text-sm">
           <thead className="bg-muted/40 text-left text-muted-foreground">
             <tr>
               {SORTABLE.map((col) => {
                 const active = col.key === sort;
                 const nextDir = active && dir === "desc" ? "asc" : "desc";
+                const optionalNarrow =
+                  col.key === "total_storage" || col.key === "last_activity";
                 return (
                   <th
                     key={col.key}
-                    className="border-b px-3 py-2 font-medium"
+                    className={cn(
+                      "border-b px-2 py-2 font-medium sm:px-3",
+                      optionalNarrow && "hidden xl:table-cell"
+                    )}
                   >
                     <Link
                       href={buildHref("/admin/companies", {
@@ -242,10 +247,15 @@ export default async function AdminCompaniesPage(props: {
                     isDeleted && "bg-amber-50/40 dark:bg-amber-950/20"
                   )}
                 >
-                  <td className="px-3 py-2 font-mono text-xs">
+                  <td
+                    className={cn(
+                      "max-w-[10rem] px-2 py-2 font-mono text-xs sm:max-w-none sm:px-3"
+                    )}
+                  >
                     <Link
                       href={`/admin/companies/${encodeURIComponent(c.slug)}`}
-                      className="text-primary hover:underline"
+                      className="block truncate text-primary hover:underline"
+                      title={c.slug}
                     >
                       {c.slug}
                     </Link>
@@ -255,15 +265,16 @@ export default async function AdminCompaniesPage(props: {
                       </span>
                     ) : null}
                   </td>
-                  <td className="px-3 py-2">
+                  <td className="px-2 py-2 sm:px-3">
                     <Link
                       href={`/admin/companies/${encodeURIComponent(c.slug)}`}
-                      className="font-medium text-foreground hover:underline"
+                      className="block truncate font-medium text-foreground hover:underline"
+                      title={c.name}
                     >
                       {c.name}
                     </Link>
                   </td>
-                  <td className="px-3 py-2 capitalize">
+                  <td className="px-2 py-2 capitalize sm:px-3">
                     {c.planName ?? "—"}
                     {c.isFoundingMember ? (
                       <span className="ml-1 rounded bg-purple-100 px-1.5 py-0.5 text-[10px] font-semibold text-purple-900 dark:bg-purple-900/40 dark:text-purple-200">
@@ -271,22 +282,30 @@ export default async function AdminCompaniesPage(props: {
                       </span>
                     ) : null}
                   </td>
-                  <td className="px-3 py-2 text-muted-foreground">
+                  <td className="px-2 py-2 text-muted-foreground sm:px-3">
                     {c.subscriptionStatus ?? "—"}
                   </td>
-                  <td className="px-3 py-2 text-right tabular-nums">
+                  <td className="px-2 py-2 text-right tabular-nums sm:px-3">
                     {c.totalEvents}
                   </td>
-                  <td className="px-3 py-2 text-right tabular-nums">
+                  <td className="px-2 py-2 text-right tabular-nums sm:px-3">
                     {c.totalFiles}
                   </td>
-                  <td className="px-3 py-2 text-right tabular-nums">
+                  <td
+                    className={cn(
+                      "hidden px-2 py-2 text-right tabular-nums sm:px-3 xl:table-cell"
+                    )}
+                  >
                     {formatBytes(c.totalStorageBytes)}
                   </td>
-                  <td className="px-3 py-2 text-muted-foreground">
+                  <td className="px-2 py-2 text-muted-foreground sm:px-3">
                     {formatRelative(c.createdAt)}
                   </td>
-                  <td className="px-3 py-2 text-muted-foreground">
+                  <td
+                    className={cn(
+                      "hidden px-2 py-2 text-muted-foreground sm:px-3 xl:table-cell"
+                    )}
+                  >
                     {formatRelative(c.lastActivityAt)}
                   </td>
                 </tr>

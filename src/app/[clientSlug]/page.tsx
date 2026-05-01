@@ -1,4 +1,5 @@
 import type { CSSProperties } from "react";
+import { Suspense } from "react";
 import { headers } from "next/headers";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
@@ -259,12 +260,14 @@ export default async function RetailClientPage({ params }: Props) {
         {!payload.recordingFilesAvailable ? (
           <RetailFilesRemovedMessage />
         ) : (
-          <RetailGuestbookClient
-            companySlug={companySlug}
-            clientSlug={clientSlug}
-            files={payload.files}
-            bulkZip={payload.bulkZip}
-          />
+          <Suspense fallback={<div className="min-h-[12rem]" aria-hidden />}>
+            <RetailGuestbookClient
+              companySlug={companySlug}
+              clientSlug={clientSlug}
+              files={payload.files}
+              bulkZip={payload.bulkZip}
+            />
+          </Suspense>
         )}
       </main>
 

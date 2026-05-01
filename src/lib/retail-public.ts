@@ -22,6 +22,8 @@ export type RetailPublicAudioFile = {
   playbackUrl: string;
   /** When MP3 is transcoded from lossless, link retail download to this id */
   losslessOriginalFileId: string | null;
+  /** ISO timestamp for client-side sort (newest/oldest) */
+  uploadedAtIso: string;
 };
 
 export type RetailPublicEventPayload = {
@@ -93,6 +95,7 @@ export async function buildRetailPublicPayload(
         durationSeconds: f.durationSeconds,
         playbackUrl,
         losslessOriginalFileId: pick.losslessOriginal?.id ?? null,
+        uploadedAtIso: f.uploadedAt!.toISOString(),
       });
     }
   }
