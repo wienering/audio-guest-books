@@ -303,8 +303,8 @@ export function AdminCompanyActions(props: Props) {
                           "rounded px-1.5 py-0.5 text-[11px] font-semibold",
                           f.source === "plan" &&
                             "bg-blue-100 text-blue-900 dark:bg-blue-900/40 dark:text-blue-200",
-                          f.source === "admin_grant" &&
-                            "bg-green-100 text-green-900 dark:bg-green-900/40 dark:text-green-200",
+                          f.source === "comp_subscription" &&
+                            "bg-teal-100 text-teal-900 dark:bg-teal-900/40 dark:text-teal-200",
                           f.source === "founding_member" &&
                             "bg-purple-100 text-purple-900 dark:bg-purple-900/40 dark:text-purple-200"
                         )}

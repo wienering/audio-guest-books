@@ -155,9 +155,23 @@ export async function resetCompanyToFree(
       subscriptionCurrentPeriodEnd: null,
       subscriptionCancelAtPeriodEnd: false,
       isFoundingMember: false,
+      compSubscriptionPlanCode: null,
+      compSubscriptionGrantedAt: null,
+      compSubscriptionGrantedByAdminId: null,
+      compSubscriptionExpiresAt: null,
+      compSubscriptionNotes: null,
       updatedAt: new Date(),
     })
     .where(eq(companies.id, companyId));
+
+  await dbConn
+    .delete(companyFeatures)
+    .where(
+      and(
+        eq(companyFeatures.companyId, companyId),
+        eq(companyFeatures.source, "comp_subscription")
+      )
+    );
 
   await grantPlanFeaturesFromPlan(dbConn, companyId, freePlan.id);
 

@@ -1,6 +1,6 @@
 import "server-only";
 
-import { and, asc, desc, eq, isNull, sql } from "drizzle-orm";
+import { and, asc, desc, eq, isNull, inArray, sql } from "drizzle-orm";
 
 import { db } from "@/db/index";
 import {
@@ -22,7 +22,7 @@ export type AdminCompanyDetailFeatureRow = {
   featureKey: string;
   featureName: string;
   featureDescription: string | null;
-  source: "plan" | "admin_grant" | "founding_member";
+  source: "plan" | "admin_grant" | "founding_member" | "comp_subscription";
   grantedAt: string;
   expiresAt: string | null;
 };
@@ -78,6 +78,22 @@ export type AdminCompanyDetail = {
   subscriptionCurrentPeriodEnd: string | null;
   subscriptionCancelAtPeriodEnd: boolean;
   isFoundingMember: boolean;
+  /** Complimentary subscription (stored columns); may coexist with Stripe. */
+  compSubscriptionPlanCode: string | null;
+  compSubscriptionGrantedAt: string | null;
+  compSubscriptionGrantedByAdminId: string | null;
+  compSubscriptionExpiresAt: string | null;
+  compSubscriptionNotes: string | null;
+  grantedByAdminEmail: string | null;
+  /** Latest recorded complimentary end event (manual revoke or scheduler). */
+  lastComplimentaryEnd:
+    | {
+        endedAt: string;
+        actionType: string;
+        previousPlanCode: string | null;
+        previousExpiresAt: string | null;
+      }
+    | null;
   deletedAt: string | null;
   hardDeleteAfter: string | null;
   deletionRequestedByUserId: string | null;
@@ -123,6 +139,7 @@ export async function getAdminCompanyDetailBySlug(
     billingAuditRows,
     adminAuditRows,
     ownerRow,
+    lastCompRevokeAudit,
   ] = await Promise.all([
     db
       .select({
@@ -212,6 +229,24 @@ export async function getAdminCompanyDetailBySlug(
       )
       .orderBy(asc(companyUsers.createdAt))
       .limit(1),
+    db
+      .select({
+        createdAt: adminAuditLog.createdAt,
+        actionType: adminAuditLog.actionType,
+        metadata: adminAuditLog.metadata,
+      })
+      .from(adminAuditLog)
+      .where(
+        and(
+          eq(adminAuditLog.targetCompanyId, c.id),
+          inArray(adminAuditLog.actionType, [
+            "comp_subscription_revoked",
+            "comp_subscription_auto_expired",
+          ])
+        )
+      )
+      .orderBy(desc(adminAuditLog.createdAt))
+      .limit(1),
   ]);
 
   const lastActivityRow = await db
@@ -236,6 +271,28 @@ export async function getAdminCompanyDetailBySlug(
     ? await getClerkPrimaryEmail(ownerClerkId)
     : null;
 
+  const grantedByAdminEmail = c.compSubscriptionGrantedByAdminId
+    ? await getClerkPrimaryEmail(c.compSubscriptionGrantedByAdminId)
+    : null;
+
+  const lc = lastCompRevokeAudit[0];
+  let lastComplimentaryEnd: AdminCompanyDetail["lastComplimentaryEnd"] = null;
+  if (lc) {
+    const md = lc.metadata as Record<string, unknown> | null;
+    lastComplimentaryEnd = {
+      endedAt: lc.createdAt.toISOString(),
+      actionType: lc.actionType,
+      previousPlanCode:
+        typeof md?.previous_plan_code === "string"
+          ? md.previous_plan_code
+          : null,
+      previousExpiresAt:
+        typeof md?.previous_expires_at === "string"
+          ? md.previous_expires_at
+          : null,
+    };
+  }
+
   return {
     id: c.id,
     slug: c.slug,
@@ -251,6 +308,16 @@ export async function getAdminCompanyDetailBySlug(
       c.subscriptionCurrentPeriodEnd?.toISOString() ?? null,
     subscriptionCancelAtPeriodEnd: c.subscriptionCancelAtPeriodEnd,
     isFoundingMember: c.isFoundingMember,
+    compSubscriptionPlanCode: c.compSubscriptionPlanCode ?? null,
+    compSubscriptionGrantedAt:
+      c.compSubscriptionGrantedAt?.toISOString() ?? null,
+    compSubscriptionGrantedByAdminId:
+      c.compSubscriptionGrantedByAdminId ?? null,
+    compSubscriptionExpiresAt:
+      c.compSubscriptionExpiresAt?.toISOString() ?? null,
+    compSubscriptionNotes: c.compSubscriptionNotes ?? null,
+    grantedByAdminEmail,
+    lastComplimentaryEnd,
     deletedAt: c.deletedAt?.toISOString() ?? null,
     hardDeleteAfter:
       c.hardDeleteAfter instanceof Date

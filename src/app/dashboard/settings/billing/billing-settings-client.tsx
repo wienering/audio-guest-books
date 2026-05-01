@@ -1,5 +1,6 @@
 "use client";
 
+import { Gift } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
@@ -12,6 +13,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { cn } from "@/lib/utils";
 import { formatDate, formatDateTime } from "@/lib/date-format";
 
 export type BillingAuditRow = {
@@ -33,6 +35,9 @@ export type BillingSettingsClientProps = {
   isFoundingMember: boolean;
   subscriptionPlanCode: string | null;
   stripeSubscriptionId: string | null;
+  hasStripePaidSubscription: boolean;
+  complimentarySubscriptionActive: boolean;
+  compSubscriptionExpiresAt: string | null;
   auditRows: BillingAuditRow[];
 };
 
@@ -45,6 +50,9 @@ type StatusPayload = {
   subscriptionPlanCode: string | null;
   stripeSubscriptionId: string | null;
   isPaid: boolean;
+  hasStripePaidSubscription: boolean;
+  complimentarySubscriptionActive: boolean;
+  compSubscriptionExpiresAt: string | null;
 };
 
 export function BillingSettingsClient(props: BillingSettingsClientProps) {
@@ -67,8 +75,16 @@ export function BillingSettingsClient(props: BillingSettingsClientProps) {
     polled?.subscriptionPlanCode ?? props.subscriptionPlanCode;
   const stripeSubscriptionId =
     polled?.stripeSubscriptionId ?? props.stripeSubscriptionId;
+  const hasStripePaidSubscription =
+    polled?.hasStripePaidSubscription ?? props.hasStripePaidSubscription;
+  const complimentarySubscriptionActive =
+    polled?.complimentarySubscriptionActive ??
+    props.complimentarySubscriptionActive;
+  const compSubscriptionExpiresAt =
+    polled?.compSubscriptionExpiresAt ?? props.compSubscriptionExpiresAt;
 
   const isUltimate = planCode === "ultimate";
+  const isPro = planCode === "pro";
 
   const clearBillingQueryParams = useCallback(() => {
     router.replace("/dashboard/settings/billing", { scroll: false });
@@ -169,7 +185,13 @@ export function BillingSettingsClient(props: BillingSettingsClientProps) {
   }
 
   let planTitle = props.planDisplayName;
-  if (isUltimate) {
+  if (complimentarySubscriptionActive) {
+    if (isPro) {
+      planTitle = "Pro (Complimentary)";
+    } else if (isUltimate) {
+      planTitle = "Ultimate (Complimentary)";
+    }
+  } else if (isUltimate) {
     if (
       isFoundingMember ||
       subscriptionPlanCode === "ultimate_founding"
@@ -182,6 +204,10 @@ export function BillingSettingsClient(props: BillingSettingsClientProps) {
 
   const periodLabel = subscriptionCurrentPeriodEnd
     ? formatDate(subscriptionCurrentPeriodEnd)
+    : null;
+
+  const compExpiryLabel = compSubscriptionExpiresAt
+    ? formatDate(compSubscriptionExpiresAt)
     : null;
 
   return (
@@ -198,7 +224,15 @@ export function BillingSettingsClient(props: BillingSettingsClientProps) {
         <CardHeader>
           <CardTitle className="text-base">Current plan</CardTitle>
           <CardDescription>
-            {isUltimate && isFoundingMember ? (
+            {complimentarySubscriptionActive ? (
+              <span className="inline-flex items-center gap-2 text-emerald-800 dark:text-emerald-300">
+                <Gift className="h-4 w-4 shrink-0 opacity-90" aria-hidden />
+                <span>
+                  You&apos;re on a complimentary team plan — thank you for being
+                  here.
+                </span>
+              </span>
+            ) : isUltimate && isFoundingMember ? (
               <span className="inline-flex flex-wrap items-center gap-2">
                 <span className="rounded-md border bg-muted px-2 py-0.5 font-medium text-xs">
                   Founding member
@@ -211,9 +245,65 @@ export function BillingSettingsClient(props: BillingSettingsClientProps) {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <p className="font-medium text-lg">{planTitle}</p>
+          <p className="flex flex-wrap items-center gap-2 font-medium text-lg">
+            <span>{planTitle}</span>
+            {complimentarySubscriptionActive ? (
+              <span
+                className={cn(
+                  "rounded-full px-2 py-0.5 font-medium text-xs",
+                  "bg-emerald-100 text-emerald-900 dark:bg-emerald-950/80 dark:text-emerald-100"
+                )}
+              >
+                Complimentary
+              </span>
+            ) : null}
+          </p>
 
-          {isUltimate ? (
+          {complimentarySubscriptionActive ? (
+            <div className="space-y-3 text-muted-foreground text-sm leading-relaxed">
+              {!compExpiryLabel ? (
+                <>
+                  <p>
+                    This plan was granted as a courtesy by the Audio Guest Books
+                    team.
+                  </p>
+                  <p>
+                    If you have questions about this arrangement, contact{" "}
+                    <a
+                      className="text-foreground underline underline-offset-4"
+                      href="mailto:support@audioguestbooks.ca"
+                    >
+                      support@audioguestbooks.ca
+                    </a>
+                    .
+                  </p>
+                </>
+              ) : (
+                <>
+                  <p>
+                    Your complimentary {isPro ? "Pro" : "Ultimate"} plan expires on{" "}
+                    <strong className="text-foreground">{compExpiryLabel}</strong>
+                    .
+                  </p>
+                  <p>
+                    After that, your account will return to the Free plan unless
+                    you subscribe.
+                  </p>
+                  <p>
+                    If you&apos;d like to continue with{" "}
+                    {isPro ? "Pro" : "Ultimate"} beyond the expiry date, contact{" "}
+                    <a
+                      className="text-foreground underline underline-offset-4"
+                      href="mailto:support@audioguestbooks.ca"
+                    >
+                      support@audioguestbooks.ca
+                    </a>
+                    .
+                  </p>
+                </>
+              )}
+            </div>
+          ) : hasStripePaidSubscription && isUltimate ? (
             <div className="space-y-2 text-muted-foreground text-sm">
               <p>
                 Status:{" "}
@@ -229,8 +319,8 @@ export function BillingSettingsClient(props: BillingSettingsClientProps) {
               ) : null}
               {subscriptionCancelAtPeriodEnd ? (
                 <p className="text-amber-700 dark:text-amber-500">
-                  Subscription ends after this period. Use the billing portal
-                  to resume or manage payment details.
+                  Subscription ends after this period. Use the billing portal to
+                  resume or manage payment details.
                 </p>
               ) : null}
               {stripeSubscriptionId ? (
@@ -251,8 +341,7 @@ export function BillingSettingsClient(props: BillingSettingsClientProps) {
               {props.foundingSpotsRemaining > 0 ? (
                 <p className="text-muted-foreground text-sm">
                   Founding member pricing: $5/month for life —{" "}
-                  <strong>{props.foundingSpotsRemaining}</strong> spots
-                  remaining.
+                  <strong>{props.foundingSpotsRemaining}</strong> spots remaining.
                 </p>
               ) : null}
               <Button

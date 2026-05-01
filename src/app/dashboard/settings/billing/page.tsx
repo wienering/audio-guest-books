@@ -11,6 +11,10 @@ import { db } from "@/db/index";
 import { billingAuditLog } from "@/db/schema";
 import { getMembershipWithCompany } from "@/lib/company";
 import { getFoundingMemberSpotsRemaining } from "@/lib/billing-founding";
+import {
+  isComplimentarySubscriptionActiveNow,
+  isStripePaidSubscriptionActive,
+} from "@/lib/comp-subscription-utils";
 
 export default async function BillingSettingsPage() {
   const session = await auth();
@@ -33,6 +37,14 @@ export default async function BillingSettingsPage() {
 
   const company = membership.company;
   const plan = company.plan;
+
+  const stripePaidForBilling = isStripePaidSubscriptionActive(company);
+  const complimentarySubscriptionActive =
+    !stripePaidForBilling &&
+    isComplimentarySubscriptionActiveNow({
+      compSubscriptionPlanCode: company.compSubscriptionPlanCode,
+      compSubscriptionExpiresAt: company.compSubscriptionExpiresAt,
+    });
 
   const auditDb = await db
     .select({
@@ -72,6 +84,11 @@ export default async function BillingSettingsPage() {
         isFoundingMember={company.isFoundingMember}
         subscriptionPlanCode={company.subscriptionPlanCode}
         stripeSubscriptionId={company.stripeSubscriptionId}
+        hasStripePaidSubscription={stripePaidForBilling}
+        complimentarySubscriptionActive={complimentarySubscriptionActive}
+        compSubscriptionExpiresAt={
+          company.compSubscriptionExpiresAt?.toISOString() ?? null
+        }
         auditRows={auditRows}
       />
     </Suspense>

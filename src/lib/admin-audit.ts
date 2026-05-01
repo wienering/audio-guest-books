@@ -21,7 +21,11 @@ export type AdminActionType =
   | "event_edited"
   | "event_soft_deleted"
   | "event_restored"
-  | "event_hard_deleted";
+  | "event_hard_deleted"
+  | "comp_subscription_granted"
+  | "comp_subscription_revoked"
+  | "comp_subscription_extended"
+  | "comp_subscription_auto_expired";
 
 export type LogAdminActionInput = {
   actionType: AdminActionType;

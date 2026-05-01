@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { AdminCompanyActions } from "@/app/admin/companies/[slug]/admin-company-actions";
+import { AdminCompanyCompSubscription } from "@/app/admin/companies/[slug]/admin-company-comp-subscription";
 import {
   Card,
   CardContent,
@@ -11,6 +12,10 @@ import {
 } from "@/components/ui/card";
 import { getAdminCompanyDetailBySlug } from "@/lib/admin-company-detail";
 import { formatDate, formatDateTime } from "@/lib/date-format";
+import {
+  isComplimentarySubscriptionActiveNow,
+  isStripePaidSubscriptionActive,
+} from "@/lib/comp-subscription-utils";
 import { cn, formatBytes } from "@/lib/utils";
 
 function fmt(iso: string | null | undefined): string {
@@ -43,6 +48,23 @@ export default async function AdminCompanyDetailPage(props: {
 
   const isDeleted = detail.deletedAt != null;
   const stripeCustUrl = stripeCustomerLink(detail.stripeCustomerId);
+
+  const stripePaidActive = isStripePaidSubscriptionActive({
+    stripeSubscriptionId: detail.stripeSubscriptionId,
+    subscriptionStatus: detail.subscriptionStatus,
+  });
+  const complimentaryActive =
+    !stripePaidActive &&
+    isComplimentarySubscriptionActiveNow({
+      compSubscriptionPlanCode: detail.compSubscriptionPlanCode,
+      compSubscriptionExpiresAt: detail.compSubscriptionExpiresAt
+        ? new Date(detail.compSubscriptionExpiresAt)
+        : null,
+    });
+  const showComplimentaryEnded =
+    !stripePaidActive &&
+    !complimentaryActive &&
+    detail.lastComplimentaryEnd != null;
 
   return (
     <div className="space-y-8">
@@ -188,6 +210,22 @@ export default async function AdminCompanyDetailPage(props: {
         </Card>
       </div>
 
+      <AdminCompanyCompSubscription
+        companyId={detail.id}
+        companyName={detail.name}
+        isDeleted={isDeleted}
+        stripePaidActive={stripePaidActive}
+        complimentaryActive={complimentaryActive}
+        showComplimentaryEnded={showComplimentaryEnded}
+        compSubscriptionPlanCode={detail.compSubscriptionPlanCode}
+        compSubscriptionGrantedAt={detail.compSubscriptionGrantedAt}
+        compSubscriptionExpiresAt={detail.compSubscriptionExpiresAt}
+        compSubscriptionGrantedByAdminId={detail.compSubscriptionGrantedByAdminId}
+        grantedByAdminEmail={detail.grantedByAdminEmail}
+        compSubscriptionNotes={detail.compSubscriptionNotes}
+        lastComplimentaryEnd={detail.lastComplimentaryEnd}
+      />
+
       <AdminCompanyActions
         companyId={detail.id}
         companySlug={detail.slug}
@@ -195,12 +233,7 @@ export default async function AdminCompanyDetailPage(props: {
         isDeleted={isDeleted}
         hardDeleteAfter={detail.hardDeleteAfter}
         isFoundingMember={detail.isFoundingMember}
-        hasActiveSubscription={
-          detail.stripeSubscriptionId != null &&
-          (detail.subscriptionStatus === "active" ||
-            detail.subscriptionStatus === "trialing" ||
-            detail.subscriptionStatus === "past_due")
-        }
+        hasActiveSubscription={stripePaidActive}
         planCode={detail.planCode}
         featuresGranted={detail.featuresGranted}
         featuresCatalog={detail.featuresCatalog}

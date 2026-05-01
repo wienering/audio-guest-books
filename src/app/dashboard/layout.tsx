@@ -11,6 +11,10 @@ import {
   getSoftDeletedMembershipInfo,
 } from "@/lib/company";
 import { formatDate } from "@/lib/date-format";
+import {
+  isComplimentarySubscriptionActiveNow,
+  isStripePaidSubscriptionActive,
+} from "@/lib/comp-subscription-utils";
 
 export default async function DashboardLayout({
   children,
@@ -43,6 +47,24 @@ export default async function DashboardLayout({
     company.subscriptionCancelAtPeriodEnd === true &&
     company.subscriptionCurrentPeriodEnd != null &&
     planCode === "ultimate";
+
+  const stripePaidLayout = isStripePaidSubscriptionActive(company);
+  let compExpiringSoon: { daysLeft: number } | null = null;
+  if (
+    !stripePaidLayout &&
+    company.compSubscriptionExpiresAt &&
+    isComplimentarySubscriptionActiveNow({
+      compSubscriptionPlanCode: company.compSubscriptionPlanCode,
+      compSubscriptionExpiresAt: company.compSubscriptionExpiresAt,
+    })
+  ) {
+    const daysLeft = Math.ceil(
+      (company.compSubscriptionExpiresAt.getTime() - Date.now()) / 86400000
+    );
+    if (daysLeft > 0 && daysLeft <= 14) {
+      compExpiringSoon = { daysLeft };
+    }
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -128,6 +150,24 @@ export default async function DashboardLayout({
             >
               Resume subscription
             </Link>
+          </div>
+        </div>
+      ) : null}
+      {compExpiringSoon ? (
+        <div className="border-emerald-700/30 border-b bg-emerald-500/10">
+          <div className="mx-auto flex max-w-5xl flex-col gap-2 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+            <p className="text-emerald-950 text-sm dark:text-emerald-50">
+              Your complimentary {planCode === "pro" ? "Pro" : "Ultimate"} plan
+              expires in <strong>{compExpiringSoon.daysLeft}</strong>{" "}
+              {compExpiringSoon.daysLeft === 1 ? "day" : "days"}. Contact{" "}
+              <a
+                className="underline underline-offset-4"
+                href="mailto:support@audioguestbooks.ca"
+              >
+                support@audioguestbooks.ca
+              </a>{" "}
+              to discuss continuing.
+            </p>
           </div>
         </div>
       ) : null}

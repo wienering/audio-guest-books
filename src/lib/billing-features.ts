@@ -11,6 +11,10 @@ import {
   planFeatures,
   plans,
 } from "@/db/schema";
+import {
+  assignCompanyFreePlanTier,
+} from "@/lib/billing-plan-state";
+import { tryApplyComplimentaryAfterStripeCancelled } from "@/lib/comp-subscription";
 
 import { subscriptionPlanCodeFromStripePriceId } from "@/lib/billing-stripe-price";
 
@@ -64,6 +68,24 @@ export async function grantUltimateFeatures(
     throw new Error("ultimate_plan_missing");
   }
 
+  const ultimateFeatureRows = await dbConn
+    .select({ featureId: planFeatures.featureId })
+    .from(planFeatures)
+    .where(eq(planFeatures.planId, ultimatePlanId));
+
+  const compFeatureIds = ultimateFeatureRows.map((r) => r.featureId);
+  if (compFeatureIds.length > 0) {
+    await dbConn
+      .delete(companyFeatures)
+      .where(
+        and(
+          eq(companyFeatures.companyId, companyId),
+          eq(companyFeatures.source, "comp_subscription"),
+          inArray(companyFeatures.featureId, compFeatureIds)
+        )
+      );
+  }
+
   await dbConn
     .delete(companyFeatures)
     .where(
@@ -95,52 +117,47 @@ export async function grantUltimateFeatures(
 }
 
 /**
- * Removes Ultimate subscription benefits and returns the company to the Free plan.
+ * Removes Ultimate subscription benefits (Stripe + plan-sourced Ultimate features).
+ * If a complimentary subscription is still active on the company row, applies that
+ * tier instead of Free. Otherwise returns the company to the Free plan.
  * Keeps stripe_customer_id so the same Customer can resubscribe.
  */
 export async function revokeUltimateFeatures(
   dbConn: AppDbClient,
   companyId: string
 ): Promise<void> {
-  const ultimatePlanId = await getPlanIdByCode(dbConn, "ultimate");
-  const freePlanId = await getPlanIdByCode(dbConn, "free");
-  if (!ultimatePlanId || !freePlanId) {
-    throw new Error("plan_rows_missing");
-  }
+  await dbConn.transaction(async (tx) => {
+    const [before] = await tx
+      .select()
+      .from(companies)
+      .where(eq(companies.id, companyId))
+      .limit(1);
+    if (!before) {
+      throw new Error("company_not_found");
+    }
 
-  const ultimateFeatureRows = await dbConn
-    .select({ featureId: planFeatures.featureId })
-    .from(planFeatures)
-    .where(eq(planFeatures.planId, ultimatePlanId));
+    await tx
+      .update(companies)
+      .set({
+        stripeSubscriptionId: null,
+        subscriptionStatus: "canceled",
+        subscriptionCurrentPeriodEnd: null,
+        subscriptionCancelAtPeriodEnd: false,
+        updatedAt: new Date(),
+      })
+      .where(eq(companies.id, companyId));
 
-  const featureIds = ultimateFeatureRows.map((r) => r.featureId);
-  if (featureIds.length > 0) {
-    await dbConn
-      .delete(companyFeatures)
-      .where(
-        and(
-          eq(companyFeatures.companyId, companyId),
-          eq(companyFeatures.source, "plan"),
-          inArray(companyFeatures.featureId, featureIds)
-        )
-      );
-  }
+    const applied = await tryApplyComplimentaryAfterStripeCancelled(
+      tx,
+      companyId,
+      before
+    );
+    if (applied) {
+      return;
+    }
 
-  await dbConn
-    .update(companies)
-    .set({
-      planId: freePlanId,
-      stripeSubscriptionId: null,
-      subscriptionStatus: "canceled",
-      subscriptionCurrentPeriodEnd: null,
-      subscriptionCancelAtPeriodEnd: false,
-      subscriptionPlanCode: null,
-      isFoundingMember: false,
-      updatedAt: new Date(),
-    })
-    .where(eq(companies.id, companyId));
-
-  await grantPlanFeaturesFromPlan(dbConn, companyId, freePlanId);
+    await assignCompanyFreePlanTier(tx, companyId);
+  });
 }
 
 export async function updateCompanyStripeSubscriptionFields(

@@ -43,6 +43,7 @@ import { formatDateOnly } from "@/lib/date-format";
 import { sendEmail } from "@/lib/email";
 import { addUtcMonths, utcCalendarDate } from "@/lib/retention";
 import { formatRetailEventDate } from "@/lib/format-retail-event-date";
+import { expireComplimentarySubscriptionsDue } from "@/lib/comp-subscription-expiry-worker";
 import {
   hardDeleteEvent,
   listEventsDueForHardDelete,
@@ -75,6 +76,18 @@ export async function runRetentionScheduler(
   log: Pick<Logger, "info" | "warn" | "error">
 ): Promise<void> {
   const today = utcCalendarDate(new Date());
+
+  try {
+    const n = await expireComplimentarySubscriptionsDue(db, new Date());
+    if (n > 0) {
+      log.info({ count: n }, "complimentary subscriptions auto-expired");
+    }
+  } catch (err) {
+    log.error(
+      { err },
+      "complimentary subscription expiry sweep failed"
+    );
+  }
 
   await notifyRetentionWindow(db, today, 60, "60_days", log);
   await notifyRetentionWindow(db, today, 30, "30_days", log);

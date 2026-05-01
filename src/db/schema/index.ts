@@ -24,6 +24,7 @@ export const featureSourceEnum = pgEnum("company_feature_source", [
   "plan",
   "admin_grant",
   "founding_member",
+  "comp_subscription",
 ]);
 
 export const eventTypeEnum = pgEnum("event_type", [
@@ -157,6 +158,18 @@ export const companies = pgTable(
       withTimezone: true,
     }),
     subscriptionPlanCode: text("subscription_plan_code"),
+    /** Complimentary admin-granted subscription: pro_comp / ultimate_comp when active. */
+    compSubscriptionPlanCode: text("comp_subscription_plan_code"),
+    compSubscriptionGrantedAt: timestamp("comp_subscription_granted_at", {
+      withTimezone: true,
+    }),
+    compSubscriptionGrantedByAdminId: text(
+      "comp_subscription_granted_by_admin_id"
+    ),
+    compSubscriptionExpiresAt: timestamp("comp_subscription_expires_at", {
+      withTimezone: true,
+    }),
+    compSubscriptionNotes: text("comp_subscription_notes"),
     isFoundingMember: boolean("is_founding_member").notNull().default(false),
     logoStorageKey: text("logo_storage_key"),
     themePrimary: text("theme_primary"),
