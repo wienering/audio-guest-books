@@ -37,6 +37,8 @@ export type BrandingClientProps = {
   brandingFromServer: unknown;
   /** Bump when company row changes so local draft resets after save/refresh */
   brandingRevision: number;
+  /** Hide back link / top page title when embedded in the consolidated branding dashboard */
+  embedded?: boolean;
 };
 
 type SectionDef = {
@@ -508,22 +510,26 @@ export function BrandingClient(props: BrandingClientProps) {
 
   return (
     <div className="space-y-10">
-      <div>
-        <Link
-          href="/dashboard"
-          className="inline-flex text-muted-foreground text-sm hover:text-foreground"
-        >
-          ← Back to events
-        </Link>
-      </div>
-      <header className="space-y-2">
-        <h1 className="text-2xl font-semibold tracking-tight">Client page branding</h1>
-        <p className="text-muted-foreground text-sm">
-          Logo and colors appear on client-facing guest book pages when your plan
-          includes custom branding. Adjust colors on the left — the preview updates as
-          you go. Save when you are happy with the result.
-        </p>
-      </header>
+      {props.embedded ? null : (
+        <>
+          <div>
+            <Link
+              href="/dashboard"
+              className="inline-flex text-muted-foreground text-sm hover:text-foreground"
+            >
+              ← Back to events
+            </Link>
+          </div>
+          <header className="space-y-2">
+            <h1 className="text-2xl font-semibold tracking-tight">Client page branding</h1>
+            <p className="text-muted-foreground text-sm">
+              Logo and colors appear on client-facing guest book pages when your plan
+              includes custom branding. Adjust colors on the left — the preview updates as
+              you go. Save when you are happy with the result.
+            </p>
+          </header>
+        </>
+      )}
 
       <section className="space-y-3">
         <h2 className="font-medium">Logo</h2>

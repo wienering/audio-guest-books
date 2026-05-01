@@ -44,7 +44,7 @@ export async function saveCompanyBranding(input: {
     })
     .where(eq(companies.id, membership.company.id));
 
-  revalidatePath("/dashboard/settings/branding");
+  revalidatePath("/dashboard/branding");
   revalidatePath("/dashboard");
   return { ok: true };
 }
@@ -73,7 +73,7 @@ export async function resetCompanyBranding(): Promise<BrandingSaveResult> {
     })
     .where(eq(companies.id, membership.company.id));
 
-  revalidatePath("/dashboard/settings/branding");
+  revalidatePath("/dashboard/branding");
   revalidatePath("/dashboard");
   return { ok: true };
 }

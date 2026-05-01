@@ -76,7 +76,7 @@ export default async function DashboardLayout({
               method to avoid losing Ultimate access.
             </p>
             <Link
-              href="/dashboard/settings/billing"
+              href="/dashboard/account#billing"
               className={cn(buttonVariants({ variant: "outline", size: "sm" }), "shrink-0")}
             >
               Update payment method
@@ -95,7 +95,7 @@ export default async function DashboardLayout({
               . You can resume from the Stripe billing portal.
             </p>
             <Link
-              href="/dashboard/settings/billing"
+              href="/dashboard/account#billing"
               className={cn(buttonVariants({ variant: "outline", size: "sm" }), "shrink-0")}
             >
               Resume subscription

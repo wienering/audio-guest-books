@@ -312,7 +312,7 @@ export function CompanyAnalyticsClient() {
                   You are approaching per-event file limits on your busiest
                   events.{" "}
                   <Link
-                    href="/dashboard/settings/billing"
+                    href="/dashboard/account#billing"
                     className="font-medium underline underline-offset-2"
                   >
                     Upgrade billing

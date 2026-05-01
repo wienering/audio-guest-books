@@ -1,5 +1,5 @@
 import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
-import { NextResponse } from "next/server";
+import { NextResponse, type NextRequest } from "next/server";
 import { eq, and, isNull } from "drizzle-orm";
 
 import { getMiddlewareDb } from "@/db/middleware";
@@ -38,6 +38,34 @@ function isMarketingOnlyPath(pathname: string): boolean {
   return MARKETING_ONLY_PATHS.some(
     (p) => pathname === p || pathname.startsWith(`${p}/`)
   );
+}
+
+/**
+ * Canonical dashboard URLs live at /dashboard/branding and /dashboard/account.
+ * Legacy /dashboard/settings/* paths redirect with `_nav` for section scroll/hash.
+ */
+function maybeDashboardLegacyRedirect(req: NextRequest): NextResponse | null {
+  const p = req.nextUrl.pathname;
+
+  const table = [
+    ["/dashboard/settings/branding", "/dashboard/branding", "branding"],
+    ["/dashboard/settings/public-page", "/dashboard/branding", "public-guest-page"],
+    ["/dashboard/settings/email-templates", "/dashboard/branding", "email-templates"],
+    ["/dashboard/email-templates", "/dashboard/branding", "email-templates"],
+    ["/dashboard/settings/billing", "/dashboard/account", "billing"],
+    ["/dashboard/settings/account", "/dashboard/account", "profile"],
+  ] as const;
+
+  for (const [fromPath, destPath, nav] of table) {
+    if (p !== fromPath) continue;
+    const out = req.nextUrl.clone();
+    out.pathname = destPath;
+    out.hash = "";
+    out.searchParams.set("_nav", nav);
+    return NextResponse.redirect(out, 308);
+  }
+
+  return null;
 }
 
 export default clerkMiddleware(async (auth, request) => {
@@ -141,9 +169,16 @@ export default clerkMiddleware(async (auth, request) => {
     });
   }
 
-  /** Clerk protection for dashboard surface (localhost + app host) */
+  /** App shell (localhost + canonical app hostname) */
   const appSurface =
     hostCtx.isAppHost || hostCtx.isLocalDev;
+
+  if (appSurface && pathname.startsWith("/dashboard")) {
+    const legacyDash = maybeDashboardLegacyRedirect(request);
+    if (legacyDash) return legacyDash;
+  }
+
+  /** Clerk protection for dashboard surface (localhost + app host) */
   const needsClerkProtection =
     appSurface &&
     (pathname.startsWith("/dashboard") ||

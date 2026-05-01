@@ -1,7 +1,7 @@
 "use client";
 
 import { Gift } from "lucide-react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 
@@ -25,6 +25,7 @@ export type BillingAuditRow = {
 };
 
 export type BillingSettingsClientProps = {
+  embedded?: boolean;
   companyName: string;
   planCode: string;
   planDisplayName: string;
@@ -57,6 +58,7 @@ type StatusPayload = {
 
 export function BillingSettingsClient(props: BillingSettingsClientProps) {
   const router = useRouter();
+  const pathname = usePathname() ?? "/dashboard/account";
   const searchParams = useSearchParams();
   const [busy, setBusy] = useState<"checkout" | "portal" | null>(null);
   const [polled, setPolled] = useState<Partial<StatusPayload> | null>(null);
@@ -87,8 +89,11 @@ export function BillingSettingsClient(props: BillingSettingsClientProps) {
   const isPro = planCode === "pro";
 
   const clearBillingQueryParams = useCallback(() => {
-    router.replace("/dashboard/settings/billing", { scroll: false });
-  }, [router]);
+    if (typeof window !== "undefined") {
+      window.history.replaceState(null, "", `${pathname}#billing`);
+    }
+    void router.refresh();
+  }, [pathname, router]);
 
   useEffect(() => {
     if (searchParams.get("canceled") === "true") {
@@ -212,13 +217,15 @@ export function BillingSettingsClient(props: BillingSettingsClientProps) {
 
   return (
     <div className="space-y-8">
-      <div>
-        <h1 className="font-semibold text-2xl tracking-tight">Billing</h1>
-        <p className="mt-1 text-muted-foreground text-sm leading-relaxed">
-          Subscription and payments for{" "}
-          <strong>{props.companyName}</strong>.
-        </p>
-      </div>
+      {props.embedded ? null : (
+        <div>
+          <h1 className="font-semibold text-2xl tracking-tight">Billing</h1>
+          <p className="mt-1 text-muted-foreground text-sm leading-relaxed">
+            Subscription and payments for{" "}
+            <strong>{props.companyName}</strong>.
+          </p>
+        </div>
+      )}
 
       <Card>
         <CardHeader>

@@ -37,7 +37,7 @@ export function UpgradeTooltipLock(props: {
         <TooltipContent side="top" className="flex max-w-xs flex-col gap-2 py-3">
           <p>{message ?? "Upgrade to Pro to unlock this feature."}</p>
           <Link
-            href="/dashboard/settings/billing"
+            href="/dashboard/account#billing"
             className="font-medium text-background underline underline-offset-2"
           >
             Upgrade

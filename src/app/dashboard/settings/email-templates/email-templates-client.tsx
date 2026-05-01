@@ -30,6 +30,8 @@ export function EmailTemplatesSettingsClient(props: {
   canEdit: boolean;
   companyName: string;
   initialTemplates: EmailTemplateRow[];
+  /** Hide top heading when embedded in the consolidated branding dashboard */
+  embedded?: boolean;
 }) {
   const samples = useMemo(() => mergeFieldSampleValues(), []);
   const defaultSubject = useMemo(
@@ -217,13 +219,15 @@ export function EmailTemplatesSettingsClient(props: {
 
   return (
     <div className="space-y-10">
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight">Email templates</h1>
-        <p className="mt-2 text-muted-foreground text-sm">
-          Reusable &quot;send link&quot; messages for client galleries. Ultimate
-          can save custom templates with merge fields.
-        </p>
-      </div>
+      {props.embedded ? null : (
+        <div>
+          <h1 className="text-2xl font-semibold tracking-tight">Email templates</h1>
+          <p className="mt-2 text-muted-foreground text-sm">
+            Reusable &quot;send link&quot; messages for client galleries. Ultimate
+            can save custom templates with merge fields.
+          </p>
+        </div>
+      )}
 
       {!props.canEdit ? (
         <div className="relative rounded-xl border bg-card p-6">

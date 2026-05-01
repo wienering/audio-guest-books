@@ -85,8 +85,8 @@ export async function POST(req: Request): Promise<Response> {
       mode: "subscription",
       customer: customerId,
       line_items: [{ price: resolved.priceId, quantity: 1 }],
-      success_url: `${base}/dashboard/settings/billing?success=true&session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${base}/dashboard/settings/billing?canceled=true`,
+      success_url: `${base}/dashboard/account?success=true&session_id={CHECKOUT_SESSION_ID}&_nav=billing`,
+      cancel_url: `${base}/dashboard/account?canceled=true&_nav=billing`,
       metadata: {
         company_id: company.id,
         is_founding_member: isFoundingStr,

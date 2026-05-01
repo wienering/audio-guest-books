@@ -12,19 +12,8 @@ import { cn } from "@/lib/utils";
 const NAV_ITEMS = [
   { label: "Events", value: "events", href: "/dashboard" },
   { label: "Analytics", value: "analytics", href: "/dashboard/analytics" },
-  {
-    label: "Email templates",
-    value: "email-templates",
-    href: "/dashboard/settings/email-templates",
-  },
-  { label: "Branding", value: "branding", href: "/dashboard/settings/branding" },
-  {
-    label: "Public guest page",
-    value: "public-page",
-    href: "/dashboard/settings/public-page",
-  },
-  { label: "Billing", value: "billing", href: "/dashboard/settings/billing" },
-  { label: "Account", value: "account", href: "/dashboard/settings/account" },
+  { label: "Branding", value: "branding", href: "/dashboard/branding" },
+  { label: "Account", value: "account", href: "/dashboard/account" },
 ] as const;
 
 function normalizePathname(pathname: string): string {

@@ -25,7 +25,7 @@ export function AnalyticsLockedOverlay(props: { className?: string }) {
           Track page views, downloads, and engagement for every event.
         </p>
         <Link
-          href="/dashboard/settings/billing"
+          href="/dashboard/account#billing"
           className={cn(buttonVariants({ size: "sm" }), "mt-2")}
         >
           Upgrade

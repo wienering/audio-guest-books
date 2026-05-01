@@ -68,7 +68,7 @@ export async function saveCompanyPublicContact(input: {
     })
     .where(eq(companies.id, membership.company.id));
 
-  revalidatePath("/dashboard/settings/public-page");
+  revalidatePath("/dashboard/branding");
   revalidatePath("/dashboard");
   revalidatePath("/");
   return { ok: true };
