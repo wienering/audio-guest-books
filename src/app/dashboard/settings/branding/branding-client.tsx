@@ -18,7 +18,6 @@ import { toast } from "sonner";
 import { UpgradeTooltipLock } from "@/components/dashboard/upgrade-tooltip-lock";
 import { buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { PillNav } from "@/components/ui/pill-nav";
 import { Label } from "@/components/ui/label";
 import {
   COMPANY_BRANDING_KEYS,
@@ -102,14 +101,6 @@ const SECTIONS: SectionDef[] = [
   },
 ];
 
-const BRANDING_TABS = [
-  { label: "Header", value: "header" },
-  { label: "Body", value: "body" },
-  { label: "Audio player", value: "player" },
-  { label: "Buttons", value: "buttons" },
-  { label: "Footer", value: "footer" },
-] as const;
-
 async function putFileToPresignedUrl(
   file: File,
   url: string,
@@ -175,7 +166,7 @@ export function BrandingClient(props: BrandingClientProps) {
   const resetDialogRef = useRef<HTMLDialogElement | null>(null);
   const [pending, startTransition] = useTransition();
   const [uploadBusy, setUploadBusy] = useState(false);
-  const [activeColorTab, setActiveColorTab] = useState("header");
+  const [openSectionId, setOpenSectionId] = useState<string | null>("header");
 
   const baseline = useMemo(
     () => mergeCompanyBranding(props.brandingFromServer),
@@ -339,29 +330,47 @@ export function BrandingClient(props: BrandingClientProps) {
         </div>
 
         <div className="min-w-0 flex-1 lg:w-[40%] lg:flex-none">
-          <PillNav
-            ariaLabel="Branding color sections"
-            items={[...BRANDING_TABS]}
-            activeValue={activeColorTab}
-            onChange={setActiveColorTab}
-          />
-
-          <div className="mt-4 rounded-lg border bg-card">
-            <div className="space-y-6 px-4 py-4">
-              {(SECTIONS.find((s) => s.id === activeColorTab) ?? SECTIONS[0]).fields.map(
-                ({ key, label }) => (
-                  <ColorFieldRow
-                    key={key}
-                    id={inputId}
-                    fieldKey={key}
-                    label={label}
-                    value={draft[key]}
-                    locked={props.locked}
-                    onChange={setField}
-                  />
-                )
-              )}
-            </div>
+          <div className="space-y-3">
+            {SECTIONS.map((section) => {
+              const open = openSectionId === section.id;
+              return (
+                <div key={section.id} className="group rounded-lg border bg-card">
+                  <button
+                    type="button"
+                    className="flex w-full cursor-pointer list-none items-center justify-between px-4 py-3 text-left text-sm font-medium outline-none touch-manipulation focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                    aria-expanded={open}
+                    onClick={() =>
+                      setOpenSectionId((prev) =>
+                        prev === section.id ? null : section.id
+                      )
+                    }
+                  >
+                    <span>{section.title}</span>
+                    <ChevronDown
+                      className={cn(
+                        "size-4 shrink-0 text-muted-foreground transition",
+                        open && "rotate-180"
+                      )}
+                    />
+                  </button>
+                  {open ? (
+                    <div className="space-y-6 border-t px-4 py-4">
+                      {section.fields.map(({ key, label }) => (
+                        <ColorFieldRow
+                          key={key}
+                          id={inputId}
+                          fieldKey={key}
+                          label={label}
+                          value={draft[key]}
+                          locked={props.locked}
+                          onChange={setField}
+                        />
+                      ))}
+                    </div>
+                  ) : null}
+                </div>
+              );
+            })}
           </div>
 
           {dirty ? (

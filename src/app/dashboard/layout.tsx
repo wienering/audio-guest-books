@@ -1,10 +1,8 @@
-import { UserButton } from "@clerk/nextjs";
 import { auth } from "@clerk/nextjs/server";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 
-import { BrandLogo } from "@/components/brand/brand-logo";
-import { DashboardTopPillNav } from "@/components/dashboard/dashboard-top-pill-nav";
+import { DashboardTopNav } from "@/components/dashboard/dashboard-top-nav";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import {
@@ -69,29 +67,7 @@ export default async function DashboardLayout({
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="border-b border-border bg-card">
-        <div className="mx-auto flex max-w-5xl flex-col gap-3 px-4 py-3 md:h-14 md:flex-row md:items-center md:justify-between md:gap-4 md:py-0">
-          <div className="flex items-center justify-between md:contents">
-            <Link href="/dashboard" className="flex shrink-0 items-center">
-              <BrandLogo className="h-7 w-auto max-w-[200px]" />
-            </Link>
-            <div className="flex items-center gap-3 md:hidden">
-              <UserButton />
-            </div>
-          </div>
-
-          <div className="flex w-full justify-center md:w-auto md:min-w-0 md:flex-1 md:justify-end md:px-2">
-            <DashboardTopPillNav />
-          </div>
-
-          <div className="hidden items-center gap-3 md:flex shrink-0">
-            <span className="max-w-[12rem] truncate text-muted-foreground text-sm">
-              {membership.company.name}
-            </span>
-            <UserButton />
-          </div>
-        </div>
-      </header>
+      <DashboardTopNav companyName={membership.company.name} />
       {billingProblem ? (
         <div className="border-amber-500/30 border-b bg-amber-500/10">
           <div className="mx-auto flex max-w-5xl flex-col gap-2 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
