@@ -1,3 +1,7 @@
+// NOTE: Intentionally NO `import "server-only"` — this module runs inside the
+// BullMQ worker (Node process, not a Next.js runtime). See `docs/notes.md` ›
+// "Worker compatibility rule".
+
 import {
   and,
   asc,

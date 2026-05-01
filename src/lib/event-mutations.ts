@@ -1,3 +1,6 @@
+// NOTE: Intentionally NO `import "server-only"` — this module is shared with
+// the BullMQ worker (Node process, not a Next.js runtime). See
+// `docs/notes.md` › "Worker compatibility rule".
 
 import bcrypt from "bcryptjs";
 import { and, eq, inArray, isNull, ne, sql } from "drizzle-orm";

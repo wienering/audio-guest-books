@@ -1,5 +1,35 @@
 # Audio Guest Books — Notes & TODOs
 
+## Worker compatibility rule
+
+Files imported by the worker (`src/worker/*`) must NOT use `import "server-only"`.
+The worker is a Node.js process, not a Next.js runtime — `server-only` throws
+there with `This module cannot be imported from a Client Component module`.
+
+Common shared files that need to avoid `server-only`:
+- `src/lib/r2.ts`
+- `src/lib/queue.ts`
+- `src/lib/redis.ts`
+- `src/lib/email.ts`
+- `src/lib/retention-scheduler.tsx`
+- `src/lib/event-mutations.ts`
+- `src/lib/display-audio-files.ts`
+- `src/lib/app-url.ts` / `src/lib/host.ts`
+- `src/lib/clerk-primary-email.ts`
+- `src/lib/date-format.ts` / `src/lib/format-retail-event-date.ts`
+- `src/lib/retention.ts`
+- Any file imported by webhook handlers or background jobs
+
+When in doubt, audit with `rg -l 'import "server-only"' src/lib/` and check
+whether each file is reachable from `src/worker/index.ts` (or one of its
+transitive imports such as `runRetentionScheduler` or any job processor).
+
+If the same logic must run in both contexts, keep the worker-shared portion in
+a file without `server-only`, then have the Next.js-only callers import that
+file (the wrapper file with `server-only` may add request-scoped helpers like
+Clerk auth on top, but should not be reached by the worker).
+
+
 ## Pre-launch design tasks
 - [ ] Comprehensive design pass on retail page (after Stage 5 branding integration)
 - [x] Marketing site design (apex audioguestbooks.ca) — Stage 13a v1 (Crimson Pro serif + teal accent, plan cards driven by live `getFoundingMemberSpotsRemaining`)

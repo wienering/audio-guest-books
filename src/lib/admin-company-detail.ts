@@ -173,12 +173,11 @@ export async function getAdminCompanyDetailBySlug(
         deletedAt: events.deletedAt,
         hardDeleteAfter: events.hardDeleteAfter,
         fileCount: sql<number>`COALESCE((
-          SELECT COUNT(*)::int
+          SELECT COUNT("af"."id")::int
           FROM "audio_files" "af"
           WHERE "af"."event_id" = ${events.id}
-            AND "af"."deleted_at" IS NULL
             AND "af"."is_original" = true
-            AND "af"."uploaded_at" IS NOT NULL
+            AND "af"."deleted_at" IS NULL
         ), 0)`,
       })
       .from(events)
