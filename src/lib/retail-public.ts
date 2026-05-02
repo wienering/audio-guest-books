@@ -10,6 +10,9 @@ import { getRetailPlaybackPicks } from "@/lib/display-audio-files";
 import { presignGetUrl } from "@/lib/r2";
 
 import type { RetailBulkZip } from "@/lib/retail-types";
+import type { FileReactionCounts } from "@/lib/file-reaction-types";
+import { emptyReactionCounts } from "@/lib/file-reaction-types";
+import { fetchReactionCountsByFileIds } from "@/lib/file-reactions-db";
 
 export { formatRetailEventDate } from "@/lib/format-retail-event-date";
 
@@ -24,6 +27,7 @@ export type RetailPublicAudioFile = {
   losslessOriginalFileId: string | null;
   /** ISO timestamp for client-side sort (newest/oldest) */
   uploadedAtIso: string;
+  reactions: FileReactionCounts;
 };
 
 export type RetailPublicEventPayload = {
@@ -84,6 +88,11 @@ export async function buildRetailPublicPayload(
 
   const picks = getRetailPlaybackPicks(event.audioFiles);
 
+  const retailFileIds = recordingFilesAvailable
+    ? picks.map((p) => p.playbackRow.id)
+    : [];
+  const reactionMap = await fetchReactionCountsByFileIds(retailFileIds);
+
   const files: RetailPublicAudioFile[] = [];
   if (recordingFilesAvailable) {
     for (const pick of picks) {
@@ -96,6 +105,7 @@ export async function buildRetailPublicPayload(
         playbackUrl,
         losslessOriginalFileId: pick.losslessOriginal?.id ?? null,
         uploadedAtIso: f.uploadedAt!.toISOString(),
+        reactions: reactionMap.get(f.id) ?? emptyReactionCounts(),
       });
     }
   }

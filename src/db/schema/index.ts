@@ -382,6 +382,15 @@ export const retailPageSessions = pgTable(
   (t) => [uniqueIndex("retail_page_sessions_token_uidx").on(t.sessionToken)]
 );
 
+export const fileReactionTypeEnum = pgEnum("file_reaction_type", [
+  "heart",
+  "laugh",
+  "cry",
+  "smile",
+  "fire",
+  "clap",
+]);
+
 export const audioFiles = pgTable(
   "audio_files",
   {
@@ -408,6 +417,26 @@ export const audioFiles = pgTable(
     transcodingError: text("transcoding_error"),
   },
   (t) => [uniqueIndex("audio_files_storage_key_uidx").on(t.storageKey)]
+);
+
+/** Aggregate listener reactions per visible audio file (public guest page). */
+export const fileReactions = pgTable(
+  "file_reactions",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    fileId: uuid("file_id")
+      .references(() => audioFiles.id, { onDelete: "cascade" })
+      .notNull(),
+    reactionType: fileReactionTypeEnum("reaction_type").notNull(),
+    count: integer("count").notNull().default(0),
+  },
+  (t) => [
+    uniqueIndex("file_reactions_file_id_reaction_type_uidx").on(
+      t.fileId,
+      t.reactionType
+    ),
+    index("file_reactions_file_id_idx").on(t.fileId),
+  ]
 );
 
 export const downloadJobs = pgTable("download_jobs", {
@@ -623,6 +652,14 @@ export const audioFilesRelations = relations(audioFiles, ({ one, many }) => ({
   }),
   derivedCopies: many(audioFiles, { relationName: "audio_derivation" }),
   analyticsEvents: many(eventAnalyticsEvents),
+  reactions: many(fileReactions),
+}));
+
+export const fileReactionsRelations = relations(fileReactions, ({ one }) => ({
+  audioFile: one(audioFiles, {
+    fields: [fileReactions.fileId],
+    references: [audioFiles.id],
+  }),
 }));
 
 export const uploadJobsRelations = relations(uploadJobs, ({ one }) => ({

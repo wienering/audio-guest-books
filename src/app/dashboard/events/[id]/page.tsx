@@ -4,6 +4,8 @@ import { notFound, redirect } from "next/navigation";
 
 import { db } from "@/db/index";
 import { audioFiles, emailTemplates, events, uploadJobs } from "@/db/schema";
+import { emptyReactionCounts } from "@/lib/file-reaction-types";
+import { fetchReactionCountsByFileIds } from "@/lib/file-reactions-db";
 import { getMembershipWithCompany } from "@/lib/company";
 import { companyHasFeatureKey } from "@/lib/company-features";
 import { formatDate, formatDateOnly } from "@/lib/date-format";
@@ -118,6 +120,8 @@ export default async function EventDetailPage(props: {
         })
       : null;
 
+  const reactionMap = await fetchReactionCountsByFileIds(files.map((f) => f.id));
+
   const clientFiles: EventDetailClientFile[] = files.map((f) => ({
     id: f.id,
     originalFilename: f.originalFilename,
@@ -128,6 +132,7 @@ export default async function EventDetailPage(props: {
     mimeType: f.mimeType,
     transcodingStatus: f.transcodingStatus,
     transcodingError: f.transcodingError,
+    reactionCounts: reactionMap.get(f.id) ?? emptyReactionCounts(),
   }));
 
   const zipJobVisibleCutoff = new Date(Date.now() - 10 * 60 * 1000);

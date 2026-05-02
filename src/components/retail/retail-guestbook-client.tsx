@@ -4,11 +4,8 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Download } from "lucide-react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
-import {
-  RetailAudioPlayer,
-  type RetailAudioFile,
-  type RetailAudioPlayerHandle,
-} from "@/components/retail/audio-player";
+import { RetailAudioPlayer, type RetailAudioFile, type RetailAudioPlayerHandle } from "@/components/retail/audio-player";
+import { RetailFileReactions } from "@/components/retail/retail-file-reactions";
 import { Input } from "@/components/ui/input";
 import { buttonVariants } from "@/components/ui/button";
 import type { RetailBulkZip } from "@/lib/retail-types";
@@ -443,6 +440,7 @@ export function RetailGuestbookClient({
                   className="border-t border-solid first:border-t-0"
                   style={{ borderTopColor: "var(--brand-body-border)" }}
                 >
+                  <div className="flex flex-col gap-0">
                   <div
                     className="flex flex-col gap-3 px-3 py-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4 sm:px-4 sm:py-3"
                     style={
@@ -501,6 +499,16 @@ export function RetailGuestbookClient({
                         </button>
                       ) : null}
                     </div>
+                  </div>
+                  <div
+                    className="border-t px-3 pb-3 pt-1 sm:px-4 sm:pb-3"
+                    style={{
+                      borderTopColor: "var(--brand-body-border)",
+                      ...(active ? { background: "var(--brand-row-active)" } : {}),
+                    }}
+                  >
+                    <RetailFileReactions fileId={f.id} initialCounts={f.reactions} />
+                  </div>
                   </div>
                 </li>
               );

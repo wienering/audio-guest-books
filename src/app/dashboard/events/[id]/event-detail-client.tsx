@@ -39,6 +39,10 @@ import { EventAnalyticsPanel } from "@/components/dashboard/analytics/event-anal
 import { EventRetailAppearanceSection } from "./event-retail-appearance";
 import { SendLinkComposer } from "./send-link-composer";
 
+import {
+  formatReactionSummaryLine,
+  type FileReactionCounts,
+} from "@/lib/file-reaction-types";
 import { APP_TIMEZONE, formatDateTime } from "@/lib/date-format";
 import { formatRelativeTimePast } from "@/lib/relative-time";
 
@@ -84,6 +88,7 @@ export type EventDetailClientFile = {
     | "succeeded"
     | "failed";
   transcodingError: string | null;
+  reactionCounts: FileReactionCounts;
 };
 
 export type EventUploadJobSnapshot = {
@@ -305,6 +310,7 @@ function AudioRow(props: {
 }) {
   const { file, onDeleted, reorder } = props;
   const uploadedAtLabel = formatUploadedAtLabel(file.uploadedAt);
+  const reactionSummary = formatReactionSummaryLine(file.reactionCounts);
   const [src, setSrc] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const confirmRef = useRef<HTMLDialogElement | null>(null);
@@ -428,6 +434,9 @@ function AudioRow(props: {
           file.transcodingStatus === "failed" &&
           file.transcodingError ? (
             <p className="text-destructive text-xs">{file.transcodingError}</p>
+          ) : null}
+          {reactionSummary ? (
+            <p className="text-muted-foreground text-xs">{reactionSummary}</p>
           ) : null}
           </div>
         </div>

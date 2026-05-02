@@ -15,6 +15,8 @@ import { Button } from "@/components/ui/button";
 import { formatFileDisplayName } from "@/lib/format-file-display-name";
 import { cn } from "@/lib/utils";
 
+import type { FileReactionCounts } from "@/lib/file-reaction-types";
+
 export type RetailAudioFile = {
   id: string;
   originalFilename: string;
@@ -23,6 +25,7 @@ export type RetailAudioFile = {
   /** When playing transcoded MP3, downloadable lossless id */
   losslessOriginalFileId?: string | null;
   uploadedAtIso: string;
+  reactions: FileReactionCounts;
 };
 
 export type RetailAudioPlayerHandle = {
