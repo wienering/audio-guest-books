@@ -387,8 +387,6 @@ export const fileReactionTypeEnum = pgEnum("file_reaction_type", [
   "laugh",
   "cry",
   "smile",
-  "fire",
-  "clap",
 ]);
 
 export const audioFiles = pgTable(

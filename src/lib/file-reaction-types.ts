@@ -4,8 +4,6 @@ export const FILE_REACTION_TYPES = [
   "laugh",
   "cry",
   "smile",
-  "fire",
-  "clap",
 ] as const;
 
 export type FileReactionType = (typeof FILE_REACTION_TYPES)[number];
@@ -18,8 +16,6 @@ export function emptyReactionCounts(): FileReactionCounts {
     laugh: 0,
     cry: 0,
     smile: 0,
-    fire: 0,
-    clap: 0,
   };
 }
 
@@ -36,8 +32,6 @@ export const FILE_REACTION_SUMMARY_CHARS: Record<FileReactionType, string> = {
   laugh: "😂",
   cry: "😢",
   smile: "😊",
-  fire: "🔥",
-  clap: "👏",
 };
 
 export function formatReactionSummaryLine(

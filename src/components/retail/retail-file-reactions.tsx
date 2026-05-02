@@ -113,31 +113,6 @@ function ReactionGlyph(props: {
           <circle cx="15" cy="10" r="1.25" fill="currentColor" />
         </svg>
       );
-    case "fire":
-      return (
-        <svg className={common} viewBox="0 0 24 24" aria-hidden fill="currentColor">
-          <path d="M12 3s3 3.5 3 7c0 1.8-.8 3.4-2 4.5 1.5-.4 3.5-2 4.5-5.5 0 6-4 9.5-8 10.5 5-2 7.5-7 6.5-11C14 13 13 11 13 9c0 5-5 9-9 11 4-7 3-13 8-17z" />
-        </svg>
-      );
-    case "clap":
-      return (
-        <svg className={common} viewBox="0 0 24 24" aria-hidden fill="none">
-          <path
-            d="M6 14V8l2-2v8M9 13V6l2-1.5V14M12 14V5l2 2v9"
-            stroke="currentColor"
-            strokeWidth="1.6"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-          <path
-            d="M14 14l3-8 2 1-3 9"
-            stroke="currentColor"
-            strokeWidth="1.6"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-        </svg>
-      );
     default:
       return null;
   }
@@ -148,8 +123,6 @@ const REACTION_LABELS: Record<FileReactionType, string> = {
   laugh: "Laugh",
   cry: "Moved",
   smile: "Smile",
-  fire: "Fire",
-  clap: "Applause",
 };
 
 type Props = {
