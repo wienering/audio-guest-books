@@ -56,7 +56,7 @@ export function DashboardTopNav(props: { companyName: string }) {
       <div className="mx-auto flex h-14 max-w-5xl items-center justify-between px-4">
         <div className="flex min-w-0 items-center gap-6">
           <Link href="/dashboard" className="flex shrink-0 items-center">
-            <BrandLogo className="h-7 w-auto max-w-[200px]" />
+            <BrandLogo className="h-[calc(1.75rem*1.15)] w-auto max-w-[calc(200px*1.15)]" />
           </Link>
           <nav
             aria-label="Dashboard"
