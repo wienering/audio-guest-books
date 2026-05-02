@@ -26,6 +26,7 @@
     "@neondatabase/serverless": "^1.1.0",
     "@react-email/components": "^1.0.12",
     "@react-email/render": "^2.0.8",
+    "@react-pdf/renderer": "^4.5.1",
     "@types/fluent-ffmpeg": "^2.1.28",
     "archiver": "^7.0.1",
     "bcryptjs": "^3.0.3",

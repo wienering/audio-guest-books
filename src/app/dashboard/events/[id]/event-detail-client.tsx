@@ -37,6 +37,7 @@ import { cn, formatBytes } from "@/lib/utils";
 import { EventAnalyticsPanel } from "@/components/dashboard/analytics/event-analytics-panel";
 
 import { EventRetailAppearanceSection } from "./event-retail-appearance";
+import { DownloadClientReportButton } from "./download-client-report-button";
 import { SendLinkComposer } from "./send-link-composer";
 
 import {
@@ -969,14 +970,20 @@ export function EventDetailClient(props: EventDetailClientProps) {
               />
             ) : null}
           </div>
-          <SendLinkComposer
-            eventId={props.eventId}
-            companyName={props.companyName}
-            retailClientEmail={props.retailClientEmail}
-            mergeFieldValues={props.mergeFieldValues}
-            canUseCustomTemplates={props.canUseCustomEmailTemplates}
-            templates={props.composerTemplates}
-          />
+          <div className="flex flex-wrap items-start justify-end gap-2">
+            <DownloadClientReportButton
+              eventId={props.eventId}
+              retailClientSlug={props.retailClientSlug}
+            />
+            <SendLinkComposer
+              eventId={props.eventId}
+              companyName={props.companyName}
+              retailClientEmail={props.retailClientEmail}
+              mergeFieldValues={props.mergeFieldValues}
+              canUseCustomTemplates={props.canUseCustomEmailTemplates}
+              templates={props.composerTemplates}
+            />
+          </div>
         </div>
         {props.metadataOnlyAfterLabel && props.permanentRemovalLabel ? (
           <div className="rounded-lg border border-amber-500/35 bg-amber-500/10 px-4 py-3 text-amber-950 text-sm dark:border-amber-500/40 dark:bg-amber-500/10 dark:text-amber-100">
