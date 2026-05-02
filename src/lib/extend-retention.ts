@@ -4,6 +4,7 @@ import { and, eq, isNull, sql } from "drizzle-orm";
 import { db } from "@/db/index";
 import { events } from "@/db/schema";
 import { getMembershipWithCompany } from "@/lib/company";
+import { logImpersonatedDashboardMutation } from "@/lib/impersonation";
 import {
   addUtcMonths,
   computeRetentionUntil,
@@ -86,6 +87,10 @@ export async function extendEventRetentionForUser(
       updatedAt: new Date(),
     })
     .where(eq(events.id, eventId));
+
+  await logImpersonatedDashboardMutation(membership, "extended event retention", {
+    event_id: eventId,
+  });
 
   return {
     ok: true,

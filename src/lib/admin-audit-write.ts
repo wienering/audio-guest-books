@@ -12,6 +12,7 @@ export async function insertAdminAuditLogRow(input: {
   description: string;
   targetCompanyId?: string | null;
   targetCompanySlug?: string | null;
+  impersonatedCompanyId?: string | null;
   metadata?: Record<string, unknown> | null;
 }): Promise<void> {
   const conn = input.dbConn ?? db;
@@ -21,6 +22,7 @@ export async function insertAdminAuditLogRow(input: {
     targetCompanyId: input.targetCompanyId ?? null,
     targetCompanySlug: input.targetCompanySlug ?? null,
     targetUserClerkId: null,
+    impersonatedCompanyId: input.impersonatedCompanyId ?? null,
     description: input.description,
     metadata: input.metadata ?? null,
   });

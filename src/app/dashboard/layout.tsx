@@ -2,6 +2,7 @@ import { auth } from "@clerk/nextjs/server";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 
+import { ImpersonationBanner } from "@/components/dashboard/impersonation-banner";
 import { DashboardTopNav } from "@/components/dashboard/dashboard-top-nav";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -14,6 +15,8 @@ import {
   isComplimentarySubscriptionActiveNow,
   isStripePaidSubscriptionActive,
 } from "@/lib/comp-subscription-utils";
+import { getActorSubFromAuth } from "@/lib/admin-audit";
+import { isAdminUser } from "@/lib/admin-auth";
 
 export default async function DashboardLayout({
   children,
@@ -39,6 +42,8 @@ export default async function DashboardLayout({
 
   const company = membership.company;
   const planCode = company.plan?.code;
+  const actorSub = getActorSubFromAuth(session);
+  const isImpersonating = Boolean(actorSub && isAdminUser(actorSub));
   const billingProblem =
     company.subscriptionStatus === "past_due" ||
     company.subscriptionStatus === "unpaid";
@@ -67,6 +72,9 @@ export default async function DashboardLayout({
 
   return (
     <div className="min-h-screen bg-background">
+      {isImpersonating ? (
+        <ImpersonationBanner companyName={membership.company.name} />
+      ) : null}
       <DashboardTopNav companyName={membership.company.name} />
       {billingProblem ? (
         <div className="border-amber-500/30 border-b bg-amber-500/10">

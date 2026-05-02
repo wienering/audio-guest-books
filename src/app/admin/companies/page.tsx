@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { AdminImpersonateButton } from "@/app/admin/companies/admin-impersonate-button";
 import { buttonVariants } from "@/components/ui/button";
 import {
   type AdminCompaniesFilter,
@@ -224,13 +225,16 @@ export default async function AdminCompaniesPage(props: {
                   </th>
                 );
               })}
+              <th className="border-b px-2 py-2 text-right font-medium sm:px-3">
+                Actions
+              </th>
             </tr>
           </thead>
           <tbody>
             {rows.length === 0 ? (
               <tr>
                 <td
-                  colSpan={SORTABLE.length}
+                  colSpan={SORTABLE.length + 1}
                   className="px-3 py-8 text-center text-muted-foreground"
                 >
                   No companies match.
@@ -307,6 +311,12 @@ export default async function AdminCompaniesPage(props: {
                     )}
                   >
                     {formatRelative(c.lastActivityAt)}
+                  </td>
+                  <td className="px-2 py-2 text-right sm:px-3">
+                    <AdminImpersonateButton
+                      companyId={c.id}
+                      companyName={c.name}
+                    />
                   </td>
                 </tr>
               );

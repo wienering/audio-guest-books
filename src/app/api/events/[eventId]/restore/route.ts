@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { db } from "@/db/index";
 import { restoreEvent } from "@/lib/event-mutations";
 import { requireEventCompanyOwner } from "@/lib/event-route-auth";
+import { logImpersonatedDashboardMutation } from "@/lib/impersonation";
 
 export async function POST(
   _req: Request,
@@ -12,7 +13,7 @@ export async function POST(
 
   const gated = await requireEventCompanyOwner(eventId);
   if ("error" in gated) return gated.error;
-  const { event } = gated;
+  const { event, membership } = gated;
 
   if (!event.deletedAt) {
     return NextResponse.json(
@@ -35,6 +36,10 @@ export async function POST(
       { status: 409 }
     );
   }
+
+  await logImpersonatedDashboardMutation(membership, "restored event", {
+    event_id: eventId,
+  });
 
   return NextResponse.json({ ok: true });
 }

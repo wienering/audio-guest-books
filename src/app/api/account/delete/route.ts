@@ -8,6 +8,10 @@ import { companies } from "@/db/schema";
 import { AccountDeletionRequestedEmail } from "@/emails/account-deletion-requested";
 import { getAppBaseUrl } from "@/lib/app-url";
 import { getMembershipWithCompany } from "@/lib/company";
+import {
+  impersonationAccountDeletionBlockResponse,
+  isImpersonatedClerkSession,
+} from "@/lib/impersonation";
 import { getClerkPrimaryEmail } from "@/lib/clerk-primary-email";
 import { formatDateOnly } from "@/lib/date-format";
 import { sendEmailWithResult } from "@/lib/email";
@@ -26,6 +30,10 @@ export async function POST(): Promise<Response> {
   const userId = session.userId;
   if (!userId) {
     return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });
+  }
+
+  if (isImpersonatedClerkSession(session)) {
+    return impersonationAccountDeletionBlockResponse();
   }
 
   const membership = await getMembershipWithCompany(userId);

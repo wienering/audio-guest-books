@@ -1,6 +1,6 @@
 import "server-only";
 
-import { and, asc, desc, eq, gte, ilike, lt, or, sql } from "drizzle-orm";
+import { and, asc, desc, eq, gte, ilike, isNotNull, lt, or, sql } from "drizzle-orm";
 
 import { db } from "@/db/index";
 import { adminAuditLog, companies } from "@/db/schema";
@@ -11,6 +11,8 @@ export type AdminAuditQueryOptions = {
   targetCompanyQuery?: string;
   fromDate?: Date | null;
   toDate?: Date | null;
+  /** When true, only rows with impersonated_company_id set (support impersonation context). */
+  impersonationOnly?: boolean;
   page?: number;
   pageSize?: number;
   dir?: "asc" | "desc";
@@ -24,6 +26,7 @@ export type AdminAuditQueryRow = {
   targetCompanyId: string | null;
   targetCompanySlug: string | null;
   targetUserClerkId: string | null;
+  impersonatedCompanyId: string | null;
   metadata: Record<string, unknown> | null;
   createdAt: string;
 };
@@ -67,6 +70,9 @@ export async function listAdminAuditEntries(
       )
     );
   }
+  if (opts.impersonationOnly) {
+    conditions.push(isNotNull(adminAuditLog.impersonatedCompanyId));
+  }
 
   const where = conditions.length ? and(...conditions) : undefined;
 
@@ -86,6 +92,7 @@ export async function listAdminAuditEntries(
       targetCompanyId: adminAuditLog.targetCompanyId,
       targetCompanySlug: adminAuditLog.targetCompanySlug,
       targetUserClerkId: adminAuditLog.targetUserClerkId,
+      impersonatedCompanyId: adminAuditLog.impersonatedCompanyId,
       metadata: adminAuditLog.metadata,
       createdAt: adminAuditLog.createdAt,
       currentSlug: companies.slug,
@@ -122,6 +129,7 @@ export async function listAdminAuditEntries(
       targetCompanyId: r.targetCompanyId,
       targetCompanySlug: r.targetCompanySlug ?? r.currentSlug ?? null,
       targetUserClerkId: r.targetUserClerkId,
+      impersonatedCompanyId: r.impersonatedCompanyId,
       metadata: r.metadata,
       createdAt: r.createdAt.toISOString(),
     })),

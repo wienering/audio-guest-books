@@ -193,8 +193,28 @@ export default clerkMiddleware(async (auth, request) => {
    * /admin/* (and /api/admin/*) are admin-only. Non-admins are redirected to
    * /dashboard rather than 404'd so we don't leak the existence of admin
    * routes. API requests get a 403 instead of a redirect.
+   *
+   * Impersonation exit runs in the subject's session with `actor.sub` set to
+   * the real platform admin — allow through when the actor is allowlisted.
    */
   if (appSurface && isAdminRoute(request)) {
+    const path = request.nextUrl.pathname;
+    if (path === "/api/admin/impersonate/exit") {
+      const { actor } = await auth();
+      const actorSub =
+        actor &&
+        typeof actor === "object" &&
+        "sub" in actor &&
+        typeof (actor as { sub: unknown }).sub === "string"
+          ? (actor as { sub: string }).sub
+          : null;
+      if (actorSub && isAdminUser(actorSub)) {
+        return NextResponse.next({
+          request: { headers: requestHeaders },
+        });
+      }
+    }
+
     const { userId } = await auth();
     if (!isAdminUser(userId)) {
       if (pathname.startsWith("/api/")) {

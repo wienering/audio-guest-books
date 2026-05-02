@@ -8,6 +8,7 @@ import { events } from "@/db/schema";
 import { RetailInvitationEmail } from "@/emails/retail-invitation";
 import { sendEmailWithResult, type SendEmailResult } from "@/lib/email";
 import { getMembershipWithCompany } from "@/lib/company";
+import { logImpersonatedDashboardMutation } from "@/lib/impersonation";
 
 export const sendRetailInvitationBodySchema = z.object({
   to: z.string().trim().email("Invalid email address"),
@@ -83,6 +84,11 @@ export async function sendRetailInvitationForUser(input: {
       updatedAt: new Date(),
     })
     .where(eq(events.id, eventRow.id));
+
+  await logImpersonatedDashboardMutation(membership, "sent retail invitation email", {
+    event_id: eventRow.id,
+    template: parsed.data.template_source,
+  });
 
   return { ok: true };
 }

@@ -240,6 +240,11 @@ export const adminAuditLog = pgTable(
     }),
     targetCompanySlug: text("target_company_slug"),
     targetUserClerkId: text("target_user_clerk_id"),
+    /** When set, this row describes support work done while impersonating this company. */
+    impersonatedCompanyId: uuid("impersonated_company_id").references(
+      () => companies.id,
+      { onDelete: "set null" }
+    ),
     description: text("description").notNull(),
     metadata: jsonb("metadata").$type<Record<string, unknown> | null>(),
     createdAt: timestamp("created_at", { withTimezone: true })
@@ -249,6 +254,9 @@ export const adminAuditLog = pgTable(
   (t) => [
     index("admin_audit_log_created_at_idx").on(t.createdAt.desc()),
     index("admin_audit_log_target_company_id_idx").on(t.targetCompanyId),
+    index("admin_audit_log_impersonated_company_id_idx").on(
+      t.impersonatedCompanyId
+    ),
   ]
 );
 

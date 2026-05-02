@@ -8,6 +8,7 @@ import {
   hardDeleteEvent,
 } from "@/lib/event-mutations";
 import { requireEventCompanyOwner } from "@/lib/event-route-auth";
+import { logImpersonatedDashboardMutation } from "@/lib/impersonation";
 
 const log = pino({ level: process.env.LOG_LEVEL ?? "info" });
 
@@ -23,7 +24,7 @@ export async function POST(
 
   const gated = await requireEventCompanyOwner(eventId);
   if ("error" in gated) return gated.error;
-  const { event } = gated;
+  const { event, membership } = gated;
 
   const raw = await req.json().catch(() => ({}));
   const parsed = BodySchema.safeParse(raw);
@@ -53,6 +54,10 @@ export async function POST(
       { status: 500 }
     );
   }
+
+  await logImpersonatedDashboardMutation(membership, "hard-deleted event", {
+    event_id: eventId,
+  });
 
   return NextResponse.json({ ok: true });
 }

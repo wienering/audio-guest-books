@@ -21,9 +21,16 @@ export function AuditLogRow({ row }: { row: AdminAuditQueryRow }) {
           {fmt(row.createdAt)}
         </td>
         <td className="px-3 py-2">
-          <span className="rounded bg-muted px-1.5 py-0.5 text-[11px] font-semibold">
-            {row.actionType}
-          </span>
+          <div className="flex flex-wrap items-center gap-1">
+            <span className="rounded bg-muted px-1.5 py-0.5 text-[11px] font-semibold">
+              {row.actionType}
+            </span>
+            {row.impersonatedCompanyId ? (
+              <span className="rounded bg-amber-200 px-1.5 py-0.5 text-[10px] font-semibold text-amber-950 dark:bg-amber-800 dark:text-amber-50">
+                impersonation
+              </span>
+            ) : null}
+          </div>
         </td>
         <td className="px-3 py-2">{row.description}</td>
         <td className="px-3 py-2">

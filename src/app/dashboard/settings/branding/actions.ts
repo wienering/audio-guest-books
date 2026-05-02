@@ -10,6 +10,7 @@ import type { CompanyBranding } from "@/lib/company-branding";
 import { validateBrandingForSave } from "@/lib/company-branding";
 import { getMembershipWithCompany } from "@/lib/company";
 import { companyHasFeatureKey } from "@/lib/company-features";
+import { logImpersonatedDashboardMutation } from "@/lib/impersonation";
 
 export type BrandingSaveResult =
   | { ok: true }
@@ -46,6 +47,7 @@ export async function saveCompanyBranding(input: {
 
   revalidatePath("/dashboard/branding");
   revalidatePath("/dashboard");
+  await logImpersonatedDashboardMutation(membership, "updated company branding");
   return { ok: true };
 }
 
@@ -75,5 +77,9 @@ export async function resetCompanyBranding(): Promise<BrandingSaveResult> {
 
   revalidatePath("/dashboard/branding");
   revalidatePath("/dashboard");
+  await logImpersonatedDashboardMutation(
+    membership,
+    "reset company branding to defaults"
+  );
   return { ok: true };
 }

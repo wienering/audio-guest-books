@@ -53,6 +53,7 @@ export default async function AdminAuditLogPage(props: {
   const fromStr = getStr(sp, "from") ?? "";
   const toStr = getStr(sp, "to") ?? "";
   const dir = getStr(sp, "dir") === "asc" ? "asc" : "desc";
+  const impersonationOnly = getStr(sp, "imp") === "1";
   const pageRaw = Number.parseInt(getStr(sp, "page") ?? "1", 10);
   const page = Number.isFinite(pageRaw) && pageRaw > 0 ? pageRaw : 1;
 
@@ -65,6 +66,7 @@ export default async function AdminAuditLogPage(props: {
     targetCompanyQuery: targetCompanyQuery || undefined,
     fromDate,
     toDate,
+    impersonationOnly: impersonationOnly || undefined,
     page,
     pageSize: PAGE_SIZE,
     dir,
@@ -79,10 +81,16 @@ export default async function AdminAuditLogPage(props: {
     from: fromStr || undefined,
     to: toStr || undefined,
     dir: dir === "asc" ? "asc" : undefined,
+    imp: impersonationOnly ? "1" : undefined,
   } as const;
 
   const hasFilters =
-    actionType || adminClerkUserId || targetCompanyQuery || fromStr || toStr;
+    actionType ||
+    adminClerkUserId ||
+    targetCompanyQuery ||
+    fromStr ||
+    toStr ||
+    impersonationOnly;
 
   return (
     <div className="space-y-6">
@@ -98,7 +106,8 @@ export default async function AdminAuditLogPage(props: {
         <CardHeader>
           <CardTitle>Filters</CardTitle>
           <CardDescription>
-            Narrow down by action type, admin user, company slug, or date.
+            Narrow down by action type, admin user, company slug, date, or
+            impersonation-only events.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -174,6 +183,22 @@ export default async function AdminAuditLogPage(props: {
                 <option value="desc">Newest first</option>
                 <option value="asc">Oldest first</option>
               </select>
+            </label>
+            <label className="flex flex-col gap-1 text-xs font-medium text-muted-foreground sm:col-span-2 md:col-span-3">
+              <span className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  name="imp"
+                  value="1"
+                  defaultChecked={impersonationOnly}
+                  className="size-4 rounded border border-input"
+                />
+                Show only impersonation-related entries
+              </span>
+              <span className="font-normal text-[11px] text-muted-foreground/90">
+                Session start/end and actions taken while viewing a company
+                dashboard as the owner.
+              </span>
             </label>
             <div className="col-span-full flex flex-wrap items-center gap-2">
               <button

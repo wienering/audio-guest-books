@@ -4,6 +4,7 @@ import { z } from "zod";
 import { companyHasFeatureKey } from "@/lib/company-features";
 import { editEvent, type EventEditInput } from "@/lib/event-mutations";
 import { requireEventCompanyOwner } from "@/lib/event-route-auth";
+import { logImpersonatedDashboardMutation } from "@/lib/impersonation";
 
 const PatchSchema = z
   .object({
@@ -92,6 +93,10 @@ export async function PATCH(
       { status: result.status }
     );
   }
+
+  await logImpersonatedDashboardMutation(membership, "updated event via API", {
+    event_id: eventId,
+  });
 
   return NextResponse.json({ ok: true });
 }

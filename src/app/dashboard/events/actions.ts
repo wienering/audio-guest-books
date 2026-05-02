@@ -14,6 +14,7 @@ import {
   computeRetentionUntil,
   retentionMonthsForPlanCode,
 } from "@/lib/retention";
+import { logImpersonatedDashboardMutation } from "@/lib/impersonation";
 
 const eventTypeSchema = z.enum([
   "wedding",
@@ -230,6 +231,10 @@ export async function createEvent(
       values: submittedValues,
     });
   }
+
+  await logImpersonatedDashboardMutation(membership, "created event", {
+    event_id: created.id,
+  });
 
   redirect(`/dashboard/events/${created.id}`);
 }

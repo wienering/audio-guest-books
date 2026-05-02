@@ -25,7 +25,10 @@ export type AdminActionType =
   | "comp_subscription_granted"
   | "comp_subscription_revoked"
   | "comp_subscription_extended"
-  | "comp_subscription_auto_expired";
+  | "comp_subscription_auto_expired"
+  | "impersonation_started"
+  | "impersonation_session_end"
+  | "impersonation_dashboard_mutation";
 
 export type LogAdminActionInput = {
   actionType: AdminActionType;
@@ -33,6 +36,8 @@ export type LogAdminActionInput = {
   targetCompanyId?: string | null;
   targetCompanySlug?: string | null;
   targetUserClerkId?: string | null;
+  /** Company context when a platform admin is using the product as the owner. */
+  impersonatedCompanyId?: string | null;
   metadata?: Record<string, unknown> | null;
   /**
    * Optional override (e.g. inside a transaction). When omitted, falls back to
@@ -42,16 +47,35 @@ export type LogAdminActionInput = {
   adminClerkUserId?: string;
 };
 
+export function getActorSubFromAuth(session: {
+  actor?: unknown;
+}): string | undefined {
+  const a = session.actor;
+  if (!a || typeof a !== "object" || !("sub" in a)) return undefined;
+  const sub = (a as { sub?: unknown }).sub;
+  return typeof sub === "string" ? sub : undefined;
+}
+
 /**
  * Writes a row to admin_audit_log. Resolves the actor from Clerk when not
  * provided, and rejects if the actor isn't actually an admin (defense in
  * depth — every admin mutation API also calls requireAdminAccess()).
+ *
+ * When the session is an impersonation (Clerk actor token), `userId` is the
+ * subject and `actor.sub` is the real platform admin — we attribute the row to
+ * the latter.
  */
 export async function logAdminAction(input: LogAdminActionInput): Promise<void> {
+  const session = await auth();
+  const actorSub = getActorSubFromAuth(session);
+
   let adminId = input.adminClerkUserId;
   if (!adminId) {
-    const session = await auth();
-    adminId = session.userId ?? undefined;
+    if (actorSub && isAdminUser(actorSub)) {
+      adminId = actorSub;
+    } else {
+      adminId = session.userId ?? undefined;
+    }
   }
 
   if (!adminId || !isAdminUser(adminId)) {
@@ -66,6 +90,7 @@ export async function logAdminAction(input: LogAdminActionInput): Promise<void> 
     targetCompanyId: input.targetCompanyId ?? null,
     targetCompanySlug: input.targetCompanySlug ?? null,
     targetUserClerkId: input.targetUserClerkId ?? null,
+    impersonatedCompanyId: input.impersonatedCompanyId ?? null,
     description: input.description,
     metadata: input.metadata ?? null,
   });

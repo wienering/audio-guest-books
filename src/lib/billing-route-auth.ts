@@ -2,6 +2,10 @@ import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 
 import { getMembershipWithCompany, type MembershipWithCompany } from "@/lib/company";
+import {
+  impersonationBillingBlockResponse,
+  isImpersonatedClerkSession,
+} from "@/lib/impersonation";
 
 export type OwnerBillingOk = { membership: MembershipWithCompany };
 
@@ -14,6 +18,10 @@ export async function requireOwnerBilling(): Promise<
     return {
       error: NextResponse.json({ error: "Unauthorized" }, { status: 401 }),
     };
+  }
+
+  if (isImpersonatedClerkSession(session)) {
+    return { error: impersonationBillingBlockResponse() };
   }
 
   const membership = await getMembershipWithCompany(userId);

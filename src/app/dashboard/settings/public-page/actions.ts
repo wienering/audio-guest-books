@@ -7,6 +7,7 @@ import { revalidatePath } from "next/cache";
 import { db } from "@/db/index";
 import { companies } from "@/db/schema";
 import { getMembershipWithCompany } from "@/lib/company";
+import { logImpersonatedDashboardMutation } from "@/lib/impersonation";
 
 export type PublicContactSaveResult =
   | { ok: true }
@@ -71,5 +72,6 @@ export async function saveCompanyPublicContact(input: {
   revalidatePath("/dashboard/branding");
   revalidatePath("/dashboard");
   revalidatePath("/");
+  await logImpersonatedDashboardMutation(membership, "updated public contact fields");
   return { ok: true };
 }

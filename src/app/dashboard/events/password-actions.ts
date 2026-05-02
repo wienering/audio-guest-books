@@ -9,6 +9,7 @@ import { db } from "@/db/index";
 import { events } from "@/db/schema";
 import { getMembershipWithCompany } from "@/lib/company";
 import { companyHasFeatureKey } from "@/lib/company-features";
+import { logImpersonatedDashboardMutation } from "@/lib/impersonation";
 
 export type EventPasswordActionResult =
   | { ok: true }
@@ -68,6 +69,9 @@ export async function setEventRetailPassword(
 
   revalidatePath(`/dashboard/events/${eventId}`);
   revalidatePath("/dashboard");
+  await logImpersonatedDashboardMutation(membership, "set event retail password", {
+    event_id: eventId,
+  });
   return { ok: true };
 }
 
@@ -99,5 +103,10 @@ export async function clearEventRetailPassword(
 
   revalidatePath(`/dashboard/events/${eventId}`);
   revalidatePath("/dashboard");
+  await logImpersonatedDashboardMutation(
+    membership,
+    "cleared event retail password",
+    { event_id: eventId }
+  );
   return { ok: true };
 }
