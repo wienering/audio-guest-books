@@ -13,20 +13,6 @@ import {
 import { cn } from "@/lib/utils";
 import type { DashboardStackedNavSection } from "@/lib/stacked-nav-utils";
 
-function replaceHistoryHashPreservingSearch(pathnameLocal: string, hashId: string) {
-  const qs = typeof window !== "undefined" ? window.location.search : "";
-  const path = pathnameLocal || (typeof window !== "undefined" ? window.location.pathname : "");
-  window.history.replaceState(null, "", `${path}${qs}#${encodeURIComponent(hashId)}`);
-}
-
-function pathnameFromWindowOrProp(pathProp: string) {
-  const p =
-    pathProp ||
-    (typeof window !== "undefined" ? window.location.pathname : "") ||
-    "";
-  return p.length > 1 && p.endsWith("/") ? p.slice(0, -1) : p;
-}
-
 function scrollSectionIntoView(id: string, behavior: ScrollBehavior) {
   const el = typeof document !== "undefined" ? document.getElementById(id) : null;
   el?.scrollIntoView({ behavior, block: "start" });
@@ -37,6 +23,9 @@ function scrollBehaviorForInitialLanding(): ScrollBehavior {
   return "auto";
 }
 
+const OBSERVER_DEBOUNCE_MS = 80;
+const PROGRAMMATIC_SCROLL_GUARD_MS = 650;
+
 /** Stacked sidebar + viewport-synced hash UX; `@/lib/stacked-nav-utils` exports section classname helpers safe for Server Components. */
 export function DashboardStackedNavLayout(props: {
   sections: readonly DashboardStackedNavSection[];
@@ -46,6 +35,12 @@ export function DashboardStackedNavLayout(props: {
   const searchParams = useSearchParams();
   const [activeId, setActiveId] = useState(() => props.sections[0]?.id ?? "");
   const suppressObserverUntilMs = useRef(0);
+  const isProgrammaticScrollRef = useRef(false);
+  /** Cancels stale scroll guards (listener + fallback timeout); does not invoke onSettled. */
+  const programmaticCancelRef = useRef<(() => void) | null>(null);
+
+  const intersectionByIdRef = useRef<Map<string, boolean>>(new Map());
+  const observerDebounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const setHashSilent = useCallback(
     (id: string, searchPreserve: URLSearchParams) => {
@@ -59,6 +54,69 @@ export function DashboardStackedNavLayout(props: {
     [pathname]
   );
 
+  const cancelProgrammaticScrollGuardsOnly = useCallback(() => {
+    programmaticCancelRef.current?.();
+    programmaticCancelRef.current = null;
+    isProgrammaticScrollRef.current = false;
+  }, []);
+
+  const beginProgrammaticScroll = useCallback(
+    (onSettled?: () => void) => {
+      if (typeof window === "undefined" || typeof document === "undefined") return;
+
+      cancelProgrammaticScrollGuardsOnly();
+
+      const root = document.documentElement;
+
+      let settled = false;
+      /** Browser timer id; avoids Node/browser `Timeout`/`number` mismatch in TS. */
+      let tid: number | undefined;
+
+      function onScrollEndHandler() {
+        finish();
+      }
+
+      function cleanupListeners() {
+        root.removeEventListener("scrollend", onScrollEndHandler);
+        if (tid != null) {
+          window.clearTimeout(tid);
+          tid = undefined;
+        }
+      }
+
+      function finish() {
+        if (settled) return;
+        settled = true;
+        cleanupListeners();
+        programmaticCancelRef.current = null;
+        isProgrammaticScrollRef.current = false;
+        onSettled?.();
+      }
+
+      programmaticCancelRef.current = () => {
+        if (settled) return;
+        settled = true;
+        cleanupListeners();
+        programmaticCancelRef.current = null;
+        isProgrammaticScrollRef.current = false;
+      };
+
+      isProgrammaticScrollRef.current = true;
+
+      tid = window.setTimeout(finish, PROGRAMMATIC_SCROLL_GUARD_MS);
+
+      root.addEventListener("scrollend", onScrollEndHandler, { passive: true });
+    },
+    [cancelProgrammaticScrollGuardsOnly]
+  );
+
+  useEffect(() => {
+    return () => {
+      programmaticCancelRef.current?.();
+      programmaticCancelRef.current = null;
+    };
+  }, []);
+
   /** Initial `_nav`, hash, scroll position */
   useEffect(() => {
     const ids = new Set(props.sections.map((s) => s.id));
@@ -67,6 +125,7 @@ export function DashboardStackedNavLayout(props: {
     if (nav && ids.has(nav)) {
       suppressObserverUntilMs.current = Date.now() + 600;
       setActiveId(nav);
+      beginProgrammaticScroll();
       requestAnimationFrame(() => {
         scrollSectionIntoView(nav, scrollBehaviorForInitialLanding());
         setHashSilent(nav, new URLSearchParams(searchParams.toString()));
@@ -84,51 +143,64 @@ export function DashboardStackedNavLayout(props: {
         scrollSectionIntoView(decodedHash, scrollBehaviorForInitialLanding())
       );
     }
-  }, [pathname, props.sections, searchParams, setHashSilent]);
+  }, [pathname, props.sections, searchParams, setHashSilent, beginProgrammaticScroll]);
 
   /** IntersectionObserver: active sidebar from viewport */
   useEffect(() => {
     const ids = props.sections.map((s) => s.id);
+    intersectionByIdRef.current = new Map(ids.map((id) => [id, false]));
+
+    const applyObserverUpdate = () => {
+      if (typeof document === "undefined") return;
+      if (isProgrammaticScrollRef.current || Date.now() < suppressObserverUntilMs.current)
+        return;
+
+      const intersectingIds = ids.filter((id) => intersectionByIdRef.current.get(id) === true);
+      if (!intersectingIds.length) return;
+
+      let bestId = intersectingIds[0]!;
+      let bestTop = document.getElementById(bestId)?.getBoundingClientRect().top ?? 0;
+      for (let i = 1; i < intersectingIds.length; i++) {
+        const cid = intersectingIds[i]!;
+        const node = document.getElementById(cid);
+        const top = node?.getBoundingClientRect().top ?? 0;
+        if (top < bestTop) {
+          bestTop = top;
+          bestId = cid;
+        }
+      }
+
+      setActiveId((curr) => (curr === bestId ? curr : bestId));
+      setHashSilent(bestId, new URLSearchParams(window.location.search));
+    };
 
     let raf = 0;
+
+    const scheduleApply = () => {
+      cancelAnimationFrame(raf);
+      raf = requestAnimationFrame(() => {
+        if (observerDebounceTimerRef.current != null) clearTimeout(observerDebounceTimerRef.current);
+        observerDebounceTimerRef.current = setTimeout(() => {
+          observerDebounceTimerRef.current = null;
+          applyObserverUpdate();
+        }, OBSERVER_DEBOUNCE_MS);
+      });
+    };
+
     const observer = new IntersectionObserver(
       (entries) => {
-        cancelAnimationFrame(raf);
-        raf = requestAnimationFrame(() => {
-          if (Date.now() < suppressObserverUntilMs.current) return;
-
-          const visible = entries
-            .filter((e) => e.isIntersecting)
-            .map((e) => ({
-              id: (e.target as HTMLElement).id,
-              ratio: e.intersectionRatio,
-              top: e.boundingClientRect.top,
-            }))
-            .filter((e) => e.id && ids.includes(e.id));
-
-          if (!visible.length) return;
-
-          visible.sort((a, b) => {
-            const aNear = Math.abs(Math.min(a.top, 140));
-            const bNear = Math.abs(Math.min(b.top, 140));
-            if (Math.abs(aNear - bNear) > 48) return aNear - bNear;
-            return b.ratio - a.ratio;
-          });
-
-          const nextId = visible[0].id;
-
-          setActiveId((curr) => (curr === nextId ? curr : nextId));
-
-          replaceHistoryHashPreservingSearch(
-            pathnameFromWindowOrProp(pathname),
-            nextId
-          );
-        });
+        for (const entry of entries) {
+          const id = (entry.target as HTMLElement).id;
+          if (id && ids.includes(id)) {
+            intersectionByIdRef.current.set(id, entry.isIntersecting);
+          }
+        }
+        scheduleApply();
       },
       {
         root: null,
-        rootMargin: "-72px 0px -45% 0px",
-        threshold: [0, 0.04, 0.12, 0.28, 0.52, 0.76, 1],
+        rootMargin: "-20% 0px -75% 0px",
+        threshold: 0,
       }
     );
 
@@ -139,21 +211,28 @@ export function DashboardStackedNavLayout(props: {
 
     return () => {
       cancelAnimationFrame(raf);
+      if (observerDebounceTimerRef.current != null) {
+        clearTimeout(observerDebounceTimerRef.current);
+        observerDebounceTimerRef.current = null;
+      }
       observer.disconnect();
     };
-  }, [pathname, props.sections]);
+  }, [pathname, props.sections, setHashSilent]);
 
   useEffect(() => {
     function onHash() {
       const raw = window.location.hash.replace(/^#/, "");
       const id = raw ? decodeURIComponent(raw) : "";
       if (id && props.sections.some((s) => s.id === id)) {
+        suppressObserverUntilMs.current = Date.now() + PROGRAMMATIC_SCROLL_GUARD_MS;
+        beginProgrammaticScroll();
         setActiveId(id);
+        scrollSectionIntoView(id, "smooth");
       }
     }
     window.addEventListener("hashchange", onHash);
     return () => window.removeEventListener("hashchange", onHash);
-  }, [props.sections]);
+  }, [props.sections, beginProgrammaticScroll]);
 
   const sidebarLinkClass = (active: boolean) =>
     cn(
@@ -166,9 +245,11 @@ export function DashboardStackedNavLayout(props: {
   function onSidebarClick(id: string) {
     return (e: React.MouseEvent<HTMLAnchorElement>) => {
       e.preventDefault();
-      suppressObserverUntilMs.current = Date.now() + 800;
+      suppressObserverUntilMs.current = Date.now() + PROGRAMMATIC_SCROLL_GUARD_MS;
+      beginProgrammaticScroll(() => {
+        setHashSilent(id, new URLSearchParams(searchParams.toString()));
+      });
       setActiveId(id);
-      setHashSilent(id, new URLSearchParams(searchParams.toString()));
       scrollSectionIntoView(id, "smooth");
     };
   }
