@@ -1,25 +1,10 @@
 "use client";
 
-import { useState } from "react";
-
 import { Button } from "@/components/ui/button";
 
 export function ImpersonationBanner(props: { companyName: string }) {
-  const [busy, setBusy] = useState(false);
-
-  async function onExit() {
-    setBusy(true);
-    try {
-      const res = await fetch("/api/admin/impersonate/exit", { method: "POST" });
-      if (!res.ok) {
-        setBusy(false);
-        return;
-      }
-      window.close();
-      window.location.href = "/admin/companies";
-    } finally {
-      setBusy(false);
-    }
+  function onExit() {
+    window.location.href = "/impersonate/exit";
   }
 
   return (
@@ -38,10 +23,9 @@ export function ImpersonationBanner(props: { companyName: string }) {
         variant="secondary"
         size="sm"
         className="shrink-0 border-amber-900/50 bg-amber-950 text-amber-50 hover:bg-amber-900 dark:border-amber-950 dark:bg-amber-950 dark:text-amber-100"
-        disabled={busy}
-        onClick={() => void onExit()}
+        onClick={onExit}
       >
-        {busy ? "Exiting…" : "Exit"}
+        Exit
       </Button>
     </div>
   );

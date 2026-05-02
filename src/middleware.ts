@@ -92,7 +92,8 @@ export default clerkMiddleware(async (auth, request) => {
       pathname.startsWith("/dashboard") ||
       pathname.startsWith("/onboarding") ||
       pathname.startsWith("/sign-in") ||
-      pathname.startsWith("/sign-up")
+      pathname.startsWith("/sign-up") ||
+      pathname.startsWith("/impersonate")
     ) {
       const origin = buildAppOriginFromHostHeader(hostHeader, root);
       const dest = new URL(`${pathname}${search}`, origin);
@@ -183,10 +184,24 @@ export default clerkMiddleware(async (auth, request) => {
     appSurface &&
     (pathname.startsWith("/dashboard") ||
       pathname.startsWith("/onboarding") ||
+      pathname.startsWith("/impersonate") ||
       isAdminRoute(request));
 
   if (needsClerkProtection && !isPublicAuthRoute(request)) {
     await auth.protect();
+  }
+
+  /**
+   * Only platform admins may load the ticket consume page (before ticket swap).
+   */
+  if (appSurface && pathname.startsWith("/impersonate/consume")) {
+    const { userId } = await auth();
+    if (!userId || !isAdminUser(userId)) {
+      const dest = request.nextUrl.clone();
+      dest.pathname = "/dashboard";
+      dest.search = "";
+      return NextResponse.redirect(dest);
+    }
   }
 
   /**

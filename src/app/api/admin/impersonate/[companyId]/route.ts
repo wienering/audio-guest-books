@@ -38,20 +38,20 @@ export async function POST(
   }
 
   const clerk = await clerkClient();
-  let url: string;
+  let ticketJwt: string;
   try {
-    const token = await clerk.actorTokens.create({
+    const actorToken = await clerk.actorTokens.create({
       userId: ownerClerkId,
       actor: { sub: adminClerkUserId },
       expiresInSeconds: IMPERSONATION_TOKEN_TTL_SECONDS,
     });
-    if (!token.url) {
+    if (!actorToken.token) {
       return NextResponse.json(
-        { error: "Impersonation token did not include a URL" },
+        { error: "Impersonation token did not include a JWT ticket" },
         { status: 500 }
       );
     }
-    url = token.url;
+    ticketJwt = actorToken.token;
   } catch (e) {
     console.error("[impersonate] actor token failed", e);
     return NextResponse.json(
@@ -70,5 +70,5 @@ export async function POST(
     adminClerkUserId,
   });
 
-  return NextResponse.json({ url });
+  return NextResponse.json({ token: ticketJwt });
 }

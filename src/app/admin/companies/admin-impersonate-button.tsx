@@ -19,7 +19,7 @@ export function AdminImpersonateButton(props: {
         { method: "POST" }
       );
       const data = (await res.json().catch(() => ({}))) as {
-        url?: string;
+        token?: string;
         error?: string;
       };
       if (!res.ok) {
@@ -30,8 +30,11 @@ export function AdminImpersonateButton(props: {
         );
         return;
       }
-      if (typeof data.url === "string") {
-        window.open(data.url, "_blank", "noopener,noreferrer");
+      if (typeof data.token === "string") {
+        const consumeUrl = `/impersonate/consume?ticket=${encodeURIComponent(data.token)}`;
+        window.open(consumeUrl, "_blank", "noopener,noreferrer");
+      } else {
+        toast.error("No impersonation ticket returned");
       }
     } finally {
       setBusy(false);
@@ -43,7 +46,7 @@ export function AdminImpersonateButton(props: {
       type="button"
       variant="outline"
       size="sm"
-      title={`Open ${props.companyName} dashboard in a new tab`}
+      title={`Open ${props.companyName} dashboard in a new tab. For best results use incognito or a separate profile so your super admin session stays signed in.`}
       disabled={busy}
       onClick={() => void onClick()}
     >
