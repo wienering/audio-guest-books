@@ -7,6 +7,7 @@ import pino from "pino";
 import type { AppDatabase } from "@/db/index";
 import { downloadJobs, uploadJobs } from "@/db/schema";
 import {
+  EXTRACT_ZIP_ATTEMPT_TIMEOUT_MS,
   EXTRACT_ZIP_QUEUE_NAME,
   GENERATE_ZIP_QUEUE_NAME,
   RETENTION_SCHEDULER_QUEUE_NAME,
@@ -35,6 +36,18 @@ const log = pino({
 
 const connection = createRedisFromEnv();
 
+async function withAttemptTimeout<T>(promise: Promise<T>, ms: number, label: string): Promise<T> {
+  let timeoutId: ReturnType<typeof setTimeout> | undefined;
+  const deadline = new Promise<never>((_, reject) => {
+    timeoutId = setTimeout(() => reject(new Error(`${label}: exceeded ${ms}ms`)), ms);
+  });
+  try {
+    return await Promise.race([promise, deadline]);
+  } finally {
+    if (timeoutId !== undefined) clearTimeout(timeoutId);
+  }
+}
+
 const extractWorker = new Worker<ExtractZipPayload>(
   EXTRACT_ZIP_QUEUE_NAME,
   async (job) => {
@@ -47,7 +60,11 @@ const extractWorker = new Worker<ExtractZipPayload>(
       },
       "extract-zip job start"
     );
-    await processExtractZipJob(job.data, log);
+    await withAttemptTimeout(
+      processExtractZipJob(job.data, log),
+      EXTRACT_ZIP_ATTEMPT_TIMEOUT_MS,
+      "extract-zip"
+    );
     const row = await getWorkerDb().query.uploadJobs.findFirst({
       where: eq(uploadJobs.id, job.data.uploadJobId),
     });
@@ -68,6 +85,10 @@ const extractWorker = new Worker<ExtractZipPayload>(
   {
     connection,
     concurrency: 2,
+    lockDuration: 5 * 60 * 1000,
+    lockRenewTime: 60 * 1000,
+    stalledInterval: 60 * 1000,
+    maxStalledCount: 1,
   }
 );
 
@@ -155,7 +176,6 @@ void (async () => {
 
 extractWorker.on("failed", async (job, err) => {
   if (!job?.data?.uploadJobId || !err) return;
-  if (!job.finishedOn) return;
   await markUploadJobFailedFromWorkerError(job.data.uploadJobId, err, log);
 });
 

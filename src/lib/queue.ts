@@ -2,6 +2,15 @@ import { Queue } from "bullmq";
 
 import { getSharedRedis } from "@/lib/redis";
 
+/** Shared bounded retention so Redis does not grow unbounded job history. */
+const REMOVE_ON_COMPLETE = { count: 50, age: 24 * 3600 };
+const REMOVE_ON_FAIL = { count: 100, age: 7 * 24 * 3600 };
+
+/**
+ * BullMQ v5 `JobsOptions` has no typed `timeout` field; enforced per attempt in the extract-zip Worker.
+ */
+export const EXTRACT_ZIP_ATTEMPT_TIMEOUT_MS = 15 * 60 * 1000;
+
 export const EXTRACT_ZIP_QUEUE_NAME = "extract-zip";
 export const GENERATE_ZIP_QUEUE_NAME = "generate-zip";
 export const RETENTION_SCHEDULER_QUEUE_NAME = "retention-scheduler";
@@ -41,8 +50,8 @@ export async function enqueueTranscodeAudioJob(
         jobId: `transcode-${payload.audioFileId}`,
         attempts: 3,
         backoff: { type: "exponential", delay: 8000 },
-        removeOnComplete: true,
-        removeOnFail: false,
+        removeOnComplete: REMOVE_ON_COMPLETE,
+        removeOnFail: REMOVE_ON_FAIL,
       }
     );
   } catch (e) {
@@ -80,8 +89,8 @@ export async function enqueueExtractZipJob(
     jobId: payload.uploadJobId,
     attempts: 3,
     backoff: { type: "exponential", delay: 5000 },
-    removeOnComplete: true,
-    removeOnFail: false,
+    removeOnComplete: REMOVE_ON_COMPLETE,
+    removeOnFail: REMOVE_ON_FAIL,
   });
 }
 
@@ -114,8 +123,8 @@ export async function enqueueGenerateZipJob(
     jobId: payload.downloadJobId,
     attempts: 2,
     backoff: { type: "exponential", delay: 10_000 },
-    removeOnComplete: true,
-    removeOnFail: false,
+    removeOnComplete: REMOVE_ON_COMPLETE,
+    removeOnFail: REMOVE_ON_FAIL,
   });
 }
 
