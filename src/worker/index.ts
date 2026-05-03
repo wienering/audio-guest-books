@@ -89,6 +89,7 @@ const extractWorker = new Worker<ExtractZipPayload>(
     lockRenewTime: 60 * 1000,
     stalledInterval: 60 * 1000,
     maxStalledCount: 1,
+    drainDelay: 30,
   }
 );
 
@@ -117,6 +118,7 @@ const generateZipWorker = new Worker<GenerateZipPayload>(
   {
     connection,
     concurrency: 1,
+    drainDelay: 30,
   }
 );
 
@@ -138,6 +140,7 @@ const transcodeAudioWorker = new Worker<TranscodeAudioJobPayload>(
   {
     connection,
     concurrency: 2,
+    drainDelay: 30,
   }
 );
 
@@ -154,6 +157,7 @@ const retentionWorker = new Worker(
   {
     connection,
     concurrency: 1,
+    drainDelay: 30,
   }
 );
 
