@@ -8,28 +8,43 @@ import {
   type PricingPlan,
 } from "@/components/marketing/pricing-plan-cards";
 import { FaqAccordion } from "@/components/marketing/faq-accordion";
+import { JsonLd } from "@/components/seo/json-ld";
 import { getFoundingMemberSpotsRemaining } from "@/lib/billing-founding";
 import { resolveAppBaseUrl } from "@/lib/app-url";
+import { MARKETING_PRICING_FAQ } from "@/lib/marketing-pricing-faq";
+import {
+  marketingCanonical,
+  marketingOpenGraphExtras,
+  marketingTwitterExtras,
+} from "@/lib/marketing-seo-defaults";
+import {
+  getBreadcrumbSchema,
+  getFAQPageSchema,
+  getMarketingPricingWebPageSchema,
+  getProductSchema,
+  SCHEMA_BASE_URL,
+} from "@/lib/schema";
+
+const PRICING_PAGE_OG_NAME = "Pricing";
+const PRICING_PAGE_SCHEMA_NAME = "Pricing — Audio Guest Books";
+const PRICING_OG_TWITTER_TITLE = PRICING_PAGE_SCHEMA_NAME;
+/** ~152 chars — shared across meta, Open Graph, Twitter, and pricing WebPage JSON-LD. */
+const PRICING_PAGE_DESCRIPTION =
+  "Simple, transparent pricing for Audio Guest Books: start free on one event, Pro during early launch, Ultimate at five dollars per month CAD, and founding-member pricing for early studios.";
 
 export const metadata: Metadata = {
-  title: "Pricing",
-  description:
-    "Simple, transparent pricing for Audio Guest Books. Start free, upgrade when you're ready, and lock in $5/month forever as a founding member.",
-  alternates: { canonical: "/pricing" },
-  openGraph: {
-    title: "Pricing — Audio Guest Books",
-    description:
-      "Simple, transparent pricing. Start free, upgrade when you're ready.",
-    type: "website",
-    url: "/pricing",
-    siteName: "Audio Guest Books",
-  },
-  twitter: {
-    card: "summary",
-    title: "Pricing — Audio Guest Books",
-    description:
-      "Simple, transparent pricing. Start free, upgrade when you're ready.",
-  },
+  title: PRICING_PAGE_OG_NAME,
+  description: PRICING_PAGE_DESCRIPTION,
+  alternates: { canonical: marketingCanonical("/pricing") },
+  openGraph: marketingOpenGraphExtras({
+    title: PRICING_OG_TWITTER_TITLE,
+    description: PRICING_PAGE_DESCRIPTION,
+    pathname: "/pricing",
+  }),
+  twitter: marketingTwitterExtras({
+    title: PRICING_OG_TWITTER_TITLE,
+    description: PRICING_PAGE_DESCRIPTION,
+  }),
 };
 
 export default async function PricingPage() {
@@ -98,36 +113,57 @@ export default async function PricingPage() {
   ];
 
   return (
-    <div className="bg-marketing-bg">
-      <Hero />
-      <section className="mx-auto max-w-6xl px-4 pb-20 sm:px-6">
-        <PricingPlanCards plans={plans} />
-        {showFoundingBadge ? (
-          <p className="mt-10 text-center font-mono text-[11px] font-medium uppercase tracking-[0.14em] text-marketing-accent">
-            {foundingSpotsRemaining} of 5 founding spots remaining
-          </p>
-        ) : null}
-      </section>
+    <>
+      <JsonLd
+        data={[
+          getBreadcrumbSchema([
+            { name: "Home", url: `${SCHEMA_BASE_URL}/` },
+            { name: "Pricing", url: `${SCHEMA_BASE_URL}/pricing` },
+          ]),
+          getMarketingPricingWebPageSchema({
+            name: PRICING_PAGE_SCHEMA_NAME,
+            description: PRICING_PAGE_DESCRIPTION,
+          }),
+          getProductSchema(),
+          getFAQPageSchema(
+            MARKETING_PRICING_FAQ.map((item) => ({
+              question: item.q,
+              answer: item.a,
+            })),
+          ),
+        ]}
+      />
+      <div className="bg-marketing-bg">
+        <Hero />
+        <section className="mx-auto max-w-6xl px-4 pb-20 sm:px-6">
+          <PricingPlanCards plans={plans} />
+          {showFoundingBadge ? (
+            <p className="mt-10 text-center font-mono text-[11px] font-medium uppercase tracking-[0.14em] text-marketing-accent">
+              {foundingSpotsRemaining} of 5 founding spots remaining
+            </p>
+          ) : null}
+        </section>
 
-      <ComparisonTable />
+        <ComparisonTable />
 
-      <PricingFaq />
+        <PricingFaq />
 
-      <section className="border-t border-marketing-border bg-marketing-bg">
-        <div className="mx-auto flex max-w-3xl flex-col items-center gap-4 px-4 py-16 text-center sm:px-6">
-          <h2 className="font-serif text-2xl font-light tracking-tight text-marketing-ink sm:text-3xl">
-            More Questions?
-          </h2>
-          <Link
-            href="/faq"
-            className="inline-flex items-center gap-1 text-marketing-accent text-sm font-medium hover:underline"
-          >
-            See our full FAQ
-            <ArrowRight className="size-4" />
-          </Link>
-        </div>
-      </section>
-    </div>
+        <section className="border-t border-marketing-border bg-marketing-bg">
+          <div className="mx-auto flex max-w-3xl flex-col items-center gap-4 px-4 py-16 text-center sm:px-6">
+            <h2 className="font-serif text-2xl font-light tracking-tight text-marketing-ink sm:text-3xl">
+              More Questions?
+            </h2>
+            <Link
+              href="/faq"
+              className="inline-flex items-center gap-1 text-marketing-accent text-sm font-medium hover:underline"
+            >
+              See our full FAQ
+              <ArrowRight className="size-4" aria-hidden />
+            </Link>
+          </div>
+        </section>
+      </div>
+    </>
   );
 }
 
@@ -198,16 +234,28 @@ function ComparisonTable() {
           <table className="w-full min-w-[640px] border-collapse text-sm">
             <thead>
               <tr className="border-b border-marketing-border bg-marketing-bg/60 text-left">
-                <th className="px-6 py-4 font-mono text-[11px] font-medium text-marketing-muted uppercase tracking-[0.14em]">
+                <th
+                  scope="col"
+                  className="px-6 py-4 font-mono text-[11px] font-medium text-marketing-muted uppercase tracking-[0.14em]"
+                >
                   Feature
                 </th>
-                <th className="px-6 py-4 font-serif text-base font-light text-marketing-ink">
+                <th
+                  scope="col"
+                  className="px-6 py-4 font-serif text-base font-light text-marketing-ink"
+                >
                   Free
                 </th>
-                <th className="px-6 py-4 font-serif text-base font-light text-marketing-ink">
+                <th
+                  scope="col"
+                  className="px-6 py-4 font-serif text-base font-light text-marketing-ink"
+                >
                   Pro
                 </th>
-                <th className="px-6 py-4 font-serif text-base font-light text-marketing-ink">
+                <th
+                  scope="col"
+                  className="px-6 py-4 font-serif text-base font-light text-marketing-ink"
+                >
                   Ultimate
                 </th>
               </tr>
@@ -218,7 +266,9 @@ function ComparisonTable() {
                   key={row.label}
                   className="border-b border-marketing-border last:border-0"
                 >
-                  <td className="px-6 py-4 text-marketing-ink">{row.label}</td>
+                  <td className="px-6 py-4 text-marketing-ink" scope="row">
+                    {row.label}
+                  </td>
                   <ComparisonCell value={row.free} />
                   <ComparisonCell value={row.pro} />
                   <ComparisonCell value={row.ultimate} />
@@ -238,40 +288,20 @@ function ComparisonCell({ value }: { value: boolean | string }) {
   }
   if (value) {
     return (
-      <td className="px-6 py-4">
-        <Check className="size-4 text-marketing-accent" />
+      <td className="px-6 py-4 text-center" aria-label="Included">
+        <Check className="mx-auto size-4 text-marketing-accent" aria-hidden />
       </td>
     );
   }
   return (
-    <td className="px-6 py-4">
-      <Minus className="size-4 text-marketing-muted/60" />
+    <td className="px-6 py-4 text-center" aria-label="Not included">
+      <Minus
+        className="mx-auto size-4 text-marketing-muted/60"
+        aria-hidden
+      />
     </td>
   );
 }
-
-const PRICING_FAQ = [
-  {
-    q: "Can I change plans anytime?",
-    a: "Yes. You can upgrade to Ultimate from your dashboard billing settings whenever you're ready. Cancellations take effect at the end of your current billing period — you keep Ultimate access until then.",
-  },
-  {
-    q: "What happens to my files if I downgrade?",
-    a: "Your files stay safe. If you downgrade, existing events keep their files until each event's retention period ends. New events will follow the limits of your new plan (for example, fewer files per event on Free or Pro).",
-  },
-  {
-    q: "Do you offer annual pricing?",
-    a: "Not yet. Audio Guest Books is month-to-month for now so you can cancel anytime without commitment. We may introduce annual pricing later.",
-  },
-  {
-    q: "What payment methods do you accept?",
-    a: "We use Stripe to process payments and accept all major credit and debit cards. Your card information is handled by Stripe and never touches our servers.",
-  },
-  {
-    q: "Is there a setup fee?",
-    a: "No. There is no setup fee on any plan. You pay only the listed monthly price (which is $0 on Free and Pro during early launch).",
-  },
-] as const;
 
 function PricingFaq() {
   return (
@@ -286,7 +316,7 @@ function PricingFaq() {
           </h2>
         </div>
         <div className="mt-10">
-          <FaqAccordion items={[...PRICING_FAQ]} />
+          <FaqAccordion items={MARKETING_PRICING_FAQ} />
         </div>
       </div>
     </section>

@@ -2,28 +2,33 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 import { LegalPageShell } from "@/components/marketing/legal-page-shell";
+import {
+  marketingCanonical,
+  marketingOpenGraphExtras,
+  marketingTwitterExtras,
+} from "@/lib/marketing-seo-defaults";
 
 const LAST_UPDATED = "April 30, 2026";
 
+const PRIVACY_PAGE_TITLE = "Privacy Policy";
+const PRIVACY_OG_TITLE = "Privacy Policy — Audio Guest Books";
+/** ~152 chars */
+const PRIVACY_PAGE_DESCRIPTION =
+  "How Audio Guest Books collects, uses, stores, and protects your data — including audio files in encrypted object storage, account security, analytics, retention, and your privacy rights.";
+
 export const metadata: Metadata = {
-  title: "Privacy Policy",
-  description:
-    "How Audio Guest Books collects, uses, stores, and protects your data, including audio files, account information, and analytics.",
-  alternates: { canonical: "/privacy" },
-  openGraph: {
-    title: "Privacy Policy — Audio Guest Books",
-    description:
-      "How Audio Guest Books collects, uses, stores, and protects your data.",
-    type: "website",
-    url: "/privacy",
-    siteName: "Audio Guest Books",
-  },
-  twitter: {
-    card: "summary",
-    title: "Privacy Policy — Audio Guest Books",
-    description:
-      "How Audio Guest Books collects, uses, stores, and protects your data.",
-  },
+  title: PRIVACY_PAGE_TITLE,
+  description: PRIVACY_PAGE_DESCRIPTION,
+  alternates: { canonical: marketingCanonical("/privacy") },
+  openGraph: marketingOpenGraphExtras({
+    title: PRIVACY_OG_TITLE,
+    description: PRIVACY_PAGE_DESCRIPTION,
+    pathname: "/privacy",
+  }),
+  twitter: marketingTwitterExtras({
+    title: PRIVACY_OG_TITLE,
+    description: PRIVACY_PAGE_DESCRIPTION,
+  }),
 };
 
 export default function PrivacyPolicyPage() {

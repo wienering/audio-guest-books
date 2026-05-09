@@ -1,0 +1,23 @@
+Audio Guest Books
+
+Audio Guest Books is a multi-tenant SaaS platform that helps photo booth and event companies deliver wedding and event audio guest book recordings to their clients with branded delivery pages, automatic file processing, and engagement analytics.
+
+Product
+
+Homepage: Overview, features, three-step workflow
+Pricing: Free, Pro (free during launch, invitation only), and Ultimate ($5/month) plans
+FAQ: Getting started, file uploads, branding, pricing, privacy
+
+Company
+
+Contact
+Privacy Policy
+Terms of Service
+
+Key facts
+
+Free forever for first event
+Founding member pricing: $5/month forever for first 5 customers
+Built for photo booth and event companies
+Custom branding, password protection, analytics included on Pro
+Up to 24 months file retention on Ultimate

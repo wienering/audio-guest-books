@@ -3,6 +3,7 @@ import { headers } from "next/headers";
 
 import { MarketingHome } from "@/components/marketing/home-page";
 import { MarketingShell } from "@/components/marketing/marketing-shell";
+import { JsonLd } from "@/components/seo/json-ld";
 import { RetailTenantLanding } from "@/components/retail/retail-tenant-landing";
 import {
   ReservedSubdomainMessage,
@@ -11,29 +12,45 @@ import {
 import { resolveAppBaseUrl } from "@/lib/app-url";
 import { companyHasFeatureKey } from "@/lib/company-features";
 import { presignGetUrl } from "@/lib/r2";
+import {
+  marketingCanonical,
+  marketingOpenGraphExtras,
+  marketingTwitterExtras,
+} from "@/lib/marketing-seo-defaults";
 import { getRetailTenantLandingCompany } from "@/lib/retail-tenant-landing-data";
+import {
+  getBreadcrumbSchema,
+  getDeliverAudioGuestBookHowToSchema,
+  getMarketingHomeWebPageSchema,
+  getOrganizationSchema,
+  getSoftwareApplicationSchema,
+  getWebSiteSchema,
+  SCHEMA_BASE_URL,
+} from "@/lib/schema";
+
+/** Shared with homepage JSON-LD WebPage `name` / `description`. ~155 chars for OG/meta. */
+const MARKETING_HOME_PAGE_TITLE =
+  "Audio Guest Books — Deliver Audio Guest Books Professionally";
+const MARKETING_HOME_META_DESCRIPTION =
+  "Professional audio guest book delivery for photo booth and event companies: branded client pages, automatic processing, WAV-to-MP3 transcoding, client analytics, and optional password-protected client pages.";
 
 const MARKETING_HOME_METADATA: Metadata = {
   title: {
-    absolute: "Audio Guest Books — Deliver Audio Guest Books Professionally",
+    absolute: MARKETING_HOME_PAGE_TITLE,
   },
-  description:
-    "Branded delivery pages, automatic file processing, and analytics for wedding and event audio guest books. Built for photo booth and event companies.",
-  alternates: { canonical: "/" },
+  description: MARKETING_HOME_META_DESCRIPTION,
+  alternates: { canonical: marketingCanonical("/") },
   openGraph: {
-    title: "Audio Guest Books — Deliver Audio Guest Books Professionally",
-    description:
-      "Branded delivery pages, automatic file processing, and analytics for wedding and event audio guest books.",
-    type: "website",
-    url: "/",
-    siteName: "Audio Guest Books",
+    ...marketingOpenGraphExtras({
+      title: MARKETING_HOME_PAGE_TITLE,
+      description: MARKETING_HOME_META_DESCRIPTION,
+      pathname: "/",
+    }),
   },
-  twitter: {
-    card: "summary_large_image",
-    title: "Audio Guest Books — Deliver Audio Guest Books Professionally",
-    description:
-      "Branded delivery pages, automatic file processing, and analytics for wedding and event audio guest books.",
-  },
+  twitter: marketingTwitterExtras({
+    title: MARKETING_HOME_PAGE_TITLE,
+    description: MARKETING_HOME_META_DESCRIPTION,
+  }),
 };
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -108,8 +125,23 @@ export default async function Home() {
   }
 
   return (
-    <MarketingShell>
-      <MarketingHome appUrl={appUrl} />
-    </MarketingShell>
+    <>
+      <JsonLd
+        data={[
+          getOrganizationSchema(),
+          getWebSiteSchema(),
+          getSoftwareApplicationSchema(),
+          getMarketingHomeWebPageSchema({
+            name: MARKETING_HOME_PAGE_TITLE,
+            description: MARKETING_HOME_META_DESCRIPTION,
+          }),
+          getBreadcrumbSchema([{ name: "Home", url: `${SCHEMA_BASE_URL}/` }]),
+          getDeliverAudioGuestBookHowToSchema(),
+        ]}
+      />
+      <MarketingShell>
+        <MarketingHome appUrl={appUrl} />
+      </MarketingShell>
+    </>
   );
 }

@@ -39,7 +39,10 @@ export function MarketingHeader({ appUrl }: { appUrl: string }) {
           <BrandLogo className="h-8 w-auto max-w-[min(100%,240px)] sm:h-9" />
         </Link>
 
-        <nav className="hidden items-center gap-7 md:flex">
+        <nav
+          aria-label="Primary"
+          className="hidden items-center gap-7 md:flex"
+        >
           {NAV_LINKS.map((l) => (
             <Link
               key={l.href}
@@ -73,7 +76,11 @@ export function MarketingHeader({ appUrl }: { appUrl: string }) {
           onClick={() => setOpen((v) => !v)}
           className="inline-flex h-10 w-10 items-center justify-center rounded-md text-marketing-ink hover:bg-marketing-border/50 md:hidden"
         >
-          {open ? <X className="size-5" /> : <Menu className="size-5" />}
+          {open ? (
+            <X className="size-5" aria-hidden />
+          ) : (
+            <Menu className="size-5" aria-hidden />
+          )}
         </button>
       </div>
 
@@ -83,7 +90,10 @@ export function MarketingHeader({ appUrl }: { appUrl: string }) {
           open ? "block" : "hidden"
         )}
       >
-        <nav className="mx-auto flex max-w-6xl flex-col gap-1 px-4 py-4 sm:px-6">
+        <nav
+          aria-label="Primary for mobile"
+          className="mx-auto flex max-w-6xl flex-col gap-1 px-4 py-4 sm:px-6"
+        >
           {NAV_LINKS.map((l) => (
             <Link
               key={l.href}

@@ -1,0 +1,35 @@
+Audio Guest Books
+
+Audio Guest Books is a multi-tenant SaaS platform that helps photo booth and event companies deliver wedding and event audio guest book recordings to their clients with branded delivery pages, automatic file processing, and engagement analytics.
+
+Canonical marketing site: https://audioguestbooks.ca/
+
+Product
+
+Homepage (https://audioguestbooks.ca/)
+The homepage explains what Audio Guest Books is, who it is for (photo booth and event operators), and how the workflow works in three steps: upload recordings (including zips), customize branding and optional password protection, then share a single client link for playback and downloads. It highlights core product capabilities such as analytics, retention, and email templates on higher tiers.
+
+Pricing (https://audioguestbooks.ca/pricing/)
+The pricing page compares Free, Pro, and Ultimate plans with a feature table. Free supports a limited number of events and files; Pro adds branding, passwords, and analytics during launch; Ultimate adds unlimited scale, transcoding, custom emails, and longer retention. Founding-member pricing may apply to early Ultimate subscribers.
+
+FAQ (https://audioguestbooks.ca/faq/)
+The FAQ is organized into sections: getting started, file formats and uploads, branding and customization, pricing and billing, and privacy/retention/security. It answers common operator questions in plain language.
+
+Company
+
+Contact (https://audioguestbooks.ca/contact/)
+The contact page directs visitors to email support for general help, with separate addresses mentioned for privacy and legal inquiries.
+
+Privacy Policy (https://audioguestbooks.ca/privacy/)
+The privacy policy describes how the service collects, uses, stores, and protects data including audio files and account information. It is standard legal boilerplate that should be reviewed by counsel for your jurisdiction.
+
+Terms of Service (https://audioguestbooks.ca/terms/)
+The terms govern use of the platform, including accounts, billing, cancellations, liability, and termination. It is standard legal boilerplate that should be reviewed by counsel for your jurisdiction.
+
+Key facts
+
+Free forever for first event
+Founding member pricing: $5/month forever for first 5 customers
+Built for photo booth and event companies
+Custom branding, password protection, analytics included on Pro
+Up to 24 months file retention on Ultimate

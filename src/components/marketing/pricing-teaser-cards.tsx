@@ -60,7 +60,10 @@ export function PricingTeaserCards({
                 key={f}
                 className="flex items-start gap-2 text-marketing-ink/85"
               >
-                <Check className="mt-0.5 size-4 shrink-0 text-marketing-accent" />
+                <Check
+                  className="mt-0.5 size-4 shrink-0 text-marketing-accent"
+                  aria-hidden
+                />
                 <span>{f}</span>
               </li>
             ))}

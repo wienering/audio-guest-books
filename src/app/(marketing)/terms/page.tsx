@@ -2,27 +2,33 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 import { LegalPageShell } from "@/components/marketing/legal-page-shell";
+import {
+  marketingCanonical,
+  marketingOpenGraphExtras,
+  marketingTwitterExtras,
+} from "@/lib/marketing-seo-defaults";
 
 const LAST_UPDATED = "April 30, 2026";
 
+const TERMS_PAGE_TITLE = "Terms of Service";
+const TERMS_OG_TITLE = "Terms of Service — Audio Guest Books";
+/** ~149 chars */
+const TERMS_PAGE_DESCRIPTION =
+  "Terms governing use of Audio Guest Books: accounts, acceptable use, plans and billing, cancellations, liability limits, termination, and the law that applies to your subscription.";
+
 export const metadata: Metadata = {
-  title: "Terms of Service",
-  description:
-    "The terms governing your use of Audio Guest Books, including acceptable use, billing, cancellation, liability, and termination.",
-  alternates: { canonical: "/terms" },
-  openGraph: {
-    title: "Terms of Service — Audio Guest Books",
-    description:
-      "The terms governing your use of Audio Guest Books.",
-    type: "website",
-    url: "/terms",
-    siteName: "Audio Guest Books",
-  },
-  twitter: {
-    card: "summary",
-    title: "Terms of Service — Audio Guest Books",
-    description: "The terms governing your use of Audio Guest Books.",
-  },
+  title: TERMS_PAGE_TITLE,
+  description: TERMS_PAGE_DESCRIPTION,
+  alternates: { canonical: marketingCanonical("/terms") },
+  openGraph: marketingOpenGraphExtras({
+    title: TERMS_OG_TITLE,
+    description: TERMS_PAGE_DESCRIPTION,
+    pathname: "/terms",
+  }),
+  twitter: marketingTwitterExtras({
+    title: TERMS_OG_TITLE,
+    description: TERMS_PAGE_DESCRIPTION,
+  }),
 };
 
 export default function TermsOfServicePage() {

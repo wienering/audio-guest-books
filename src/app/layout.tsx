@@ -31,6 +31,7 @@ const SITE_URL =
   process.env.NEXT_PUBLIC_SITE_URL ?? "https://audioguestbooks.ca";
 
 export const metadata: Metadata = {
+  /** Resolves relative `canonical`, `openGraph.url`, and image paths site-wide. */
   metadataBase: new URL(SITE_URL),
   title: {
     default: "Audio Guest Books",

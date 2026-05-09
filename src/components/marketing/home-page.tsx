@@ -94,7 +94,7 @@ function Hero({ signupHref }: { signupHref: string }) {
               className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-md bg-marketing-ink px-7 text-base font-semibold tracking-tight text-marketing-bg transition-opacity hover:opacity-90 sm:w-auto"
             >
               Start Your Free Trial
-              <ArrowRight className="size-4" />
+              <ArrowRight className="size-4" aria-hidden />
             </a>
             <Link
               href="/pricing"
@@ -146,7 +146,7 @@ function Problem() {
           {PAIN_POINTS.map(({ icon: Icon, title, body }) => (
             <div key={title} className="space-y-3">
               <div className="inline-flex size-11 items-center justify-center rounded-md bg-marketing-accent-soft text-marketing-accent">
-                <Icon className="size-5" />
+                <Icon className="size-5" aria-hidden />
               </div>
               <h3 className="font-serif text-xl font-light tracking-tight text-marketing-ink">
                 {title}
@@ -203,7 +203,7 @@ function Solution() {
               className="rounded-xl border border-marketing-border bg-marketing-surface p-7 shadow-[0_1px_0_rgba(26,26,26,0.05)]"
             >
               <div className="inline-flex size-11 items-center justify-center rounded-md bg-marketing-accent-soft text-marketing-accent">
-                <Icon className="size-5" />
+                <Icon className="size-5" aria-hidden />
               </div>
               <h3 className="mt-4 font-serif text-xl font-light tracking-tight text-marketing-ink">
                 {title}
@@ -289,7 +289,7 @@ function PricingTeaser({ signupHref }: { signupHref: string }) {
             className="inline-flex items-center gap-1 text-marketing-accent text-sm font-medium hover:underline"
           >
             See full pricing details
-            <ArrowRight className="size-4" />
+            <ArrowRight className="size-4" aria-hidden />
           </Link>
         </div>
       </div>
@@ -313,7 +313,7 @@ function FinalCta({ signupHref }: { signupHref: string }) {
           className="mt-8 inline-flex h-12 items-center justify-center gap-2 rounded-md bg-marketing-ink px-8 text-base font-semibold tracking-tight text-marketing-bg transition-opacity hover:opacity-90"
         >
           Start Your Free Trial
-          <ArrowRight className="size-4" />
+          <ArrowRight className="size-4" aria-hidden />
         </a>
       </div>
     </section>
